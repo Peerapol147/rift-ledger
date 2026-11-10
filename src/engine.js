@@ -83,6 +83,7 @@ export function sources(s) {
   if (s.pastJob) add(`อาชีพเดิม: ${CAREERS[s.pastJob].n}`, halve(CAREERS[s.pastJob].m));
   (s.paths || []).forEach((id) => add(`วัยเด็ก: ${D.PATHS[id].n}`, D.PATHS[id].m));
   (s.perks || []).forEach((id) => { const p = D.perkOf(id); add(`สายฝึก: ${p.n}`, p.m); });
+  for (const f in s.disc || {}) { const n = discLv(s, f), X = D.DISC[f]; if (n) add(`วิถี${X.n} บทที่ ${n}`, discM(X, n)); }
   for (const k in s.wear) { const g = gearOf(s, s.wear[k]); if (g && g.affix != null) add(`อุปกรณ์: ${gearName(g)}`, AFFIX[g.affix].m); }
   if (s.guild) { if (s.guild.own) for (const k in HALLS) add(`${HALLS[k].n} Lv.${s.guild.hall[k]}`, s.guild.hall[k] && { [HALLS[k].m]: HALLS[k].v * s.guild.hall[k] }); else add(`กิลด์: ${s.guild.n}`, s.guild.m); }
   return o;
@@ -122,12 +123,13 @@ export function derive(s) {
   const body = stat(s, "str") * 0.7 + stat(s, main) * 0.3;
   const def = (3 + body * 0.33 + lv * 1.2 + (a ? gearPw(a) * 0.6 : 0)) * (1 + sum("guard") + mod(s, "def") / 100);
   const maxHp = (60 + body * 5.5 + lv * 16 + (a ? gearPw(a) * 2 : 0)) * (1 + mod(s, "hp") / 100);
-  return { atk, def, maxHp, hp: maxHp * (0.55 + s.health / 220), crit: clamp(0.05 + stat(s, "luk") * 0.0012 + (mod(s, "crit") + (w ? WEAPONS[w.t].crit : 0)) / 100, 0.02, 0.6), dodge: clamp(0.03 + stat(s, "agi") * 0.0008 + sum("step") + mod(s, "dodge") / 100, 0, skCap.step(eq.find((x) => x.k === "step")?.g ?? 0)), heal: sum("heal") * (1 + mod(s, "heal") / 100), healCap: skCap.heal(eq.find((x) => x.k === "heal")?.g ?? 0), skills: eq.filter((x) => x.k === "atk"), wfx: w ? WEAPONS[w.t].fx : "impacts/blunt-hit", power: Math.round(atk * Math.sqrt(maxHp) * 0.1 + def) };
+  return { atk, def, maxHp, hp: maxHp * (0.55 + s.health / 220), crit: clamp(0.05 + stat(s, "luk") * 0.0012 + (mod(s, "crit") + (w ? WEAPONS[w.t].crit : 0)) / 100, 0.02, 0.6), dodge: clamp(0.03 + stat(s, "agi") * 0.0008 + sum("step") + mod(s, "dodge") / 100, 0, skCap.step(eq.find((x) => x.k === "step")?.g ?? 0)), heal: sum("heal") * (1 + mod(s, "heal") / 100), healCap: skCap.heal(eq.find((x) => x.k === "heal")?.g ?? 0), acc: clamp(mod(s, "acc") / 100, 0, 0.3), mag: mod(s, "mag") / 100, skills: eq.filter((x) => x.k === "atk"), wfx: w ? WEAPONS[w.t].fx : "impacts/blunt-hit", power: Math.round(atk * Math.sqrt(maxHp) * 0.1 + def) };
 }
 export const enemy = (o) => { const L = o.lv, m = o.m || 1; return { n: o.n, boss: o.boss, el: o.el, lv: L, atk: (14 + L * 3.6 + L * L * 0.045) * m, def: (3 + L * 1.7 + L * L * 0.02) * m, hp: (90 + L * 22 + L * L * 0.5) * m, crit: 0.05, dodge: 0.03 }; };
+// acc: fewer misses and less armour in the way. mag: skill blows land harder.
 function simulate(a, b, r, rec) {
   let ha = a.hp, hb = b.hp, healed = false; const R = [];
-  const hit = (x, y, who, sk) => { if (rnd(r) < y.dodge) { rec && R.push({ who, miss: 1 }); return 0; } let p = x.atk * (x.atk / (x.atk + y.def * 1.2)) * (0.85 + rnd(r) * 0.3); const c = rnd(r) < x.crit; if (c) p *= 1.6; if (sk && ELEMENTS[sk.el].beat === y.el) p *= 1.25; p = Math.max(x.atk * 0.08, p); rec && R.push({ who, dmg: Math.round(p), crit: c, sk: sk?.n, el: sk?.el }); return p; };
+  const hit = (x, y, who, sk) => { const ac = x.acc || 0; if (rnd(r) < y.dodge - ac) { rec && R.push({ who, miss: 1 }); return 0; } let p = x.atk * (x.atk / (x.atk + y.def * 1.2 * (1 - ac))) * (0.85 + rnd(r) * 0.3); const c = rnd(r) < x.crit; if (c) p *= 1.6; if (sk) p *= 1 + (x.mag || 0); if (sk && ELEMENTS[sk.el].beat === y.el) p *= 1.25; p = Math.max(x.atk * 0.08, p); rec && R.push({ who, dmg: Math.round(p), crit: c, sk: sk?.n, el: sk?.el }); return p; };
   for (let i = 0; i < 12 && ha > 0 && hb > 0; i++) {
     hb -= hit(a, b, "p", a.skills?.length ? a.skills[i % a.skills.length] : null); if (hb <= 0) break;
     ha -= hit(b, a, "e");
@@ -138,6 +140,14 @@ function simulate(a, b, r, rec) {
 }
 export function fight(s, foe) { const r = simulate(derive(s), foe, s.r, true); s.c.fights = (s.c.fights || 0) + 1; return { ...r, foe: { n: foe.n, boss: foe.boss, el: foe.el }, wfx: derive(s).wfx }; }
 export function winOdds(s, foe) { const a = derive(s), r = { s: hash(s.ageM + foe.n) }; let w = 0; for (let i = 0; i < 60; i++) if (simulate(a, foe, r).win) w++; return Math.round((w / 60) * 100); }
+// The stat a test "asks for": at this value the chance is NEED_P%. Below it you can still try, at worse odds. Shown to the player beside their own number.
+export const NEED_P = 75;
+// A passed stat test trains the stat it used: a little, and less as the stat grows (same curve as drills).
+export const growOf = (s, k) => Math.round(8 * clamp(1.3 - s.st[k] / 90, 0.35, 1.1)) / 100;
+export function needOf(s, k, d = 0) {
+  const e = s.ageM < 192 ? 6 + (s.ageM / 12) * 0.75 : s.hunter ? 12 + s.lv * 1.35 : 16 + s.cr * 7, sp = s.hunter ? 1 + s.lv / 25 : 1, t = (NEED_P - 50 - d * 2) * sp;
+  return Math.max(1, Math.ceil(e + (k === "luk" ? t / 2.45 : (t - (stat(s, "luk") - e) * 0.25) / 2.2)));
+}
 const afterFight = (s, res) => { if (res.win) s.health = clamp(s.health - (1 - res.share) * 13, 1, 100); };
 
 // ---- Effects: a single table so event data stays tiny.
@@ -214,6 +224,7 @@ export function choose(s, i) {
   const ev = s.ev, o = ev.o[i]; s.ev = null; s.ctx = ev.ctx; let ok = true, roll = "";
   if (o.fight) { const res = fight(s, enemy(o.fight)); ok = res.win; afterFight(s, res); emit("fight", res); roll = ok ? "ชนะ" : "แพ้"; if (ok && o.fight.boss) s.c.boss = (s.c.boss || 0) + 1; if (!ok && (o.fight.boss || ev.tag === "โลก") && !s.dead) deathRoll(s, o.fight); }
   else { const p = optOdds(s, o); if (p != null) { ok = ch(s.r, p / 100); roll = ok ? "สำเร็จ" : "พลาด"; } }
+  if (ok && o.s && !o.fight) s.st[o.s] += growOf(s, o.s);
   if (o.ap || o.need) s.habit = s.habit?.k === o.s ? { k: o.s, n: s.habit.n + 1 } : { k: o.s, n: 1 }; else if (o.s || o.fight) s.habit = null;
   const out = ok ? o.y : o.n || {};
   const m = text(s, out.m);
@@ -374,6 +385,7 @@ function schedule(s) {
   if (s.hunter && s.ageM >= s.spcCd && !s.spc) { const ready = s.w.specials.map(spc).filter((x) => met(s, x) && (age(s) < SPC_AGE || x.id === "late")); if (ready.length) return openSpecial(s, ready.slice(0, 3)); }
   if (s.ageM >= s.nextExam && examReady(s)) return openExam(s);
   if (s.ageM >= s.nextMain) return openMain(s);
+  if ((s.hunter || (s.career && !retired(s))) && s.ageM >= (s.nextDisc ?? 0) - (WAY_F.has(s.focus) ? 3 : 0) && openDisc(s)) return;
   randomEvent(s, 0.17);
 }
 function openCross(s, x) {
@@ -400,6 +412,42 @@ function breakthrough(s) {
     open(s, { t: `${STATS[k]}ของคุณทะลุ ${at[t]}: ${BT_LINE[k]} ถึงเวลาเลือกว่าจะปั้นมันไปทางไหน`, o: [0, 1].map((a) => { const p = D.perkOf(`${k}_${a}_${t}`); return { l: p.n, note: `${p.d} · ${perkText(p.m)}`, y: { m: "ทางฝึกนี้เป็นของคุณแล้ว", perk: `${k}_${a}_${t}` } }; }) }, "ปั้นสเตตัส");
     return true;
   }
+}
+// ---- Ways (วิถี). The story that grows the fighting side your class or trade leans on: three ways per job, read off its main stat, bonuses and weapon, so new classes need no rows.
+const DISC_ST = { str: ["body", "hp"], agi: ["dodge", "acc"], int: ["mag", "wit"], wil: ["hp", "mag"], cha: ["wit", "mag"], luk: ["crit", "dodge"] };
+const DISC_M = { def: "body", safe: "body", hp: "hp", heal: "hp", life: "hp", crit: "crit", dodge: "dodge", xp: "wit", quest: "wit", gold: "wit", cxp: "wit", craft: "wit" };
+const DISC_WP = { 1: "crit", 3: "body", 4: "body", 5: "acc", 6: "acc", 7: "mag", 8: "crit", 10: "dodge" };
+export const DISC_CAP = [5, 3, 2]; // chapters open on the main, second and third way
+const WAY_F = new Set(["train", "body", "mind", "study"]); // months spent training bring the next lesson sooner
+export const discLv = (s, f) => Math.floor((s.disc?.[f] || 0) + 1e-6);
+const discM = (X, n) => Object.fromEntries(Object.entries(X.m).map(([k, v]) => [k, Math.round(v * n * 10) / 10]));
+export function discOf(s) {
+  const job = s.hunter ? CLASSES[s.cls] : CAREERS[s.career]; if (!job) return [];
+  const w = {}, add = (k, v) => k && (w[k] = (w[k] || 0) + v), [a, b] = DISC_ST[job.main || job.st];
+  add(a, 4); add(b, 2); for (const k in job.m) if (job.m[k] > 0) add(DISC_M[k], 1.5); if (s.hunter) add(DISC_WP[job.wp], 1.6);
+  return Object.keys(D.DISC).filter((k) => s.hunter || k !== "mag").sort((x, y) => (w[y] || 0) - (w[x] || 0)).slice(0, 3);
+}
+// For the UI: the three ways of the current job, then anything learned in an earlier job.
+export const discList = (s) => { const fit = discOf(s); return [...fit, ...Object.keys(s.disc || {}).filter((f) => !fit.includes(f) && discLv(s, f))].map((f) => { const X = D.DISC[f], i = fit.indexOf(f), lv = discLv(s, f); return { n: `วิถี${X.n} · บทที่ ${lv}/${i < 0 ? lv : DISC_CAP[i]}`, d: `${X.d} · บทละ ${perkText(X.m)}`, m: lv ? discM(X, lv) : {} }; }); };
+H.disc = (s, [f, v]) => {
+  const d = (s.disc ||= {}), a = discLv(s, f), cap = DISC_CAP[discOf(s).indexOf(f)] ?? 5, X = D.DISC[f];
+  d[f] = Math.min(cap, (d[f] || 0) + v); const b = discLv(s, f);
+  if (b > a) { emit("skill"); log(s, `วิถี${X.n}จบบทที่ ${b} "${D.DISC_T[b - 1]}" · ${perkText(discM(X, b))}${b === 5 ? " ไม่มีบทต่อไปให้เรียนแล้ว ที่เหลือคือของคุณเอง" : ""}`, "วิถี", "leg"); if (b === 5) s.fame += 5; }
+};
+// A chapter opens only when your standing has caught up with it (rank or position), like a ceiling that lifts as you rise.
+function openDisc(s) {
+  if (s.nextDisc == null) { s.nextDisc = s.ageM + ri(s.r, 4, 8); return false; }
+  s.nextDisc = s.ageM + ri(s.r, 14, 22);
+  const rk = s.hunter ? s.rank : s.cr, fs = discOf(s).map((f, i) => ({ f, w: 3 - i, lv: discLv(s, f), cap: DISC_CAP[i] })).filter((x) => x.lv < x.cap && x.lv <= rk);
+  if (!fs.length) return false;
+  const { f, lv } = wp(s.r, fs), X = D.DISC[f], [t, l, ok, bad] = X.ch[lv], M = (s.discM ||= {});
+  if (M[f] == null || !s.npcs[M[f]]?.alive) M[f] = pickNpc(s); // one teacher per way for as long as they live
+  const g = gearOf(s, s.wear.weapon), cost = 50 * (lv + 1), again = (s.disc?.[f] || 0) > lv + 0.01;
+  const o = [{ l, s: X.st, d: -4 - lv * 4, note: `จบบทได้ ${perkText(X.m)}`, y: { m: ok, disc: [f, 1], sta: { [X.st]: 0.3 }, rel: 4 }, n: { m: bad, disc: [f, 0.3], hp: -3 } }];
+  if (s.gold >= cost * tier(s) * 3) o.push({ l: "จ่ายค่าครูให้สอนตัวต่อตัว", note: `₡${fmt(cost * tier(s))} · ได้ผลแน่นอนแต่ช้ากว่า`, y: { m: "บทเรียนเดินช้า แต่ไม่มีก้าวไหนเสียเปล่า", gold: -cost, disc: [f, 0.5], rel: 2 } });
+  o.push({ l: "ขอผ่านไปก่อน", y: { m: "บทเรียนนี้จะรอคุณอยู่" } });
+  open(s, { t: `วิถี${X.n} บทที่ ${lv + 1} "${D.DISC_T[lv]}" · ${again ? "คุณกลับมาแก้มือ: " : ""}${t}`, lt: `วิถี${X.n} บทที่ ${lv + 1}:`, o }, "วิถี", { z: here(s), mon: pk(s.r, MON), tool: g ? WEAPONS[g.t].n : "ของใกล้มือ", ni: M[f], npc: s.npcs[M[f]].n });
+  return true; // no ◇ approaches here: a way is tested on its own stat, or bought slowly from the teacher
 }
 function randomEvent(s, p) {
   const arrived = s.arrive; s.arrive = 0;
