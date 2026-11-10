@@ -19,3 +19,10 @@ export function idleRows(rows, time, fighting = false) {
  }));
  return result.map(r => r.join(''));
 }
+
+export function civilianIdleRows(rows, time) {
+ const pose = idlePose(time), h = rows.length, w = rows[0].length;
+ const out = Array.from({length:h+1},()=>Array(w+2).fill('.'));
+ rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=='.')out[y+1+(y<h*.7?pose.breath:0)][x+1+(y<14?pose.sway:0)]=c;}));
+ return out.map(r=>r.join(''));
+}

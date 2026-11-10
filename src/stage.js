@@ -1,4 +1,5 @@
-import { idleRows, idlePose } from "./hero-idle.js";
+import { HERO_RASTER } from "./hero-raster.js";
+import { idleRows, idlePose, civilianIdleRows } from "./hero-idle.js";
 import { SHADE_ART } from "./shade-art.js";
 import * as shadowFlames from "../../pixelfx-main/src/fx/shadow/shadow-flames.js";
 import { WEATHER, drawWeather } from "./weather-art.js";
@@ -57,8 +58,12 @@ export function setScene(k, seed = 7, climate = 'normal') {
  paint(k, seed); ambient(outdoor ? WEATHER[weather].amb || '' : SCENES[k].amb);
  if (overlay) overlay.dataset.weather = outdoor ? WEATHER[weather].label : '';
 }
-let heroArt = makeHeroArt();
+// Every art set gets its palette converted once here, never per frame.
+const withColors = (art) => ({ ...art, colors: Object.fromEntries(Object.entries(art.palette).map(([k, v]) => [k, rgb(v)])) });
+let heroArt = withColors(makeHeroArt());
 let heroArtKey = "";
+const FOE_MAP = new Map();
+const foeMap = (c) => { if (!FOE_MAP.has(c)) FOE_MAP.set(c, { m: rgb(c), e: rgb(PAL.e), w: rgb(PAL.w) }); return FOE_MAP.get(c); };
 let shadowAura = null;
 let heroClass = null;
 export const setHero = (c, isKid, ageM = 0, career = null, classId = null) => {
@@ -66,7 +71,7 @@ export const setHero = (c, isKid, ageM = 0, career = null, classId = null) => {
   heroClass = classId;
   if (classId === "shade" && !isKid) { if (!shadowAura) shadowAura = createFx(shadowFlames, {x: PX, y: GY, seed: 12}); } else shadowAura = null;
   const key = `${ageM}:${career}:${c}:${classId}`;
-  if (key !== heroArtKey) { heroArtKey = key; const art = classId === "shade" && !isKid ? SHADE_ART : makeHeroArt(ageM, career, c); heroArt = { ...art, colors: Object.fromEntries(Object.entries(art.palette).map(([k,v]) => [k,rgb(v)])) }; }
+  if (key !== heroArtKey) { heroArtKey = key; heroArt = withColors(classId === "shade" && !isKid ? SHADE_ART : makeHeroArt(ageM, career, c)); }
 };
 function sprite(a, x, y, map, sc = 1, flash = 0, flip = false) { const h = a.length * sc, w = a[0].length; for (let j = 0; j < a.length; j++) for (let i = 0; i < w; i++) { const ch = a[j][flip ? w - 1 - i : i]; if (ch === ".") continue; const c = flash > 0 ? 0xffffffff : map[ch]; for (let p = 0; p < sc; p++) for (let q = 0; q < sc; q++) pix(Math.round(x - (w * sc) / 2) + i * sc + p, y - h + j * sc + q, c); } }
 function spawn(name, x, y, o = {}) { const mod = REG[name]; if (!mod) return; fxs.push({ fx: createFx(mod, { x, y, seed: (Math.random() * 9999) | 0, ...o }), dur: Math.min(mod.meta?.duration ?? 1, 2.2) }); }
@@ -99,23 +104,35 @@ export function trigger(ev) {
   L.forEach((name, i) => spawn(name, PX + i * 40, n === "event" ? GY - 34 : GY)); if (n === "surge" || n === "break") shake = 5;
 }
 export const skip = () => { if (seq) { seq.i = seq.R.length; seq.wait = 0; } };
+// The next frame is booked first, so one bad frame can never leave the stage black for the rest of the session.
 function frameLoop(now) {
+  requestAnimationFrame(frameLoop);
+  try { drawFrame(now); } catch (e) { if (!drawFrame.warned) { drawFrame.warned = 1; console.error("stage frame", e); } }
+}
+function drawFrame(now) {
   const real = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; let dt = real * stage.speed; t += real;
   if (stop > 0) { stop -= real; dt = 0; }
   if (dt > 0) { if (seq) stepSeq(dt); for (const a of amb) { a.fx.update(dt); if (!a.mod.meta?.loop && a.fx.t > (a.mod.meta?.duration ?? 2)) a.fx = createFx(a.mod, a.fx.options); else if (a.mod.meta?.loop && a.fx.t > 600) a.fx = createFx(a.mod, a.fx.options); } for (const f of fxs) f.fx.update(dt); fxs = fxs.filter((f) => f.fx.t < f.dur); heroX *= 0.82; if (foe) { foe.x += (EX - foe.x) * 0.18; foe.kick *= 0.82; foe.flash -= dt; } heroFlash -= dt; }
-  if (outdoor) drawWeather(weatherPixel,W,H,GY,weather,t);
+  // Clouds drift 1-2 px a second, so the outdoor backdrop is repainted twice a second, not every frame.
+  if (outdoor) { const step = Math.floor(t * 2); if (step !== drawFrame.sky || sceneKey !== drawFrame.key) { drawFrame.sky = step; drawFrame.key = sceneKey; drawWeather(weatherPixel, W, H, GY, weather, t); } }
   if (shadowAura) { shadowAura.update(dt); shadowAura.options.x = PX + Math.round(heroX); }
   clearFrame(frame);
   for (const a of amb) a.fx.draw(frame, "back"); for (const f of fxs) f.fx.draw(frame, "back");
-  const bob = Math.round(Math.sin(t * 3) * 1), map = { ...Object.fromEntries(Object.entries(PAL).map(([k, v]) => [k, rgb(v)])), c: rgb(hero) };
-  if (shadowAura) { shadowAura.draw(frame, "back"); shadowAura.draw(frame, "front"); }
-  const posedRows = heroClass === "shade" && !small ? idleRows(heroArt.rows, t, !!seq) : heroArt.rows;
-  sprite(posedRows, PX + Math.round(heroX), GY, heroArt.colors || Object.fromEntries(Object.entries(heroArt.palette).map(([k,v]) => [k,rgb(v)])), 1, heroFlash);
-  if (foe && foe.a > 0) sprite(foe.boss ? SPR.boss : SPR.beast, Math.round(foe.x + foe.kick), GY, { m: rgb(foe.c), e: rgb(PAL.e), w: rgb(PAL.w) }, foe.boss ? 3 : 2, foe.flash, true);
+  if (shadowAura) { shadowAura.draw(frame, "back"); }
+  const raster = heroClass === 'shade' && !small ? HERO_RASTER.shade : heroArt.preclass ? HERO_RASTER.child : null;
+  if (raster) {
+    const height = raster.height - (Math.sin(t * 2) > .6 ? 1 : 0);
+    const left = Math.round(PX + heroX - raster.width / 2);
+    for (let y=0;y<height;y++) for(let x=0;x<raster.width;x++) {
+      const color=raster.pixels[Math.min(raster.height-1,Math.floor(y*raster.height/height))*raster.width+x];
+      if(color) pix(left+x,GY-height+y,heroFlash>0?0xffffffff:color);
+    }
+  } else sprite(heroArt.rows, PX + Math.round(heroX), GY, heroArt.colors, 1, heroFlash);
+  if (foe && foe.a > 0) sprite(foe.boss ? SPR.boss : SPR.beast, Math.round(foe.x + foe.kick), GY, foeMap(foe.c), foe.boss ? 3 : 2, foe.flash, true);
   for (const f of fxs) f.fx.draw(frame, "front"); for (const a of amb) if (a.name === "rain") a.fx.draw(frame, "front");
   if (outdoor) drawWeather((x,y,c) => { if (!weatherColors.has(c)) weatherColors.set(c,rgb(c)); pix(x,y,weatherColors.get(c)); },W,H,GY,weather,t,true);
   composite(frame, img.data, bg);
   let sx = 0, sy = 0; if (shake > 0.2) { sx = Math.round((Math.random() - 0.5) * shake * 2); sy = Math.round((Math.random() - 0.5) * shake); shake *= 0.85; }
-  ctx.putImageData(img, sx, sy); requestAnimationFrame(frameLoop);
+  ctx.putImageData(img, sx, sy);
 }
 export function initStage(canvas, ov) { canvas.width = W; canvas.height = H; ctx = canvas.getContext("2d"); frame = createFrame(W, H); img = new ImageData(W, H); bg = new Uint32Array(W * H); overlay = ov; setScene("home"); requestAnimationFrame(frameLoop); }

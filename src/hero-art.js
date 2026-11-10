@@ -1,3 +1,4 @@
+import { CHILD_ART } from "./child-art.js";
 // Original code-native art. Shared grid, outline and palette across life stages.
 const CHILD = ["........nnn.........","......nnhhhnn.......",".....nhhhhHhhn......","....nhHHhhhhhhhn....","....nhhhhhhhhhhn....","...nhhhhsSSshhhn....","....nhhssSSSshn.....","....nsssnSsnssn.....",".....nsSSSSSsn......","......nssSssn.......",".......nssnn........",".....nncttcann......","....ncCcttcacn......","...ncCCcttcacn......","...ncCcntncabn......","...nssnctncbbn......","...nSsnccncbbn......","....nnnccnnnn.......","......nddDdn........","......nddDdn........","......ndnndn........",".....nddnnddn.......",".....nwwnnwwn.......",".....nnnnnnnn......."];
 const BASE = {"n":"#202333","h":"#493642","H":"#73505a","s":"#dda17f","S":"#ffd0a3","c":"#277d83","C":"#52b3ac","t":"#f3dfb3","a":"#bf854d","b":"#835638","d":"#34455f","D":"#526c87","w":"#eee4cf"};
@@ -6,6 +7,14 @@ export const CAREER_ART = ['doc', 'smith', 'cop', 'cook'];
 export function makeHeroArt(ageM = 0, career = null, tint = '#277d83') {
   const age = Math.max(0, Number(ageM) || 0) / 12;
   const life = age < 3 ? 'infant' : age < 13 ? 'child' : age < 18 ? 'teen' : age < 60 ? 'adult' : 'elder';
+  if (!career && age >= 3) {
+    const source = CHILD_ART.rows;
+    // Same face and costume grow smoothly before awakening.
+    const height = age < 7 ? 32 + Math.floor((age - 3) * 2) : age < 13 ? 40 + Math.floor((age - 7) / 2) : 46;
+    const head = 14, torso = source.slice(head);
+    const rows = [...source.slice(0, head), ...Array.from({length:height-head}, (_,i) => torso[Math.min(torso.length-1, Math.floor(i*torso.length/(height-head)))])];
+    return {rows, palette:CHILD_ART.palette, life, job:null, preclass:true};
+  }
   const pal = {...BASE};
   let rows = [...CHILD];
   if (life === 'infant') rows = [...rows.slice(0, 11), '......nttttn........', '.....nttttttn.......', '.....nttttttn.......', '......nttttn........', '.......nnnn.........'];

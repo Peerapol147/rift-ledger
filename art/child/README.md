@@ -1,0 +1,1 @@
+Built-in imagegen: childhood redesign of existing shade-generated.png reference. Prompt: seven year old civilian, same black hair/violet eyes, navy hoodie, shorts and shoulder bag; no weapons or aura. Native 40px sprite, 28 colors, alpha preserved; age growth extends torso/legs while preserving face.
