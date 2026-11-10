@@ -6,6 +6,8 @@ import { PRESET, AMBIENT, HIT } from "./src/presets.js";
 
 const used = new Set([...Object.values(ELEMENTS).flatMap((e) => e.fx), ...WEAPONS.map((w) => w.fx), ...Object.values(PRESET).flat(), ...Object.values(AMBIENT), ...HIT, "melee/claw-swipe", "spawn/poof"]);
 const list = [...used].sort();
+const body = list.filter((n) => /\bo\.actor\b/.test(readFileSync(`../pixelfx-main/src/fx/${n}.js`, "utf8")));
+if (body.length) throw new Error(`These effects draw pixelfx's stock character, pick skill-only ones: ${body.join(", ")}`);
 writeFileSync("src/fxreg.gen.js", list.map((n, i) => `import * as f${i} from "../../pixelfx-main/src/fx/${n}.js";`).join("\n") + `\nexport const REG = {${list.map((n, i) => `"${n}":f${i}`).join(",")}};\n`);
 const out = await esbuild.build({ entryPoints: ["src/ui.js"], bundle: true, minify: true, format: "iife", target: "es2020", write: false, legalComments: "none" });
 const js = out.outputFiles[0].text.replace(/<\/script/g, "<\\/script");
