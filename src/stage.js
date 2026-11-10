@@ -1,13 +1,15 @@
+import { professionArt } from "./profession-art.js";
+import { civilianArt } from "./civilian-art.js";
 import { HERO_RASTER } from "./hero-raster.js";
 import { idleRows, idlePose, civilianIdleRows } from "./hero-idle.js";
 import { SHADE_ART } from "./shade-art.js";
 import * as shadowFlames from "../../pixelfx-main/src/fx/shadow/shadow-flames.js";
 import { WEATHER, drawWeather } from "./weather-art.js";
-import { makeHeroArt } from "./hero-art.js";
+import { makeHeroArt, heightAt } from "./hero-art.js";
 // Pixel stage: own backdrop and sprites, pixelfx for all effects. Acting follows pixelfx: wind-up, freeze on contact, target rocks back.
 import { createFrame, clearFrame, createFx, composite } from "../../pixelfx-main/src/core/index.js";
 import { REG } from "./fxreg.gen.js";
-import { PRESET, AMBIENT } from "./presets.js";
+import { PRESET, AMBIENT, STYLE, LOOK } from "./presets.js";
 import { ELEMENTS } from "./data.js";
 
 const W = 256, H = 144, GY = 128, PX = 78, EX = 178;
@@ -65,16 +67,32 @@ let heroArtKey = "";
 const FOE_MAP = new Map();
 const foeMap = (c) => { if (!FOE_MAP.has(c)) FOE_MAP.set(c, { m: rgb(c), e: rgb(PAL.e), w: rgb(PAL.w) }); return FOE_MAP.get(c); };
 let shadowAura = null;
-let heroClass = null;
+let heroClass = null, heroH = 56, heroLook = null, pend = [];
+const CANE = rgb("#7a5a3a");
+let civilianRaster = civilianArt();
+let professionRaster = null;
 export const setHero = (c, isKid, ageM = 0, career = null, classId = null) => {
   hero = c; small = isKid;
-  heroClass = classId;
+  heroClass = classId; heroH = heightAt(ageM); heroLook = isKid ? null : STYLE[LOOK[classId] || LOOK[career]] || null;
+  civilianRaster = civilianArt(ageM, career, classId);
+  const art = classId === "shade" && !isKid ? HERO_RASTER.shade : professionArt(career, classId);
+  professionRaster = art ? { ...art, drawH: heroH } : null;
   if (classId === "shade" && !isKid) { if (!shadowAura) shadowAura = createFx(shadowFlames, {x: PX, y: GY, seed: 12}); } else shadowAura = null;
   const key = `${ageM}:${career}:${c}:${classId}`;
   if (key !== heroArtKey) { heroArtKey = key; heroArt = withColors(classId === "shade" && !isKid ? SHADE_ART : makeHeroArt(ageM, career, c)); }
 };
+// Grid art drawn to a target pixel height (nearest neighbour), so grid heroes stand as tall as their age.
+function scaledSprite(a, x, y, map, h, flash = 0) { const sc = h / a.length, w = a[0].length, ww = Math.round(w * sc), x0 = Math.round(x - ww / 2); for (let j = 0; j < h; j++) { const row = a[Math.min(a.length - 1, Math.floor(j / sc))]; for (let i = 0; i < ww; i++) { const ch = row[Math.min(w - 1, Math.floor(i / sc))]; if (ch === ".") continue; pix(x0 + i, y - h + j, flash > 0 ? 0xffffffff : map[ch]); } } }
 function sprite(a, x, y, map, sc = 1, flash = 0, flip = false) { const h = a.length * sc, w = a[0].length; for (let j = 0; j < a.length; j++) for (let i = 0; i < w; i++) { const ch = a[j][flip ? w - 1 - i : i]; if (ch === ".") continue; const c = flash > 0 ? 0xffffffff : map[ch]; for (let p = 0; p < sc; p++) for (let q = 0; q < sc; q++) pix(Math.round(x - (w * sc) / 2) + i * sc + p, y - h + j * sc + q, c); } }
-function spawn(name, x, y, o = {}) { const mod = REG[name]; if (!mod) return; fxs.push({ fx: createFx(mod, { x, y, seed: (Math.random() * 9999) | 0, ...o }), dur: Math.min(mod.meta?.duration ?? 1, 2.2) }); }
+function spawn(name, x, y, o = {}, dur) { const mod = REG[name]; if (!mod) return null; const f = { fx: createFx(mod, { x, y, seed: (Math.random() * 9999) | 0, ...o }), dur: dur ?? Math.min(mod.meta?.duration ?? 1, 2.2) }; fxs.push(f); return f; }
+const later = (t, name, x, y) => name && pend.push({ t, name, x, y });
+// Hero strike shaped by the profession sprite (presets.js STYLE): the weapon's own motion first, then the element fx (skill) or the style hit.
+function strike(st, end, skill) {
+  if (skill && st.cast) spawn(st.cast, PX + 4, GY, {}, 1.2);
+  if (st.go) { const f = spawn(st.go, PX + 16, GY - 22, {}, 0.22); if (f) f.vx = (EX - PX - 16) / 0.22; return later(0.22, end, EX, GY); }
+  if (st.from) { spawn(st.from, PX + 6, GY, { reach: EX - PX - 6 }); return later(0.25, end, EX, GY); }
+  spawn(end, EX, GY);
+}
 export function float(txt, x, cls = "") { if (!overlay) return; const d = document.createElement("div"); d.className = "float " + cls; d.textContent = txt; d.style.left = (x / W) * 100 + "%"; d.style.top = "44%"; overlay.append(d); setTimeout(() => d.remove(), 1000); }
 let foeClear = 0;
 function playFight(r) {
@@ -91,8 +109,9 @@ function stepSeq(dt) {
   if (you) heroX = 16; else foe.x = EX - 16;
   if (x.miss) { float("พลาด", tx); return; }
   stop = x.crit ? 0.13 : 0.06; shake = x.crit ? 4 : 2;
-  const fx = you ? (heroClass === "shade" ? "shadow/dark-explosion" : x.el ? ELEMENTS[x.el].fx[seq.i % 3] : seq.wfx) : "melee/claw-swipe";
-  spawn(fx, tx, GY, { flip: !you }); if (x.crit) spawn("impacts/crit-hit", tx, GY - 18);
+  if (you && heroLook && heroClass !== "shade") strike(heroLook, x.el ? ELEMENTS[x.el].fx[seq.i % 3] : heroLook.hit, !!x.el);
+  else spawn(you ? (heroClass === "shade" ? "shadow/dark-explosion" : x.el ? ELEMENTS[x.el].fx[seq.i % 3] : seq.wfx) : "melee/claw-swipe", tx, GY, { flip: !you });
+  if (x.crit) spawn("impacts/crit-hit", tx, GY - 18);
   if (you) { foe.flash = 0.1; foe.kick = 7; } else { heroFlash = 0.1; heroX = -7; }
   float((x.crit ? "!" : "") + x.dmg, tx, x.crit ? "crit" : you ? "" : "bad"); if (x.sk) float(x.sk, W / 2, "sk");
 }
@@ -112,22 +131,26 @@ function frameLoop(now) {
 function drawFrame(now) {
   const real = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; let dt = real * stage.speed; t += real;
   if (stop > 0) { stop -= real; dt = 0; }
-  if (dt > 0) { if (seq) stepSeq(dt); for (const a of amb) { a.fx.update(dt); if (!a.mod.meta?.loop && a.fx.t > (a.mod.meta?.duration ?? 2)) a.fx = createFx(a.mod, a.fx.options); else if (a.mod.meta?.loop && a.fx.t > 600) a.fx = createFx(a.mod, a.fx.options); } for (const f of fxs) f.fx.update(dt); fxs = fxs.filter((f) => f.fx.t < f.dur); heroX *= 0.82; if (foe) { foe.x += (EX - foe.x) * 0.18; foe.kick *= 0.82; foe.flash -= dt; } heroFlash -= dt; }
+  if (dt > 0) { if (seq) stepSeq(dt); for (const a of amb) { a.fx.update(dt); if (!a.mod.meta?.loop && a.fx.t > (a.mod.meta?.duration ?? 2)) a.fx = createFx(a.mod, a.fx.options); else if (a.mod.meta?.loop && a.fx.t > 600) a.fx = createFx(a.mod, a.fx.options); } for (const f of fxs) { f.fx.update(dt); if (f.vx) f.fx.options.x += f.vx * dt; } for (const p of pend) if ((p.t -= dt) <= 0) spawn(p.name, p.x, p.y); pend = pend.filter((p) => p.t > 0); fxs = fxs.filter((f) => f.fx.t < f.dur); heroX *= 0.82; if (foe) { foe.x += (EX - foe.x) * 0.18; foe.kick *= 0.82; foe.flash -= dt; } heroFlash -= dt; }
   // Clouds drift 1-2 px a second, so the outdoor backdrop is repainted twice a second, not every frame.
   if (outdoor) { const step = Math.floor(t * 2); if (step !== drawFrame.sky || sceneKey !== drawFrame.key) { drawFrame.sky = step; drawFrame.key = sceneKey; drawWeather(weatherPixel, W, H, GY, weather, t); } }
   if (shadowAura) { shadowAura.update(dt); shadowAura.options.x = PX + Math.round(heroX); }
   clearFrame(frame);
   for (const a of amb) a.fx.draw(frame, "back"); for (const f of fxs) f.fx.draw(frame, "back");
   if (shadowAura) { shadowAura.draw(frame, "back"); }
-  const raster = heroClass === 'shade' && !small ? HERO_RASTER.shade : heroArt.preclass ? HERO_RASTER.child : null;
+  const raster = professionRaster || civilianRaster;
   if (raster) {
-    const height = raster.height - (Math.sin(t * 2) > .6 ? 1 : 0);
-    const left = Math.round(PX + heroX - raster.width / 2);
-    for (let y=0;y<height;y++) for(let x=0;x<raster.width;x++) {
-      const color=raster.pixels[Math.min(raster.height-1,Math.floor(y*raster.height/height))*raster.width+x];
+    // drawH sets the body to the height of a real person that age; width follows so a toddler is small, not squashed.
+    const full = raster.drawH || raster.height, sx = full / raster.height;
+    const height = full - (Math.sin(t * 2) > .6 ? 1 : 0), width = Math.max(1, Math.round(raster.width * sx));
+    const left = Math.round(PX + heroX - width / 2);
+    for (let y=0;y<height;y++) for(let x=0;x<width;x++) {
+      const color=raster.pixels[Math.min(raster.height-1,Math.floor(y*raster.height/height))*raster.width+Math.min(raster.width-1,Math.floor(x/sx))];
       if(color) pix(left+x,GY-height+y,heroFlash>0?0xffffffff:color);
     }
-  } else sprite(heroArt.rows, PX + Math.round(heroX), GY, heroArt.colors, 1, heroFlash);
+    if (raster.cane) for (let y = Math.round(height * 0.45); y < height; y++) pix(left + width + 1, GY - height + y, heroFlash > 0 ? 0xffffffff : CANE);
+  } else if (heroArt.preclass) sprite(heroArt.rows, PX + Math.round(heroX), GY, heroArt.colors, 1, heroFlash);
+  else scaledSprite(heroArt.rows, PX + Math.round(heroX), GY, heroArt.colors, heroH, heroFlash);
   if (foe && foe.a > 0) sprite(foe.boss ? SPR.boss : SPR.beast, Math.round(foe.x + foe.kick), GY, foeMap(foe.c), foe.boss ? 3 : 2, foe.flash, true);
   for (const f of fxs) f.fx.draw(frame, "front"); for (const a of amb) if (a.name === "rain") a.fx.draw(frame, "front");
   if (outdoor) drawWeather((x,y,c) => { if (!weatherColors.has(c)) weatherColors.set(c,rgb(c)); pix(x,y,weatherColors.get(c)); },W,H,GY,weather,t,true);

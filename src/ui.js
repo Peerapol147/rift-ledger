@@ -52,10 +52,13 @@ function desk() {
   const st = E.stage(s), fs = E.FOCUS[st], ex = E.examInfo(s), R = RANKS[s.rank + 1], next = s.career && CAREERS[s.career].t[s.cr + 1];
   const goal = st === "k" ? "ทุกเดือนในวัยเด็กจะกลายเป็นค่าสถานะติดตัวไปตอนโต" : s.hunter ? (!R ? "ไม่มีแรงก์ให้ไต่อีกแล้ว เหลือแต่ชื่อที่จะทิ้งไว้" : ex.ready ? `พร้อมสอบแรงก์ ${R} แล้ว รอซองเรียกจากสมาคม${s.bank ? ` · EXP สะสมรอ ${fmt(s.bank)}` : ""}` : `สู่แรงก์ ${R}: Lv.${s.lv}/${LVCAP[s.rank] - 2} · สัญญาหลัก ${ex.have}/${ex.need}`) : next ? `สู่ตำแหน่ง ${next}: สัญญาหลัก ${ex.have}/${ex.need}` : s.career ? "ถึงจุดสูงสุดของสายงานแล้ว" : "ยังไม่มีงานประจำ รอโอกาสที่จะผ่านเข้ามา";
   const warn = st !== "k" && s.health < 35 && s.focus !== "rest" ? `<p class="bad">สุขภาพเหลือน้อย เปลี่ยนไปที่ "${fs.rest.n}" ก่อนจะล้มไปเอง</p>` : "";
-  // Places shown: everything up to a little past your level, so the next danger is visible before you can survive it.
-  const P = E.placeOf(s), trip = s.hunter ? `<p class="dim">ล่าอยู่ที่ <b>${esc(P.n)}</b> · ${esc(P.d)}${P.el ? ` · ศัตรูมักเป็นธาตุ${ELEMENTS[P.el].n}` : ""}${E.placePay(s) < P.pay ? " · ที่นี่ง่ายเกินฝีมือคุณ ค่าตอบแทนลดลง" : ""}</p><div class="focus">${D.PLACES.map((p, i) => (p.lv <= s.lv + 20 ? btn(`${esc(p.n)}<small>Lv.${p.lv}+${p.fare ? ` · ₡${fmt(p.fare)}` : ""}</small>`, `go:${i}`, (s.at || 0) === i ? "on" : s.lv < p.lv ? "risk" : "", (s.at || 0) !== i && s.gold < p.fare) : "")).join("")}</div>` : "";
-  return `<div class="ev desk"><span class="tag">แผนเดือนนี้</span><p>${esc(goal)}</p>${warn}<div class="focus">${Object.entries(fs).map(([k, v]) => btn(v.n, `focus:${k}`, s.focus === k ? "on" : "")).join("")}</div>${trip ? `<span class="tag">เดินทาง</span>${trip}` : ""}</div>`;
+  // Hunter plans sit under their own headings; farm, travel and tower details live in their own tabs.
+  const fb = (k) => (fs[k] ? btn(fs[k].n, `focus:${k}`, s.focus === k ? "on" : "") : ""), grp = (t, ks, note = "") => `<div class="fgrp"><span class="gl">${t}${note ? ` <small>${note}</small>` : ""}</span><div class="focus">${ks.map(fb).join("")}</div></div>`;
+  const plan = st === "h" ? `${grp("ฟาร์ม", ["hunt"], esc(E.placeOf(s).n))}${grp("หอ", ["tower"], s.run ? `รอบนี้ ${s.run.n} ชั้น` : `ชั้น ${s.floor}${s.floor < 100 ? "/100" : ""}`)}${grp("ฝึกฝน", ["train", "body", "mind", "soc", "craft"])}${grp("ชีวิต", ["guild", "rest"])}` : `<div class="focus">${Object.keys(fs).map(fb).join("")}</div>`;
+  return `<div class="ev desk"><span class="tag">แผนเดือนนี้</span><p>${esc(goal)}</p>${warn}${plan}</div>`;
 }
+// Typical local foe for a place, the same level rule hunt() uses, so the odds shown match what you will meet.
+const placeFoe = (P) => E.enemy({ n: P.n, lv: Math.max(1, s.lv - 1, P.lv - 2), m: P.m, el: P.el || "metal" });
 function eventBox() {
   if (!s.ev) return `<div class="ev desk idle"><span class="tag">เหตุการณ์</span><p class="dim">ยังไม่มีเรื่องเข้ามา เมื่อมีเหตุการณ์หรือทางเลือก จะขึ้นที่ช่องนี้</p></div>`; const big = ["โลก", "คลาสพิเศษ", "ปลุกพลัง", "แรงก์"].includes(s.ev.tag);
   return `<div class="ev ${big ? "big" : ""}"><span class="tag">${esc(s.ev.tag)}</span>${auto && KEY_EV.has(s.ev.tag) ? ` <span class="dim">ออโต้รอให้คุณเลือกเรื่องนี้เอง</span>` : ""}<p>${esc(s.ev.t)}</p><div class="opts">${s.ev.o.map((o, i) => { const p = E.optOdds(s, o), cls = p == null ? "" : p >= 70 ? "g" : p >= 40 ? "m" : "b", why = o.fight ? "โอกาสชนะ" : o.s ? `ทดสอบ${STATS[o.s]}` : "โอกาส"; return `<button data-a="opt:${i}"><span>${o.who ? "★ " : o.need ? "◆ " : o.ap ? "◇ " : ""}${esc(o.l)}<small>${esc(o.note || (o.ap ? `อีกวิธีสำหรับเรื่องเดียวกัน · ทดสอบ${STATS[o.s]} · ${chip(o.y)}` : o.who ? `ทางเลือกจากสายงานของคุณ · ${chip(o.y)}` : o.need ? `ทางเลือกจากสเตตัส ${Object.entries(o.need).map(([k, v]) => `${STATS[k]} ${v}+`).join(" ")} · ${chip(o.y)}` : chip(o.y)))}${E.habitHit(s, o) ? " · ใช้วิธีนี้ซ้ำจนคนเริ่มอ่านทางออก" : ""}</small></span>${p != null ? `<em class="${cls}" title="${why}">${why} ${p}%</em>` : ""}</button>`; }).join("")}</div></div>`;
@@ -87,9 +90,28 @@ const VIEWS = {
     <p class="dim">ใช้ ${MATS.ore} ${c.ore} (${have("ore")}) · ${MATS.hide} ${c.hide} (${have("hide")}) · ${MATS.core} ${c.core} (${have("core")}) · ₡${fmt(c.gold)} · สำเร็จ ${E.craftOdds(s, f.g)}% · ฝีมือช่าง ${Math.floor(s.craft)}</p>${btn("ลงมือตี", "craft", "pri")}
     <h3>ตลาดสมาคม</h3><p class="dim">ยา ${s.pot} · หินกันแตก ${s.stone} · แผ่นย้ายชีพ ${s.token}</p><div class="grid2">${shop}</div><h3>คลังอุปกรณ์</h3><p class="dim">ตีบวกล้ม: +5 ขึ้นไปลดระดับ · +10 ขึ้นไปอาวุธแตก เว้นแต่มีหินกันแตก</p>${gear || `<p class="dim">ยังไม่มีอุปกรณ์</p>`}`;
   },
+  farm() {
+    const P = E.placeOf(s), pay = E.placePay(s), y = s.ty || { n: 0, f: {} }, top = Object.entries(y.f).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const mats = Object.entries(MATS).map(([k, n]) => `<div class="kv"><span>${n}</span><b>${GRADES.map((_, g) => s.mat[k + g] || 0).join(" · ")}</b></div>`).join("");
+    return `<h3>ฟาร์มที่ ${esc(P.n)}</h3><p>${esc(P.d)}</p><div class="vit"><span>เลเวลพื้นที่ <b>${P.lv}+</b></span><span>ค่าตอบแทน <b>×${pay.toFixed(2)}</b></span><span>โอกาสชนะ <b>${E.winOdds(s, placeFoe(P))}%</b></span>${P.el ? `<span>ศัตรูธาตุ <b>${ELEMENTS[P.el].n}</b></span>` : ""}${P.mat ? `<span>วัตถุดิบ <b>+${P.mat}%</b></span>` : ""}</div>
+    ${pay < P.pay ? `<p class="dim">ที่นี่ง่ายเกินฝีมือคุณ ค่าตอบแทนลดลง ลองดูแท็บเดินทาง</p>` : ""}${s.lv < P.lv ? `<p class="bad">เลเวลต่ำกว่าพื้นที่ แพ้บ่อยและบาดเจ็บหนัก</p>` : ""}
+    <div class="row">${btn(s.focus === "hunt" ? "กำลังล่าที่นี่ทุกเดือน" : "ตั้งแผน: ล่ารอยแยก", "focus:hunt", s.focus === "hunt" ? "on" : "pri")}</div>
+    <h3>ผลล่าปีนี้</h3><p class="dim">ล่าสำเร็จ ${y.n} ครั้ง · ทั้งชีวิต ${fmt(s.c.hunts || 0)} ครั้ง</p>${top.map(([n, c]) => `<div class="kv"><span>${esc(n)}</span><b>${c}</b></div>`).join("")}
+    <h3>วัตถุดิบในคลัง</h3><p class="dim">ตามเกรด ${GRADES.map((g) => g.n).join(" · ")}</p>${mats}`;
+  },
+  travel() {
+    const cur = s.at || 0;
+    // Places shown: everything up to a little past your level, so the next danger is visible before you can survive it.
+    const rows = D.PLACES.map((p, i) => { if (p.lv > s.lv + 20 && i !== cur) return ""; const here = i === cur, risk = s.lv < p.lv; return `<div class="item${here ? " on" : ""}"><b>${here ? "▣ " : ""}${esc(p.n)}</b><small>${esc(p.d)}</small><small>Lv.${p.lv}+ · ค่าตอบแทน ×${p.pay}${p.mat ? ` · วัตถุดิบ +${p.mat}%` : ""}${p.el ? ` · ธาตุ${ELEMENTS[p.el].n}` : ""} · โอกาสชนะ ${E.winOdds(s, placeFoe(p))}%</small><div class="row">${here ? `<span class="dim">อยู่ที่นี่</span>` : btn(`${risk ? "เสี่ยง · " : ""}เดินทาง ${p.fare ? `₡${fmt(p.fare)}` : "ฟรี"}`, `go:${i}`, risk ? "sm risk" : "sm", s.gold < p.fare)}</div></div>`; }).join("");
+    const hidden = D.PLACES.filter((p, i) => p.lv > s.lv + 20 && i !== cur).length;
+    return `<h3>เดินทาง · สถานที่</h3><p class="dim">ค่าเดินทางจ่ายครั้งเดียว ที่ที่คุณอยู่กำหนดศัตรู ค่าตอบแทน และเหตุการณ์ท้องถิ่น · กลับรอยแยกรอบแนวกั้นฟรี</p><div class="grid2">${rows}</div>${hidden ? `<p class="dim">อีก ${hidden} แห่งยังไกลเกินฝีมือ จะเห็นเมื่อเลเวลใกล้ถึง</p>` : ""}`;
+  },
   tower() {
-    const f = Math.min(100, s.floor + 1), F = s.w.tower[f - 1], foe = E.enemy(E.floorFoe(s, f)), rank = [...s.npcs.filter((n) => n.alive && n.hun).map((n) => ({ n: n.n, f: n.floor })), { n: s.name + " (คุณ)", f: s.floor }].sort((a, b) => b.f - a.f).slice(0, 8), cells = s.w.tower.map((x, i) => `<i class="f-${x.t} ${i < s.floor ? "done" : i === s.floor ? "cur" : ""}" title="ชั้น ${i + 1}: ${x.name} · ${x.mod.n}"></i>`).join("");
-    return `<h3>หอไร้ฟ้า · ชั้นสูงสุด ${s.floor}/100</h3><div class="tower">${cells}</div><p class="dim">ถัดไป: ชั้น ${f} · ${F.name} · ${F.mod.n} · ธาตุ${ELEMENTS[F.el].n}${s.hunter ? ` · โอกาสชนะ <b>${E.winOdds(s, foe)}%</b>` : ""}</p>${s.hunter ? "" : `<p class="dim">หอเปิดเฉพาะผู้ตื่นพลัง คุณได้แต่ดูชื่อบนจอไฟในตลาด</p>`}<h3>กระดานจัดอันดับ</h3><ol class="rank">${rank.map((r) => `<li><span>${esc(r.n)}</span><b>ชั้น ${r.f}</b></li>`).join("")}</ol>`;
+    // A run in progress shows where it stands; otherwise the next run starts at the last boss checkpoint. Past 100 the grid shows the current block of 100.
+    const R = s.run, f = R ? R.f : E.diveGate(s), F = E.floorAt(s, f), base = Math.floor((f - 1) / 100) * 100, foe = E.enemy(E.floorFoe(s, f)), rank = [...s.npcs.filter((n) => n.alive && n.hun).map((n) => ({ n: n.n, f: n.floor })), { n: s.name + " (คุณ)", f: s.floor }].sort((a, b) => b.f - a.f).slice(0, 8);
+    const cells = Array.from({ length: 100 }, (_, i) => { const x = E.floorAt(s, base + i + 1), n = base + i + 1; return `<i class="f-${x.t} ${n <= s.floor ? "done" : ""} ${n === f ? "cur" : ""}" title="ชั้น ${n}: ${x.name} · ${x.mod.n}"></i>`; }).join("");
+    const fightF = F.t === "fight" || F.t === "elite" || F.t === "boss";
+    return `<h3>หอไร้ฟ้า · ชั้นสูงสุด ${s.floor}${s.floor < 100 ? "/100" : " · เหนือหลังคาโลก"}</h3><div class="tower">${cells}</div><p class="dim">ไต่ทีละชั้น ผ่านแต่ละชั้นแล้วเลือกว่าจะไปต่อหรือกลับพร้อมของ · ยิ่งไปต่อในรอบเดียว ศัตรูยิ่งแรงขึ้น +${Math.round(E.DIVE.press * 100)}% ต่อชั้น แต่ของดรอปยิ่งมากและคุณภาพดีขึ้น · แพ้แล้วของในถุงหายครึ่งหนึ่ง · รอบใหม่เริ่มที่จุดเช็คพอยต์ (ชั้นหลังบอสล่าสุด) · ชั้นที่เคยผ่านแล้วให้ของน้อยลง</p>${R ? `<p>รอบนี้ผ่านมาแล้ว <b>${R.n}</b> ชั้น · ในถุง ${E.bagText(R.bag)}</p>` : ""}<p class="dim">${R ? "ชั้นถัดไป" : "รอบหน้าเริ่ม"}: ชั้น ${f} · ${E.FLOOR_KIND[F.t]}${fightF ? ` · ${esc(F.name)}` : ""} · ${F.mod.n} · ธาตุ${ELEMENTS[F.el].n}${s.hunter && fightF ? ` · โอกาสชนะ <b>${E.winOdds(s, foe)}%</b>` : ""}</p>${s.hunter ? `<div class="row">${btn(s.focus === "tower" ? "กำลังไต่หอทุกเดือน" : "ตั้งแผน: ไต่หอ", "focus:tower", s.focus === "tower" ? "on" : "pri")}</div>` :`<p class="dim">หอเปิดเฉพาะผู้ตื่นพลัง คุณได้แต่ดูชื่อบนจอไฟในตลาด</p>`}<h3>กระดานจัดอันดับ</h3><ol class="rank">${rank.map((r) => `<li><span>${esc(r.n)}</span><b>ชั้น ${r.f}</b></li>`).join("")}</ol>`;
   },
   guild() {
 
@@ -106,13 +128,15 @@ const VIEWS = {
     return `<h3>ปฏิทินสมาคม</h3>${up.length ? up.map((c) => `<div class="item"><b>${W(c.id).n}</b><small>อีกราว ${Math.max(1, c.at - s.ageM)} เดือน · ${esc(W(c.id).d.replace("{z}", c.z))}</small></div>`).join("") : `<p class="dim">ยังไม่มีประกาศล่วงหน้า</p>`}${s.w.price > 1 ? `<p class="bad">ค่าครองชีพ ×${s.w.price} อีก ${s.w.priceT} เดือน</p>` : ""}<h3>ศิลาจารึกชีวิตก่อนๆ</h3><ul class="hall">${hallList().slice(0, 10).map((x) => `<li><b>${esc(x.n)}</b> · ${esc(x.title)} · ${x.age} ปี · ${fmt(x.score)} แต้ม</li>`).join("") || "<li>ยังว่างเปล่า</li>"}</ul>`;
   },
 };
-const TABS = { log: "บันทึก", self: "ตัวตน", skills: "วิชา", forge: "โรงตี", tower: "หอ", guild: "กิลด์", world: "โลก" };
-// Tabs follow the life stage: children have no forge, and only hunters have skills or a guild.
-const tabsFor = () => Object.entries(TABS).filter(([k]) => (k !== "forge" || E.stage(s) !== "k") && (s.hunter || (k !== "skills" && k !== "guild")));
+const TABS = { log: "บันทึก", self: "ตัวตน", skills: "วิชา", farm: "ฟาร์ม", travel: "เดินทาง", tower: "หอ", forge: "โรงตี", guild: "กิลด์", world: "โลก" };
+// Tabs follow the life stage: children have no forge, and only hunters have skills, farming, travel or a guild.
+const HUNTER_TABS = new Set(["skills", "guild", "farm", "travel"]);
+const tabsFor = () => Object.entries(TABS).filter(([k]) => (k !== "forge" || E.stage(s) !== "k") && (s.hunter || !HUNTER_TABS.has(k)));
 function draw() {
   if (!s) return; if (!tabsFor().some(([k]) => k === tab)) tab = "log"; { const sc = sceneFor(); setScene(sc, 7, weatherFor(s.y0 * 12 + s.mon0 + s.ageM, sc)); } setHero(s.cls ? CLASSES[s.cls].c : "#7fa8c9", E.stage(s) === "k", s.ageM, s.hunter ? null : s.career, s.hunter ? s.cls : null);
   $("#card").innerHTML = card() + desk(); $("#event").innerHTML = eventBox(); $("#tabs").innerHTML = tabsFor().map(([k, n]) => btn(n, `tab:${k}`, tab === k ? "on" : "")).join("");
-  if (document.activeElement?.id !== "gname") $("#view").innerHTML = VIEWS[tab]();
+  // A broken tab shows a note instead of taking the event box and controls down with it.
+  if (document.activeElement?.id !== "gname") { let v; try { v = VIEWS[tab](); } catch (e) { console.error("tab " + tab, e); v = `<p class="bad">แท็บนี้แสดงไม่ได้ชั่วคราว</p>`; } $("#view").innerHTML = v; }
   $("#ctrl").innerHTML = `${btn(paused ? "เล่นต่อ" : "หยุด", "pause", paused ? "on" : "")}${[1, 2, 4, 8].map((v) => btn(v + "×", `spd:${v}`, speed === v ? "on" : "")).join("")}${btn(auto ? "ออโต้ เปิด" : "ออโต้ ปิด", "auto", auto ? "on" : "")}${btn("เมนู", "menu", "ghost")}`;
   dirty = false;
 }
@@ -136,8 +160,13 @@ document.addEventListener("click", (e) => { if (e.detail !== 0) return; const b 
 document.addEventListener("keydown", (e) => { if (e.code === "Space" && !["INPUT", "BUTTON"].includes(e.target.tagName)) { e.preventDefault(); paused = !paused; dirty = true; } });
 // Life-shaping choices are the player's: auto waits on these instead of picking for you.
 const KEY_EV = new Set(["สายทาง", "ปั้นสเตตัส", "แรงก์", "คลาสพิเศษ", "ปลุกพลัง", "อาชีพ"]);
+// The next frame is booked first, so one bad frame can never stop the life from running.
 function loop(now) {
-  const dt = Math.min(0.25, (now - last) / 1000 || 0); last = now; ST.speed = 1 + (speed - 1) * 0.5;
+  requestAnimationFrame(loop);
+  try { step(now); } catch (e) { dirty = true; if (!loop.warned) { loop.warned = 1; console.error("game loop", e); } }
+}
+function step(now) {
+  const dt =Math.min(0.25, (now - last) / 1000 || 0); last = now; ST.speed = 1 + (speed - 1) * 0.5;
   if (s && !s.dead) {
     if (!ST.busy) {
       if (s.ev) { if (auto && !paused && !KEY_EV.has(s.ev.tag) && (autoT += dt) > SPEEDS[speed] * 2.5) { autoT = 0; E.choose(s, E.autoChoice(s)); dirty = true; save(); } }
@@ -147,6 +176,5 @@ function loop(now) {
     if (s.dead && !ST.busy) { draw(); ended(); }
     else if (dirty && now - (loop.t || 0) > 120) { loop.t = now; draw(); }
   }
-  requestAnimationFrame(loop);
 }
 initStage($("#cv"), $("#ov")); $("#stagewrap").addEventListener("pointerdown", skip); menu(); requestAnimationFrame(loop);

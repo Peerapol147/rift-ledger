@@ -1,7 +1,7 @@
 // Sweep many seeds on full auto: crashes, determinism, and how lives are distributed. node tools/sim.mjs [lives]
 import { newLife, tick, choose, autoChoice, age, FOCUS, buy, craft, enhance, stage, foundGuild, joinGuild, recruit, fxOut, gearOf } from "../src/engine.js";
 import { travel } from "../src/engine.js";
-import { EVENTS, WORLD, CLASSES, CAREERS, MOD_N, STATS, FAMILIES, WEAPONS, PATHS, CROSS, PLACES } from "../src/data.js";
+import { EVENTS, WORLD, NEWS, CLASSES, CAREERS, MOD_N, STATS, FAMILIES, WEAPONS, PATHS, CROSS, PLACES } from "../src/data.js";
 const N = +process.argv[2] || 300;
 // Static story check: every next target exists, every counter gated on is produced somewhere, no {tokens} in text the engine does not fill.
 { const ids = new Set(EVENTS.filter((e) => e.id).map((e) => e.id)), made = new Set("age level rank floor gold fame karma craft guild own mems sk els kids spouse hunter luk rel lateAw cyears hunts boss cr".split(" ")), bad = [];
@@ -17,6 +17,7 @@ const N = +process.argv[2] || 300;
   FAMILIES.forEach((f) => (f.job || []).forEach((id) => CAREERS[id] || bad.push(`${f.n}: job ${id}`)));
   const walk = (o, e) => { if (!o || typeof o !== "object") return; if (o.next && !ids.has(o.next[0])) bad.push(`${e.id}: next ${o.next[0]}`); if (o.c) Object.keys(o.c).forEach((k) => made.add(k)); if (typeof o.m === "string" && /\{\w+\}/.test(o.m)) bad.push(`${e.id}: token in result text`); for (const k in o) walk(o[k], e); };
   WORLD.forEach((e) => { walk(e.h, e); walk(e.c, e); });
+  NEWS.forEach((n) => { walk(n.e, n); if (n.once) made.add(n.once); });
   EVENTS.forEach((e) => { walk(e.o, e); e.o.forEach((x) => Array.isArray(x) && /\{\w+\}/.test(x[0]) && bad.push(`${e.id}: token in label`)); });
   EVENTS.forEach((e) => Object.keys({ ...e.if, ...e.max }).forEach((k) => made.has(k) || bad.push(`${e.id}: counter ${k} never set`)));
   if (ids.size !== EVENTS.filter((e) => e.id).length) bad.push("duplicate id");

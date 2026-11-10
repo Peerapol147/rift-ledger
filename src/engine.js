@@ -46,7 +46,7 @@ export function newLife(seed, name, legacy) {
   const t = R("tower"), bosses = shuf(R("boss"), BOSS), els = Object.keys(ELEMENTS), tower = [];
   for (let f = 1; f <= 100; f++) {
     const b = f % 10 === 0;
-    tower.push({ t: b ? "boss" : f % 5 === 0 ? "elite" : wp(t, [{ v: "fight", w: 6 }, { v: "rest", w: 1 }, { v: "cache", w: 1.3 }, { v: "test", w: 1.5 }]).v, el: pk(t, els), mod: pk(t, D.FLOOR_MODS), name: b ? bosses[(f / 10 - 1) % bosses.length] : pk(t, MON) });
+    tower.push({ t: b ? "boss" : f % 5 === 0 ? "elite" : wp(t, FLOOR_T).v, el: pk(t, els), mod: pk(t, D.FLOOR_MODS), name: b ? bosses[(f / 10 - 1) % bosses.length] : pk(t, MON) });
   }
   const c = R("cal"), cal = []; for (let a = 12 * ri(c, 2, 5); a < 12 * 160; a += ri(c, 14, 40)) cal.push({ at: a, id: wp(c, WORLD).id, z: pk(c, ZONES) });
   const nr = R("npc"), npcs = [];
@@ -164,7 +164,8 @@ export function autoEq(s) { const lim = { atk: 3, guard: 1, step: 1, heal: 1 }, 
 const fillSlot = (s, id) => { const k = sk(s, id).k; if (!s.eq.includes(id) && s.eq.filter((x) => sk(s, x).k === k).length < (k === "atk" ? 3 : 1)) s.eq.push(id); };
 export function toggleSkill(s, id) { s.eqManual = 1; if (s.eq.includes(id)) { s.eq = s.eq.filter((x) => x !== id); return; } const k = sk(s, id).k, on = s.eq.filter((x) => sk(s, x).k === k); if (on.length >= (k === "atk" ? 3 : 1)) s.eq = s.eq.filter((x) => x !== on[0]); s.eq.push(id); }
 export function mkGear(s, slot, t, g, q) { const base = slot === "weapon" ? WEAPONS[t].n : slot === "armor" ? ARMORS[t] : CHARMS[t], affix = slot === "charm" || ch(s.r, 0.3 + q * 0.14) ? ri(s.r, 0, AFFIX.length - 1) : null, x = { id: s.gid++, slot, t, g, q, plus: 0, base, affix }; s.gear.push(x); return x; }
-function dropGear(s) { const slot = pk(s.r, ["weapon", "weapon", "armor", "charm"]), n = slot === "weapon" ? WEAPONS.length : 4, x = mkGear(s, slot, ri(s.r, 0, n - 1), matGrade(s), wp(s.r, [0, 1, 2, 3, 4].map((v) => ({ v, w: [22, 45, 22, 9, 2][v] }))).v); emit("loot"); log(s, `${gearName(x)} คุณภาพ${QUAL[x.q].n} ติดมือคุณกลับมา`, "ของ", x.q >= 3 ? "leg" : "good"); autoWear(s, x); }
+// up: chance the quality rolls one step higher (deep tower runs pass it in).
+function dropGear(s, up = 0) { const slot = pk(s.r, ["weapon", "weapon", "armor", "charm"]), n = slot === "weapon" ? WEAPONS.length : 4, q0 = wp(s.r, [0, 1, 2, 3, 4].map((v) => ({ v, w: [22, 45, 22, 9, 2][v] }))).v, x = mkGear(s, slot, ri(s.r, 0, n - 1), matGrade(s), up && ch(s.r, up) ? Math.min(4, q0 + 1) : q0); emit("loot"); log(s, `${gearName(x)} คุณภาพ${QUAL[x.q].n} ติดมือคุณกลับมา`, "ของ", x.q >= 3 ? "leg" : "good"); autoWear(s, x); }
 const autoWear = (s, g) => { const c = gearOf(s, s.wear[g.slot]); if (!c || gearPw(g) > gearPw(c)) s.wear[g.slot] = g.id; };
 
 function awaken(s) {
@@ -187,12 +188,12 @@ const here = (s) => (s.hunter && s.at ? placeOf(s).n : pk(s.r, ZONES));
 function open(s, def, tag, ctx) {
   ctx = ctx || { z: here(s), mon: pk(s.r, MON) };
   if (ctx.ni == null) { ctx.ni = pickNpc(s, def.if?.rel); ctx.npc = s.npcs[ctx.ni].n; } ctx.rival = s.npcs[s.w.rival].n;
-  s.ev = { t: fill(def.t, ctx), tag, ctx, o: def.o.map((x) => (Array.isArray(x) ? toOpt(x) : x)).filter((o) => fits(s, o.who) && meets(s, o.need)) };
+  s.ev = { t: fill(def.t, ctx), lt: def.lt, tag, ctx, o: def.o.map((x) => (Array.isArray(x) ? toOpt(x) : x)).filter((o) => fits(s, o.who) && meets(s, o.need)) };
   for (const o of s.ev.o) if (o.fight && !o.fight.lv) Object.assign(o.fight, { lv: Math.max(1, s.lv + 1), n: o.fight.n || pk(s.r, MON), el: o.fight.el || pk(s.r, Object.keys(ELEMENTS)) });
   emit("event");
 }
 // Other ways through (◇ approaches, ◆ stat routes) top out below a sure thing, and leaning on the same stat again and again lets people read you.
-export const habitHit = (s, o) => (o.ap || o.need) && s.habit?.k === o.s ? s.habit.n : 0;
+export const habitHit = (s, o) => ((o.ap || o.need) && o.s && s.habit && s.habit.k === o.s ? s.habit.n : 0);
 const altCap = (s, o) => (o.ap || o.need ? Math.max(60, 85 - habitHit(s, o) * 8) : 100);
 export const optOdds = (s, o) => (o.p != null ? o.p : o.fight ? winOdds(s, enemy(o.fight)) : o.s ? Math.min(altCap(s, o), odds(s, o.s, o.d)) : null);
 // Each stat solves things in its own style, so the way you pick changes what you walk away with.
@@ -216,12 +217,12 @@ export function choose(s, i) {
   if (o.ap || o.need) s.habit = s.habit?.k === o.s ? { k: o.s, n: s.habit.n + 1 } : { k: o.s, n: 1 }; else if (o.s || o.fight) s.habit = null;
   const out = ok ? o.y : o.n || {};
   const m = text(s, out.m);
-  log(s, [ev.t, line(s, "pick", { l: o.l.replace(/^บททดสอบ: /, "รับบททดสอบ") }), m && (ok || /แต่|ทว่า/.test(m) ? m : "แต่" + m)].filter(Boolean).join(" "), ev.tag, ok ? "imp" : "bad", roll);
+  log(s, [ev.lt || ev.t, line(s, "pick", { l: o.l.replace(/^บททดสอบ: /, "รับบททดสอบ") }), m && (ok || /แต่|ทว่า/.test(m) ? m : "แต่" + m)].filter(Boolean).join(" "), ev.tag, ok ? "imp" : "bad", roll);
   const entry = s.log[s.log.length - 1];
   if (!s.dead) apply(s, out);
   entry.d = diffText(before, pickSnap(s));
 }
-function deathRoll(s, f) { const a = derive(s), e = enemy(f), p = clamp((0.05 * e.atk) / a.atk, 0.03, 0.14); if (ch(s.r, p)) fatal(s, `พ่ายแก่ ${f.n}`); }
+function deathRoll(s, f, x = 1) { const a = derive(s), e = enemy(f), p = clamp((0.05 * e.atk) / a.atk, 0.03, 0.14) * x; if (ch(s.r, p)) fatal(s, `พ่ายแก่ ${f.n}`); }
 // Every combat or injury death comes through here, so the token covers them all. Old age does not.
 function fatal(s, cause) { if (s.token > 0) { s.token--; log(s, "แผ่นย้ายชีพแตกออก คุณลืมตาอีกครั้ง", "รอดตาย", "leg"); emit("heal"); } else die(s, cause); }
 export function autoChoice(s) { let best = 0, bv = -1e9; s.ev.o.forEach((o, i) => { const p = optOdds(s, o); const v = p == null ? 52 : o.fight && p < 50 ? p - 25 : p; if (v > bv) { bv = v; best = i; } }); return best; }
@@ -244,6 +245,7 @@ export function tick(s) {
   doFocus(s, st, step); if (s.dead) return;
   if (s.guild) guildMonth(s);
   npcMonth(s);
+  news(s, step);
   if (s.ageM % 12 < step) yearEnd(s);
   if (s.ageM === 144 || (s.ageM > 144 && s.rev === 0)) { s.rev = 1; log(s, `คุณเริ่มรู้สึกถึงบางอย่างในตัว: ${LATENTS[s.latent[0]].n}`, "พลังแฝง", "imp"); }
   aging(s); if (s.dead || s.ev) return;
@@ -284,19 +286,52 @@ function hunt(s) {
   if (res.win) { const g = (40 + s.lv * 22) * pay * (1 + mod(s, "gold") / 100); s.gold += g; gainXp(s, huntXp(s) * pay); dropMat(s); if (ch(s.r, 0.45 + (mod(s, "mat") + P.mat) / 100)) dropMat(s); brew(s); trainSkill(s, 1.2); if (ch(s.r, 0.03)) learn(s); if (ch(s.r, 0.05)) dropGear(s); const y = (s.ty ||= { n: 0, f: {} }); y.n++; y.f[foe.n] = (y.f[foe.n] || 0) + 1; }
   else { hurt(s, -ri(s.r, 8, 16)); log(s, line(s, "lose", { mon: foe.n }), "ล่า", "bad"); if (s.health < 30 && ch(s.r, 0.12)) fatal(s, `พ่ายแก่ ${foe.n} ในรอยแยก`); }
 }
-export const floorFoe = (s, f) => { const F = s.w.tower[f - 1]; return { lv: Math.round(2 + f * 1.2), m: (F.t === "boss" ? 1.4 : F.t === "elite" ? 1.18 : 0.96) * F.mod.m, n: F.name, el: F.el, boss: F.t === "boss" }; };
-function climb(s) {
-  for (let i = 0; i < 2; i++) {
-    const f = s.floor + 1; if (f > 100) { log(s, "ไม่มีชั้นให้ไต่อีกแล้ว คุณยืนอยู่บนหลังคาของโลก", "หอ", "leg"); s.focus = "hunt"; return; }
-    const F = s.w.tower[f - 1], rew = { floor: 1, gold: 60 + f * 8, xp: 1.2, mat: 2 };
-    if (F.t === "boss" || F.t === "elite") {
-      open(s, { t: `ชั้น ${f}: ${F.t === "boss" ? "บอสประจำช่วง" : "ผู้คุมชั้น"} "${F.name}" รออยู่ · ${F.mod.n} · ธาตุ${ELEMENTS[F.el].n}`, o: [{ l: "เข้าสู้", fight: floorFoe(s, f), y: { m: `ล้ม ${F.name} ได้`, ...rew, ...(F.t === "boss" ? { skill: 1, gear: 1, fame: 5, xp: 3 } : { gear: f % 15 === 0 ? 1 : 0 }), fame: F.t === "boss" ? 5 : 1 }, n: { m: "ถูกเหวี่ยงลงมาจากชั้น", hp: F.t === "boss" ? -30 : -18, towerOut: 1 } }, { l: "ถอยลงไปเตรียมตัว", y: { m: "คุณจำรูปแบบการโจมตีไว้", towerOut: 1 } }] }, "หอ"); return;
-    }
-    if (F.t === "rest") { hurt(s, 20); apply(s, { floor: 1 }); log(s, `เจอห้องพักที่ชั้น ${f} คุณได้นั่งพักหายใจ`, "หอ", "good"); emit("heal"); }
-    else if (F.t === "cache") { apply(s, { floor: 1, mat: 2, gold: 50 + f * 14 }); if (ch(s.r, 0.3)) dropGear(s); log(s, `มีหีบถูกลืมไว้ที่ชั้น ${f}`, "หอ", "good"); emit("loot"); }
-    else if (F.t === "test") { const k = pk(s.r, Object.keys(STATS)); if (ch(s.r, odds(s, k, 2) / 100)) { apply(s, { floor: 1, xp: 1.5, sta: { [k]: 1 } }); log(s, `ผ่านบททดสอบ${STATS[k]}ที่ชั้น ${f}`, "หอ", "good"); } else { hurt(s, -10); log(s, `ชั้น ${f}: ไม่ผ่านบททดสอบ${STATS[k]} วันหน้าค่อยลองใหม่`, "หอ", "bad"); return; } }
-    else { const foe = enemy(floorFoe(s, f)), res = fight(s, foe); afterFight(s, res); emit("minor", res); if (res.win) { apply(s, rew); log(s, `ล้ม${foe.n}แล้วผ่านชั้น ${f} ไปได้`, "หอ"); } else { hurt(s, -14); log(s, `${foe.n}ที่ชั้น ${f} ไล่คุณกลับลงมา`, "หอ", "bad"); return; } }
-  }
+// ---- Tower runs: one floor at a time, then you choose to push on or walk out with the bag.
+// A run starts at the last boss checkpoint. Each floor cleared in the same run makes the next foes stronger (DIVE.press)
+// and the drops richer and better; losing a fight drops half the bag. Past floor 100 the tower keeps going, built from the seed.
+const FLOOR_T = [{ v: "fight", w: 6 }, { v: "rest", w: 1 }, { v: "cache", w: 1.3 }, { v: "test", w: 1.5 }];
+// re: pay share on floors cleared in an earlier run; xp: EXP per floor in hunt-months; risk: death-roll scale on a non-boss loss
+// (without it auto play backs out safely and far fewer hunters die young, which pushed EX rank from 10% to 16%); gear0/gear: base and per-floor gear chance; up: per-floor quality lift.
+export const DIVE = { press: 0.03, gold: 0.05, re: 0.25, xp: 1.2, risk: 1.3, gear0: 0.04, gear: 0.02, gearMax: 0.4, up: 0.02, upMax: 0.4 };
+export const floorAt = (s, f) => s.w.tower[f - 1] || deepFloor(s, f);
+function deepFloor(s, f) { const r = mk(s.seed, "deep" + f), b = f % 10 === 0; return { t: b ? "boss" : f % 5 === 0 ? "elite" : wp(r, FLOOR_T).v, el: pk(r, Object.keys(ELEMENTS)), mod: pk(r, D.FLOOR_MODS), name: b ? pk(r, BOSS) : pk(r, MON) }; }
+export const diveGate = (s) => Math.floor(s.floor / 10) * 10 + 1;
+const FIGHT_T = { fight: 1, elite: 1, boss: 1 };
+export const FLOOR_KIND = { fight: "ห้องมอนสเตอร์", elite: "ผู้คุมชั้น", boss: "บอสประจำช่วง", rest: "ห้องพัก", cache: "ห้องเก็บของ", test: "ห้องทดสอบ" };
+export const floorFoe = (s, f) => { const F = floorAt(s, f), n = s.run?.f === f ? s.run.n : 0; return { lv: Math.round(2 + f * 1.2), m: (F.t === "boss" ? 1.4 : F.t === "elite" ? 1.18 : 0.96) * F.mod.m * (1 + n * DIVE.press), n: F.name, el: F.el, boss: F.t === "boss" }; };
+export const bagText = (b) => [`₡${fmt(b.gold)}`, b.mat && `วัตถุดิบ ${b.mat}`, b.gear && `อุปกรณ์ ${b.gear}`, b.stone && `หินกันแตก ${b.stone}`].filter(Boolean).join(" · ");
+function climb(s) { if (s.run) diveCash(s); s.run = { f: diveGate(s), from: diveGate(s), n: 0, bag: { gold: 0, mat: 0, gear: 0, stone: 0 } }; diveAsk(s); }
+function diveAsk(s) {
+  const R = s.run, f = R.f, F = floorAt(s, f), fresh = f > s.floor, nm = FIGHT_T[F.t] ? ` "${F.name}"` : "", go = { l: R.n ? `ไปต่อชั้น ${f}` : `เข้าหอที่ชั้น ${f}`, y: { m: "", dive: 1 }, n: { m: "", diveLose: 1 } };
+  if (FIGHT_T[F.t]) { go.fight = floorFoe(s, f); go.y.m = `ล้ม ${F.name} ได้`; go.n.m = `${F.name}ไล่คุณกลับลงมา`; }
+  else if (F.t === "test") { go.s = pk(s.r, Object.keys(STATS)); go.d = 2 + Math.floor(f / 30); go.l += ` (ทดสอบ${STATS[go.s]})`; go.y.m = "ผ่านบททดสอบ"; go.n = { m: "ไม่ผ่านบททดสอบ ประตูชั้นถัดไปไม่ยอมเปิด คุณจึงลงมาพร้อมของที่มี", hp: -10, diveOut: 1 }; }
+  else go.y.m = F.t === "rest" ? "ได้นั่งพักหายใจ" : "มีหีบถูกลืมไว้";
+  go.note = `${FLOOR_KIND[F.t]} · ${F.mod.n} · ธาตุ${ELEMENTS[F.el].n}${fresh ? " · ชั้นที่ยังไม่เคยผ่าน" : ""}${R.n ? ` · ศัตรูแรงขึ้น +${Math.round(R.n * DIVE.press * 100)}%` : ""}`;
+  const head = R.n ? `ผ่านชั้น ${f - 1} แล้ว (รอบนี้ ${R.n} ชั้น) · ในถุง ${bagText(R.bag)} · สุขภาพ ${Math.round(s.health)}%` : `ประตูหอเปิดที่จุดเช็คพอยต์ชั้น ${f}`;
+  open(s, { lt: `หอชั้น ${f} ${FLOOR_KIND[F.t]}${nm}:`, t: `${head} · ข้างหน้าคือชั้น ${f}: ${FLOOR_KIND[F.t]}${nm} จะไปต่อไหม?`, o: [go, { l: R.n ? "กลับออกไปพร้อมของ" : "เดือนนี้ยังไม่เข้า", note: R.n ? "เก็บของทั้งถุง รอบหน้าเริ่มใหม่ที่จุดเช็คพอยต์" : "", y: { m: R.n ? "คุณเดินลงมาพร้อมถุงที่หนักขึ้น" : "คุณกลับไปเตรียมตัวก่อน", diveOut: 1 } }] }, "หอ");
+}
+// Clearing a floor: EXP and the record come now, loot goes into the bag. Floors already cleared in earlier runs pay less.
+H.dive = (s) => {
+  const R = s.run; if (!R) return; const f = R.f, F = floorAt(s, f), n = R.n, b = R.bag, fresh = f > s.floor, k = fresh ? 1 : DIVE.re;
+  setFloor(s, f); gainXp(s, huntXp(s) * (F.t === "boss" ? 2.5 * DIVE.xp : DIVE.xp) * k); trainSkill(s, 1.2);
+  b.gold += (30 + f * 4) * (F.t === "cache" ? 2.5 : 1) * (1 + n * DIVE.gold) * k * tier(s) * (1 + mod(s, "gold") / 100);
+  b.mat += (ch(s.r, Math.min(0.9, 0.4 + n * 0.04) * (fresh ? 1 : 0.6)) ? 1 : 0) + (F.t === "cache" ? 2 : 0);
+  const gp = Math.min(DIVE.gearMax, DIVE.gear0 + n * DIVE.gear) + (F.t === "elite" ? 0.35 : F.t === "cache" ? 0.3 : 0);
+  if (F.t === "boss") b.gear++; else if (ch(s.r, gp * k)) b.gear++;
+  if (ch(s.r, (0.06 + n * 0.015) * k) || F.t === "boss") b.stone++;
+  if (F.t === "rest") { hurt(s, 25); emit("heal"); } else if (F.t === "cache") emit("loot");
+  if (F.t === "test" && fresh) s.st[pk(s.r, Object.keys(STATS))] += 1; // only the first clear: re-clears would hand out a free stat every run
+  if (F.t === "boss") { if (fresh) learn(s); s.fame += 5; } else if (F.t === "elite" && fresh) s.fame += 1;
+  R.f++; R.n++; s.c.diveBest = Math.max(s.c.diveBest || 0, R.n);
+  diveAsk(s);
+};
+// Bosses already roll for death in choose(); any other tower loss can kill too, so going deep is a real gamble.
+H.diveLose = (s) => { const R = s.run; if (!R) return; const b = R.bag, boss = floorAt(s, R.f).t === "boss"; hurt(s, boss ? -26 : -14); if (!boss && DIVE.risk && !s.dead) deathRoll(s, floorFoe(s, R.f), DIVE.risk); if (s.dead) return; for (const k in b) b[k] = k === "gold" ? b[k] / 2 : Math.floor(b[k] / 2); log(s, `ถุงขาดระหว่างหนีลงมา ของหายไปครึ่งหนึ่ง`, "หอ", "bad"); diveCash(s); };
+H.diveOut = (s) => diveCash(s);
+function diveCash(s) {
+  const R = s.run; s.run = null; if (!R || !R.n) return; const b = R.bag, up = Math.min(DIVE.upMax, R.n * DIVE.up);
+  s.gold += b.gold; for (let i = 0; i < b.mat; i++) dropMat(s); for (let i = 0; i < b.gear; i++) dropGear(s, up); s.stone += b.stone; if (b.gold) emit("coin");
+  log(s, `จบรอบไต่หอ ชั้น ${R.from}–${R.from + R.n - 1} (${R.n} ชั้น) · ได้ ${bagText(b)}${up && b.gear ? ` · ของดีขึ้น ${Math.round(up * 100)}%` : ""}`, "หอ", R.n >= 8 ? "leg" : "good");
 }
 function npcMonth(s) { for (const n of s.npcs) { if (!n.alive) continue; if (n.hun && ch(s.r, 0.03)) n.lv++; if (n.hun && ch(s.r, 0.014 + n.lv * 0.0002)) n.floor = Math.min(100, n.floor + 1); if (ch(s.r, 0.0009)) { const i = s.npcs.indexOf(n); if (i === s.w.rival || i === s.spouse) continue; n.alive = false; if (s.guild?.mem) s.guild.mem = s.guild.mem.filter((x) => x !== i); if (n.rel >= 30) log(s, `${n.n} จากไปแล้ว ข่าวมาถึงคุณช้าเกินไป`, "ผู้คน", "bad"); } } if (s.npcs.filter((n) => n.alive).length < 18) { const hun = ch(s.r, 0.67); s.npcs.push({ n: `${pk(s.r, D.GIVEN)} ${pk(s.r, D.SUR)}`, job: hun ? "ฮันเตอร์" : CAREERS[pk(s.r, Object.keys(CAREERS))].n, hun, lv: ri(s.r, 1, hun ? Math.max(8, s.lv) : 1), floor: 0, rel: ri(s.r, -6, 20), alive: true, el: pk(s.r, Object.keys(ELEMENTS)) }); } }
 function yearEnd(s) {
@@ -311,6 +346,18 @@ function yearEnd(s) {
   }
   s.ty = null; s.snap = snap(s);
 }
+// World news: about three a year that touch your life a little (a death in the family, a neighbour turned S-rank, a cult raid).
+function news(s, step) {
+  if (s.ageM < 36 || !ch(s.r, step === 3 ? 0.55 : 0.24)) return;
+  const k = stage(s), seen = (s.newsSeen ||= {});
+  const list = D.NEWS.filter((n) => (!n.k || n.k === k) && !(n.once && s.c[n.once]) && !(n.not && fits(s, n.not)) && met(s, n) && (seen[n.id] == null || s.ageM - seen[n.id] > 30));
+  if (!list.length) return;
+  const n = wp(s.r, list); seen[n.id] = s.ageM;
+  const ni = pickNpc(s), ctx = { z: here(s), mon: pk(s.r, MON), nb: `${pk(s.r, D.GIVEN)} ${pk(s.r, D.SUR)}`, ni, npc: s.npcs[ni]?.n, rival: s.npcs[s.w.rival]?.n };
+  s.ctx = ctx; log(s, fill(n.t, ctx), n.tag || "ข่าว", n.cls || "");
+  if (n.e) apply(s, n.e);
+  if (n.once) s.c[n.once] = 1;
+}
 function aging(s) { const L = lifespan(s), a = s.ageM / 12; if (a >= L) return die(s, "อายุขัย"); if (a > L * 0.78) { s.health -= 0.25; if (s.health <= 12 && ch(s.r, 0.08)) die(s, "ความชราและโรคภัย"); } }
 
 function schedule(s) {
@@ -323,11 +370,11 @@ function schedule(s) {
   }
   if (breakthrough(s)) return;
   if (stage(s) === "k") { const x = D.CROSS[s.cross || 0]; if (x && s.ageM >= x.age * 12) return openCross(s, x); }
-  if (stage(s) === "k") return randomEvent(s, 0.16);
+  if (stage(s) === "k") return randomEvent(s, 0.3);
   if (s.hunter && s.ageM >= s.spcCd && !s.spc) { const ready = s.w.specials.map(spc).filter((x) => met(s, x) && (age(s) < SPC_AGE || x.id === "late")); if (ready.length) return openSpecial(s, ready.slice(0, 3)); }
   if (s.ageM >= s.nextExam && examReady(s)) return openExam(s);
   if (s.ageM >= s.nextMain) return openMain(s);
-  randomEvent(s, 0.11);
+  randomEvent(s, 0.17);
 }
 function openCross(s, x) {
   s.cross = (s.cross || 0) + 1;
@@ -367,7 +414,6 @@ function openAwaken(s) {
   open(s, { t: "ถึงวันตรวจปลุกพลังประจำปี แถวยาวรอบอาคารสมาคม เครื่องวัดมานาส่องแสงเย็นบนฝ่ามือคุณ", o: [{ l: "วางมือลงบนเครื่องวัด", p, y: { m: "เข็มสะบัดจนสุดหน้าปัด", awaken: 1 }, n: { m: "เข็มไม่ขยับ ไม่มีใครมองคุณอีก โลกนี้ยังต้องการคนอีกหลายแบบ", careerPick: 1 } }] }, "ปลุกพลัง");
 }
 H.careerPick = (s) => openCareer(s);
-H.towerOut = (s) => { s.focus = "hunt"; log(s, "กลับไปล่ารอยแยกเพื่อเก็บประสบการณ์ก่อนขึ้นหออีกครั้ง", "หอ"); };
 function openCareer(s) { open(s, { t: s.career ? "ใบสมัครงานใหม่วางอยู่ตรงหน้า ประสบการณ์เก่าติดตัวไปได้ครึ่งเดียว คุณจะไปทางไหน?" : "คุณไม่ใช่ฮันเตอร์ แต่ค่าเช่าไม่รอใคร เส้นทางไหนที่เปิดให้คุณ?", o: s.w.careers.filter((id) => id !== s.career).map((id) => { const c = CAREERS[id]; return { l: `${c.n} · ถนัด${STATS[c.st]}`, note: `${c.d} ·${perkText(c.m)} · เริ่มต้น ₡${fmt(c.pay)}/เดือน${c.risk ? " · งานเสี่ยงบาดเจ็บ" : ""}`, y: { m: "ตกลงเริ่มงาน", career: id } }; }) }, "อาชีพ"); }
 function openLate(s) { s.flags.lateDone = 1; open(s, { t: "มือคุณส่องแสงกลางดึก ทั้งที่อายุป่านนี้แล้ว พลังที่หลับมาตลอดชีวิตกำลังตื่น", o: [{ l: "รับมัน", y: { m: "ชีวิตครึ่งหลังเริ่มขึ้น", awaken: 1, fame: 8 } }, { l: "ปิดบังไว้ เป็นคนธรรมดาต่อ", y: { m: "มือคุณดับลงตลอดกาล", karma: 3 } }] }, "ปลุกพลัง"); }
 function openWorld(s, c) {

@@ -1,12 +1,15 @@
 // node build.mjs → play.html (one double-clickable file). Bundles only the pixelfx effects the game names.
 import { readFileSync, writeFileSync } from "node:fs";
 import esbuild from "../pixelfx-main/node_modules/esbuild/lib/main.js";
-import { ELEMENTS, WEAPONS } from "./src/data.js";
-import { PRESET, AMBIENT, HIT } from "./src/presets.js";
+import { ELEMENTS, WEAPONS, CLASSES, CAREERS } from "./src/data.js";
+import { PRESET, AMBIENT, HIT, STYLE, LOOK } from "./src/presets.js";
 
-const used = new Set([...Object.values(ELEMENTS).flatMap((e) => e.fx), ...WEAPONS.map((w) => w.fx), ...Object.values(PRESET).flat(), ...Object.values(AMBIENT), ...HIT, "melee/claw-swipe", "spawn/poof"]);
+const used = new Set([...Object.values(ELEMENTS).flatMap((e) => e.fx), ...WEAPONS.map((w) => w.fx), ...Object.values(PRESET).flat(), ...Object.values(AMBIENT), ...HIT, ...Object.values(STYLE).flatMap((s) => Object.values(s)), "melee/claw-swipe", "spawn/poof"]);
 const list = [...used].sort();
-const body = list.filter((n) => /\bo\.actor\b/.test(readFileSync(`../pixelfx-main/src/fx/${n}.js`, "utf8")));
+const missing = [...Object.keys(CLASSES), ...Object.keys(CAREERS)].filter((id) => !STYLE[LOOK[id]]);
+if (missing.length) throw new Error(`No skill style in presets.js BY for: ${missing.join(", ")}`);
+// moves/* act out a whole stock character, critters/* are creatures: neither is a skill visual.
+const body = list.filter((n) => /^(moves|critters)\//.test(n) || /\bo\.actor\b/.test(readFileSync(`../pixelfx-main/src/fx/${n}.js`, "utf8")));
 if (body.length) throw new Error(`These effects draw pixelfx's stock character, pick skill-only ones: ${body.join(", ")}`);
 writeFileSync("src/fxreg.gen.js", list.map((n, i) => `import * as f${i} from "../../pixelfx-main/src/fx/${n}.js";`).join("\n") + `\nexport const REG = {${list.map((n, i) => `"${n}":f${i}`).join(",")}};\n`);
 const out = await esbuild.build({ entryPoints: ["src/ui.js"], bundle: true, minify: true, format: "iife", target: "es2020", write: false, legalComments: "none" });
