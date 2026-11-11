@@ -24,19 +24,22 @@ export function newHeir(P, seed) {
   s.city = P.city;
   s.name = pk(R, NAMES[P.country][s.sex]);
   // the family's stat leaning follows the new family
-  const old = FAMILIES.find((f) => f.id === s.family), fam = wp(R, FAMILIES.filter((f) => f.country === P.country));
+  const old = FAMILIES.find((f) => f.id === s.family);
+  const fam = P.unlockFamily ?? FAMILIES.find((f) => f.id === P.family && f.country === P.country)
+    ?? wp(R, FAMILIES.filter((f) => f.country === P.country));
   for (const [k, v] of Object.entries(old?.st ?? {})) s.st[k] -= v;
   for (const [k, v] of Object.entries(fam.st)) s.st[k] += v;
   s.family = fam.id;
+  if (P.unlockFamily) s.unlockFamily = { ...P.unlockFamily };
   s.mon0 = (P.mon0 ?? 0) + P.ageM;
   s.world = JSON.parse(JSON.stringify(P.world));
   // whatever the calendar held before this birth is old news, not something to live through again
   const y = yearsAfterRift(s), m = monthOfYear(s);
-  for (const e of CALENDAR) if (e.year < y || (e.year === y && e.month < m)) s.world.done[e.id] = 1;
+  for (const e of CALENDAR) if (e.year < y || (e.year === y && e.month <= m)) s.world.done[e.id] = 1;
   s.gen = (P.gen ?? 1) + 1;
   const L = legacyOf(P), rel = heirWord(P);
   s.heir = {
-    of: P.name, rel, gold: Math.round(Math.max(0, P.gold) * (1 - HEIR_TAX)),
+    of: P.name, rel, gold: Math.round(Math.max(0, P.gold - (P.debt ?? 0)) * (1 - HEIR_TAX)),
     guild: L.guild, enemies: L.enemies.slice(0, 3), paid: 0, guildDone: 0, grudgeDone: 0,
   };
   // the parent's things wait in the family home, best first, as many as it holds
@@ -94,7 +97,12 @@ monthly.push((s) => {
 });
 
 hooks.act.heirGuild = (s) => {
-  if (!s.hunter || !s.heir?.guild || s.party) return;
+  if (!s.heir?.guild) return;
+  // in someone else's team, or already leading your own guild: the officers buy the family guild instead
+  if (!s.hunter || s.party || s.guild?.role === "master") {
+    addLedger(s, "ขายกิลด์ของครอบครัว", 30000);
+    return log(s, "มรดก", `คุณรับช่วงต่อไม่ได้ แกนนำของ${s.heir.guild}จึงขอซื้อไว้และรักษาชื่อเดิม`, "imp");
+  }
   if (s.guild) hooks.leaveGuild?.(s);
   s.guild = { id: "own", n: s.heir.guild, role: "master", standing: 80, since: s.ageM };
 };

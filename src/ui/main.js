@@ -200,8 +200,11 @@ function act(a, el) {
       if (!s?.dead || !C.canHeir(s)) return;
       const life = C.newHeir(s, s.seed + "-g" + ((s.gen ?? 1) + 1));
       C.applyUnlocks(life, book.get());
+      const was = ui.slot;
       ui.slot = freeSlot();
       begin(life);
+      if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
+      else if (ui.slot === was) banner("ชีวิตใหม่บันทึกต่อในช่องเดียวกับชีวิตก่อน");
     },
     load: () => {
       const life = slots.load(+v);

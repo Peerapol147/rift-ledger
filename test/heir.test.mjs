@@ -62,3 +62,14 @@ test("calendar entries before the heir's birth never replay", () => {
   assert.ok(!h.log.some((l) => l.text.includes("ปีที่ 24")));
   assert.ok(Object.keys(h.world.done).length > 0);
 });
+
+test("a young heir only hears calendar news; a takeover that cannot happen is a sale", async () => {
+  const P = parent(); P.ageM = 25 * 12;
+  const h = C.newHeir(P, "pa-kid");
+  for (let i = 0; i < 400 && C.ageY(h) < 11; i++) { h.ev = null; C.advance(h); }
+  assert.ok(!Object.keys(h.c).some((k) => k === "ev:cal46" || k === "ev:cal50"));
+  const b = C.newHeir(P, "pa-party"); b.heir.guild = "กิลด์เก่า"; b.party = { leader: { n: "x", rank: 4 }, trust: 50 };
+  const { hooks } = await import("../src/core/registry.js");
+  hooks.act.heirGuild(b);
+  assert.ok(b.ledger.some((e) => e.label === "ขายกิลด์ของครอบครัว"));
+});
