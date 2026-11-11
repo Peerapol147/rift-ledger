@@ -16,7 +16,8 @@ const EVENT_CHANCE = 0.22;
 
 export function focusList(s) {
   const table = FOCUS[stageOf(s)];
-  return Object.entries(table).filter(([, f]) => !f.hunter || s.hunter).map(([id, f]) => ({ id, ...f }));
+  const hunting = !!s.hunter && !s.flags.stoppedHunting;
+  return Object.entries(table).filter(([, f]) => !f.hunter || hunting).map(([id, f]) => ({ id, ...f }));
 }
 
 export function setFocus(s, id) {

@@ -8,7 +8,7 @@ import { CLASSES, RARITY } from "../data/classes.js";
 import { SKILLS as SK } from "../data/skills.js";
 
 export const LV_CAP = [10, 20, 30, 40, 55, 70, 90, 120];
-const LATE_P = 0.0004;
+const LATE_P = 0.00008;
 const APT_W = [3, 2, 1.2];
 
 export const rankName = (rank) => RANKS[rank];
@@ -52,7 +52,7 @@ function awaken(s, cause) {
   const cls = rollClass(s);
   const skills = startSkills(cls);
   s.hunter = {
-    rank, ceil: rollCeil(r, rank), cls, lv: 1, xp: 0,
+    rank, rank0: rank, ceil: rollCeil(r, rank), cls, lv: 1, xp: 0,
     skills, slots: skills.slice(0, slotsFor(rank)), ex: rank === 7, broke: 0,
   };
   const rare = CLASSES[cls].rarity >= 2 || rank >= 5;
@@ -70,7 +70,7 @@ export function awakenCheck(s, cause) {
   if (cause === "event") { awaken(s, cause); return true; }
   const r = stream(s, "awaken");
   const boost = Math.min(0.03, ((s.c.nearRift ?? 0) + (s.c.trainHard ?? 0)) * 0.01);
-  const p = cause === "screen" ? AWAKEN_RATE - 0.015 + boost : LATE_P;
+  const p = cause === "screen" ? AWAKEN_RATE - 0.03 + boost : LATE_P;
   if (!ch(r, p)) return false;
   awaken(s, cause);
   return true;

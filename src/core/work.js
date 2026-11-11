@@ -85,5 +85,6 @@ resolvers.jobName = (id) => CAREERS[id]?.n ?? id;
 monthly.push((s) => {
   workMonth(s);
   if (s.job && s.mind < 20 && ch(stream(s, "work"), 0.03)) quitJob(s);
-  if (!s.job && !s.hunter && !s.flags.retired && ageY(s) >= 23 && s.ageM % 12 === 0) openJobChoice(s);
+  const free = !s.hunter || s.flags.stoppedHunting;
+  if (!s.job && free && !s.flags.retired && ageY(s) >= 23 && s.ageM % 12 === 0) openJobChoice(s);
 });

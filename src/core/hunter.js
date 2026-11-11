@@ -4,9 +4,16 @@ import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX, hooks } from "./events.js";
 import { monthly } from "./clock.js";
 import { LV_CAP, canRankUp, rankUp, ceilingHint } from "./awaken.js";
-import { gateOffers } from "./hunt.js";
+import { gateOffers, gateOp, towerOp } from "./hunt.js";
+import { estimateRisk } from "./ops.js";
+import { COUNTRIES } from "../data/world.js";
 import { CLASSES } from "../data/classes.js";
 import { SKILLS } from "../data/skills.js";
+
+// Hunting is possible for awakened people who have not retired from it and are not on a break.
+export const canHunt = (s) => !!s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0);
+
+const CLIMB_SLOW = 0.4;
 
 export const xpNeed = (lv) => Math.round(40 * Math.pow(lv, 1.5));
 
@@ -23,7 +30,7 @@ export function gainXp(s, n) {
   const h = s.hunter;
   if (!h) return;
   const cap = LV_CAP[h.rank];
-  h.xp += n;
+  h.xp += n * Math.pow(CLIMB_SLOW, h.rank - (h.rank0 ?? h.rank)); // every rank climbed makes the next one slower
   while (h.lv < cap && h.xp >= xpNeed(h.lv)) {
     h.xp -= xpNeed(h.lv);
     h.lv++;
@@ -53,18 +60,24 @@ function hunterMonth(s) {
   const hint = ceilingHint(s);
   if (hint && !s.c.ceilHinted) { s.c.ceilHinted = 1; log(s, "ฮันเตอร์", hint, ""); }
   if (s.mind < 20 && ch(stream(s, "burn"), 0.03)) return openEvent(s, EVENT_INDEX.get("burnout"));
-  if (s.focus === "hunt") openGateChoice(s);
+  if (s.focus !== "hunt" || !canHunt(s)) return;
+  if (s.hp < 50) return void log(s, "ร่างกาย", "ร่างกายยังไม่พร้อมลงเกต คุณพักฟื้นเดือนนี้", "");
+  openGateChoice(s);
 }
 
 export function openGateChoice(s) {
-  const offers = gateOffers(s);
-  s.offers = offers;
+  const defs = gateOffers(s).map((g) => gateOp(s, g));
+  const tower = COUNTRIES[s.country].tower;
+  const next = (s.c.floor ?? 0) + 1;
+  if (s.hunter.rank >= 1 && next <= 50) defs.push(towerOp(s, tower, next));
+  s.offers = defs;
+  const label = (d) => (d.kind === "tower" ? d.t.split(" · ")[0] : d.t) + (d.boss ? " · มีบอส" : "");
   openEvent(s, {
     id: "gateChoice",
     tag: "เกต",
     t: "สมาคมส่งรายการเกตที่เปิดรับฮันเตอร์เดือนนี้",
     o: [
-      ...offers.map((g, i) => ({ l: `เกตแรงก์ ${"FEDCBAS"[g.rank]} · Lv.${g.lv}`, y: { act: "gate" + i } })),
+      ...defs.map((d, i) => ({ l: label(d), risk: estimateRisk(s, d), y: { act: "gate" + i } })),
       { l: "พักเดือนนี้", y: { mind: 2 } },
     ],
   });
@@ -72,6 +85,7 @@ export function openGateChoice(s) {
 
 hooks.act.rankUp = (s) => { s.c.rankEvalOpen = 0; rankUp(s); };
 hooks.act.stopHunting = (s) => { s.focus = "work"; s.flags.stoppedHunting = true; };
+hooks.act.huntBreak = (s) => { s.focus = "rest"; s.c.huntBreakUntil = s.ageM + 12; };
 hooks.act.hideRank = (s) => { s.flags.hiddenRank = true; };
 
 monthly.push(hunterMonth);

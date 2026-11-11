@@ -1,69 +1,123 @@
-// Sweep many seeds on full auto: crashes, determinism, and how lives are distributed. node tools/sim.mjs [lives]
-import { newLife, tick, choose, autoChoice, age, FOCUS, buy, craft, enhance, stage, foundGuild, joinGuild, recruit, fxOut, gearOf, placeOk } from "../src/engine.js";
-import { travel } from "../src/engine.js";
-import { QUESTS, RELICS } from "../src/data.js";
-import { EVENTS, WORLD, NEWS, CLASSES, CAREERS, MOD_N, STATS, FAMILIES, WEAPONS, PATHS, CROSS, PLACES } from "../src/data.js";
-const N = +process.argv[2] || 300;
-// Static story check: every next target exists, every counter gated on is produced somewhere, no {tokens} in text the engine does not fill.
-{ const ids = new Set(EVENTS.filter((e) => e.id).map((e) => e.id)), made = new Set("age level rank floor gold fame karma craft guild own mems sk els kids spouse hunter luk rel lateAw cyears hunts boss cr loan".split(" ")), bad = [];
-  // Trade check: ids don't collide, every who is a real id, every class and career has its own lines and at least one story row.
-  const jobIds = [...Object.keys(CLASSES), ...Object.keys(CAREERS)], known = new Set([...jobIds, ...FAMILIES.map((f) => f.id), ...Object.keys(PATHS), ...PLACES.map((p) => p.id)]), used = new Set(), who = (w, at) => (w || []).forEach((id) => { used.add(id); known.has(id) || bad.push(`${at}: who ${id}`); });
-  if (new Set(jobIds).size !== jobIds.length) bad.push("class and career ids collide");
-  EVENTS.forEach((e) => { who(e.who, e.id || e.t); e.o.forEach((x) => Array.isArray(x) && who(x[6], e.id || e.t)); });
-  jobIds.forEach((id) => used.has(id) || bad.push(`${id}: no who row`));
-  Object.entries(PATHS).forEach(([id, p]) => { CAREERS[p.job] || bad.push(`${id}: job`); STATS[p.st] || bad.push(`${id}: st`); Object.keys(p.m).forEach((k) => MOD_N[k] || bad.push(`${id}: bonus ${k}`)); });
-  CROSS.forEach((x) => x.o.forEach((r) => PATHS[r[0]] || bad.push(`cross ${r[0]}`)));
-  FAMILIES.forEach((f) => { if (!f.id?.startsWith("f_") || jobIds.includes(f.id)) bad.push(`${f.n}: bad family id`); used.has(f.id) || bad.push(`${f.id}: no who row`); f.job.forEach((j) => CAREERS[j] || bad.push(`${f.id}: job ${j}`)); Object.keys(f.m || {}).forEach((k) => MOD_N[k] || STATS[k] || bad.push(`${f.id}: unknown bonus ${k}`)); });
-  for (const [id, x] of [...Object.entries(CLASSES), ...Object.entries(CAREERS)]) { if (!x.d || !(x.job?.length >= 2)) bad.push(`${id}: needs d and job lines`); Object.keys(x.m).forEach((k) => MOD_N[k] || STATS[k] || bad.push(`${id}: unknown bonus ${k}`)); if (CAREERS[id] && CAREERS[id].t.length !== 5) bad.push(`${id}: needs 5 titles`); if (CLASSES[id] && !WEAPONS[CLASSES[id].wp]) bad.push(`${id}: bad wp`); }
-  FAMILIES.forEach((f) => (f.job || []).forEach((id) => CAREERS[id] || bad.push(`${f.n}: job ${id}`)));
-  const walk = (o, e) => { if (!o || typeof o !== "object") return; if (o.next && !ids.has(o.next[0])) bad.push(`${e.id}: next ${o.next[0]}`); if (o.c) Object.keys(o.c).forEach((k) => made.add(k)); if (typeof o.m === "string" && /\{\w+\}/.test(o.m)) bad.push(`${e.id}: token in result text`); for (const k in o) walk(o[k], e); };
-  WORLD.forEach((e) => { walk(e.h, e); walk(e.c, e); });
-  NEWS.forEach((n) => { walk(n.e, n); if (n.once) made.add(n.once); });
-  EVENTS.forEach((e) => { walk(e.o, e); e.o.forEach((x) => Array.isArray(x) && /\{\w+\}/.test(x[0]) && bad.push(`${e.id}: token in label`)); });
-  EVENTS.forEach((e) => Object.keys({ ...e.if, ...e.max }).forEach((k) => made.has(k) || bad.push(`${e.id}: counter ${k} never set`)));
-  for (const q of QUESTS) for (const o of q.out) { if (o.ev && !ids.has(o.ev[0])) bad.push(`${q.id}: ev ${o.ev[0]}`); for (const r of typeof o.item === "string" ? [o.item] : Object.values(o.item?.by || {})) RELICS[r] || bad.push(`${q.id}: item ${r}`); for (const k of Object.keys(o.item?.by || {})) q.st.includes(k) || bad.push(`${q.id}: by ${k}`); }
-  for (const q of QUESTS) q.scenes.forEach((S, i) => S.o.some(([, , , , , e, , , need]) => !need && !(e?.will < 0)) || bad.push(`${q.id} scene ${i}: no free option, a low-will life would be stuck`));
-  for (const r of Object.values(RELICS)) Object.keys(r.m).forEach((k) => MOD_N[k] || STATS[k] || bad.push(`${r.n}: bonus ${k}`));
-  if (ids.size !== EVENTS.filter((e) => e.id).length) bad.push("duplicate id");
-  if (bad.length) throw new Error("story check\n" + bad.join("\n")); }
-function play(seed) {
-  const s = newLife(seed, "ทดสอบ"); let guard = 0;
-  while (!s.dead && guard++ < 40000) {
-    if (s.ev) { const p = process.env.RL_WILL ? s.ev.o.findIndex((o) => o.push) : -1; choose(s, p >= 0 ? p : autoChoice(s)); continue; }
-    const st = stage(s);
-    if (st === "k") s.focus = ["study", "sport", "play", "help"][s.ageM % 4];
-    if (st === "c") { s.focus = s.ageM % 20 === 0 ? "study" : "work"; if (s.gold > 2000 && s.pot < 2) buy(s, "pot"); }
-    if (st === "h") {
-      s.focus = s.health < 45 ? "rest" : s.ageM % 3 === 0 ? "tower" : s.ageM % 11 === 0 ? "guild" : "hunt";
-      if (s.pot < 3 && s.gold > 800) buy(s, "pot");
-      // Move each year to the toughest place at or below your level, if the fare leaves money for potions.
-      if (s.ageM % 12 === 0) { const i = PLACES.reduce((b, p, j) => (p.lv <= s.lv && placeOk(s, p) && s.gold > p.fare * 3 ? j : b), 0); travel(s, i); }
-      if (!s.guild && s.rank >= 2 && s.gold > 20000) foundGuild(s, "ทดสอบ"); else if (!s.guild && s.ageM % 40 === 0) joinGuild(s, 0);
-      if (s.guild?.own && s.ageM % 30 === 0) recruit(s, s.ageM % 24);
-      if (s.anvil < 5 && s.gold > 15000) buy(s, "anvil");
-      if (s.ageM % 9 === 0) { const g = Math.min(s.anvil, Math.floor(s.lv / 18)); craft(s, "weapon", s.ageM % 12, g); craft(s, "armor", 0, g); const w = gearOf(s, s.wear.weapon); if (w && w.plus < 8) enhance(s, w.id); }
+// Plays many lives on autopilot with a player policy and checks the spec §14 balance targets.
+// node tools/sim.mjs [lives=300] [--policy careful|normal|reckless]
+import { execFileSync } from "node:child_process";
+import { newLife, advance, choose, optionView, stageOf, setFocus, focusList, ageY, canHunt } from "../src/core/index.js";
+import { mk, rnd } from "../src/core/rng.js";
+import * as D from "../src/data/index.js";
+import { ALL_EVENTS } from "../src/data/events/index.js";
+
+const args = process.argv.slice(2);
+const N = +args.find((a) => /^\d+$/.test(a)) || 300;
+const POLICY = args[args.indexOf("--policy") + 1] ?? "normal";
+const HUNT_P = { careful: 0.4, normal: 0.6, reckless: 0.85 }[POLICY];
+const PLAN = { careful: "retreat", normal: "careful", reckless: "push" }[POLICY];
+let hardFail = false;
+const fail = (msg) => { console.log("FAIL " + msg); hardFail = true; };
+
+// ---- Static checks
+function staticChecks() {
+  const evIds = new Set([...ALL_EVENTS, ...D.MILESTONES].map((e) => e.id));
+  const ids = new Set([...Object.keys(D.CLASSES), ...Object.keys(D.CAREERS)]);
+  const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {}))];
+  const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
+  for (const e of [...allEv, ...decisions]) {
+    const opts = e.o;
+    if (!opts.some((o) => !o.need)) fail(`no free option: ${e.id ?? e.t}`);
+    for (const o of opts) {
+      for (const out of [o.y, o.n]) {
+        if (out?.next && !evIds.has(out.next[0])) fail(`missing next ${out.next[0]}`);
+        for (const t of [out?.m ?? "", o.l]) if (/\{(?!name\})/.test(t)) fail(`unfilled token in "${t}"`);
+      }
+      for (const k of Object.keys(o.need ?? {})) {
+        const [kind, id] = k.split(":");
+        if (kind === "skill" && !D.SKILLS[id]) fail(`unknown skill ${id}`);
+        if ((kind === "job" || kind === "cls") && !ids.has(id)) fail(`unknown id ${id}`);
+      }
     }
-    tick(s); fxOut.length = 0;
   }
-  if (!s.dead) throw new Error("no ending " + seed);
+  for (const e of allEv) for (const w of e.who ?? []) if (!ids.has(w)) fail(`unknown who ${w}`);
+  const mons = [...D.GATES.flatMap((g) => [...g.mon, g.boss]),
+    ...Object.values(D.TOWERS).flatMap((t) => [...t.bands, ...t.chapters].flatMap((b) => [...b.mon, b.boss]))];
+  for (const m of mons) if (!D.MONSTERS[m]) fail(`unknown monster ${m}`);
+  for (const c of Object.values(D.CLASSES)) for (const [, sk] of c.skills) if (!D.SKILLS[sk]) fail(`unknown skill ${sk}`);
+  try { execFileSync("node", ["tools/linelen.mjs"], { stdio: "pipe" }); } catch (e) { fail("lines over 120:\n" + e.stdout); }
+}
+
+// ---- Player policy
+function pick(s) {
+  const open = s.ev.opts.map((o, i) => ({ o, i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
+  const odds = (x) => x.v.odds ?? 90;
+  const reward = (x) => (x.o.y?.loot ?? 0) * 30 + (x.o.y?.gold ?? 0) / 50 + (x.o.y?.fame ?? 0) * 3 + odds(x) / 10;
+  const by = {
+    careful: (a, b) => a.v.risk - b.v.risk || odds(b) - odds(a),
+    normal: (a, b) => odds(b) - odds(a),
+    reckless: (a, b) => reward(b) - reward(a),
+  }[POLICY];
+  // A reckless player still walks away from near-certain death.
+  const pool = POLICY === "reckless" && open.some((x) => x.v.risk <= 0.3) ? open.filter((x) => x.v.risk <= 0.3) : open;
+  return pool.sort(by)[0]?.i ?? 0;
+}
+
+function chooseFocus(s, R) {
+  const st = stageOf(s), ids = focusList(s).map((f) => f.id);
+  if (st === "kid") return setFocus(s, ids[Math.floor(rnd(R) * ids.length)]);
+  if (st === "teen") return setFocus(s, rnd(R) < 0.5 ? "study" : "train");
+  if (st === "old") return setFocus(s, "rest");
+  if (canHunt(s)) return setFocus(s, rnd(R) < HUNT_P ? "hunt" : rnd(R) < 0.5 ? "train" : "rest");
+  setFocus(s, s.job ? "work" : "study");
+}
+
+export function playLife(seed) {
+  const s = newLife(seed), R = mk(seed, "simfocus");
+  s.prefs = { plan: PLAN };
+  for (let n = 0; n < 60000 && !s.dead; n++) {
+    if (s.ev) choose(s, pick(s));
+    else { if (!s.op && s.ageM % 3 === 0) chooseFocus(s, R); advance(s); }
+  }
   return s;
 }
-const a = JSON.stringify(play("det-1")), b = JSON.stringify(play("det-1")); if (a !== b) throw new Error("not deterministic"); JSON.parse(a);
-const L = []; for (let i = 0; i < N; i++) L.push(play("s" + i));
-const H = L.filter((s) => s.hunter), C = L.filter((s) => !s.hunter), avg = (l, f) => (l.reduce((x, s) => x + f(s), 0) / (l.length || 1)).toFixed(1), hist = (l, f) => { const m = {}; for (const s of l) { const k = f(s); m[k] = (m[k] || 0) + 1; } return JSON.stringify(m); };
-console.log(`lives ${N} | hunter ${H.length} civ ${C.length} | deterministic OK | log sample size ${L[0].log.length}`);
-console.log("hunter: age", avg(H, age), "lv", avg(H, (s) => s.lv), "floor", avg(H, (s) => s.floor), "gold", avg(H, (s) => s.gold), "median/min", Math.round([...H].sort((a, b) => a.gold - b.gold)[H.length >> 1]?.gold || 0), Math.round(Math.min(...H.map((s) => s.gold))), "special%", avg(H, (s) => (s.spc ? 100 : 0)));
-console.log("rank", hist(H, (s) => s.rank), "class", hist(H, (s) => s.cls));
-console.log("by class lv/floor/rank/deaths<60:", Object.keys(CLASSES).map((c) => { const l = H.filter((s) => s.cls === c); return `${c} ${avg(l, (s) => s.lv)}/${avg(l, (s) => s.floor)}/${avg(l, (s) => s.rank)}/${l.filter((s) => age(s) < 60).length}of${l.length}`; }).join(" | "));
-{ const med = (l, f) => [...l].map(f).sort((a, b) => a - b)[l.length >> 1] || 0, line = (l) => `avg ${avg(l, (s) => s.gold)} median ${Math.round(med(l, (s) => s.gold))} debt ${l.filter((s) => s.gold < 0).length}/${l.length} score ${avg(l, (s) => s.dead.score)}`; console.log("econ hunter:", line(H), "| civ:", line(C)); }
-console.log("by career gold/cr/age:", Object.keys(CAREERS).map((c) => { const l = C.filter((s) => s.career === c); return `${c} ${Math.round(avg(l, (s) => s.gold) / 1000)}k/${avg(l, (s) => s.cr)}/${avg(l, age)}/n${l.length}`; }).join(" | "), "| changed job", C.filter((s) => s.pastJob).length, "late with old trade", H.filter((s) => s.pastJob).length);
-console.log("by family n/hunter%/lv/score/gold(k)/dirty/karma:", FAMILIES.map((f, i) => { const l = L.filter((s) => s.fam === i), h = l.filter((s) => s.hunter); return `${f.id} ${l.length}/${Math.round((100 * h.length) / (l.length || 1))}%/${avg(h, (s) => s.lv)}/${avg(l, (s) => s.dead.score)}/${Math.round(avg(l, (s) => s.gold) / 1000)}k/${avg(l, (s) => s.c.dirty || 0)}/${avg(l, (s) => s.karma)}`; }).join(" | "));
-console.log("special", hist(H.filter((s) => s.spc), (s) => s.spc), "guild own", H.filter((s) => s.guild?.own).length, "maxEnh", avg(H, (s) => s.c.enh || 0));
-console.log("civ: age", avg(C, age), "cr", hist(C, (s) => s.cr), "gold", avg(C, (s) => s.gold), "career", hist(C, (s) => s.career));
-console.log("story led", hist(H, (s) => s.c.led || 0), "quit", H.filter((s) => s.c.ledQuit > 0).length, "loophole", H.filter((s) => s.c.ledLoop).length, "| cled", hist(C, (s) => s.c.cled || 0), "| arcs/life", avg(L, (s) => s.w.arcs.length), "| no-story hunters age", H.filter((s) => !s.c.led).map((s) => Math.floor(age(s))).join(","));
-console.log("place at death", hist(H, (s) => PLACES[s.at || 0].id), "| local events seen", L.reduce((a, s) => a + EVENTS.filter((e, i) => e.who?.some((w) => w.startsWith("z_")) && s.seen[i] != null).length, 0));
-{ const ch = (s) => Object.values(s.disc || {}).reduce((a, v) => a + Math.floor(v + 1e-6), 0); console.log("ways: chapters hunter", avg(H, ch), "civ", avg(C, ch), "| by way", hist(L.flatMap((s) => Object.entries(s.disc || {}).filter((x) => x[1] >= 1).map((x) => x[0])), (k) => k), "| full 5", L.filter((s) => Object.values(s.disc || {}).some((v) => v >= 5)).length); }
-console.log("apt hit", hist(H, (s) => { const i = (s.w.apt || []).indexOf(s.cls); return i < 0 ? "other" : "apt" + (i + 1); }), "| late awakened", H.filter((s) => s.lateAw).length, "| perk grades", hist(L.flatMap((s) => Object.values(s.pg || {})), (g) => g), "| way grades", hist(L.flatMap((s) => Object.values(s.dg || {}).flat()), (g) => g));
-{ const tv = (s, a, b) => (s.tr?.[a] || 0) + (s.tr?.[b] || 0), med = (f) => [...L].map(f).sort((x, y) => x - y)[L.length >> 1]; console.log("loans", hist(L, (s) => s.loans || 0), "| will avg", avg(L, (s) => s.will ?? 0), "broken", L.filter((s) => (s.will ?? 0) < 0).length, "| home", hist(L, (s) => s.home ?? 5), "| side", hist(L, (s) => s.side || 0), "| median nego/front/scheme/under/lore/rally", ["kn dis", "act dis", "kn cun", "act cun", "kn spi", "act spi"].map((x) => med((s) => tv(s, ...x.split(" ")))).join("/")); }
-{ const line = (q) => { const r = L.map((s) => s.qs?.[q.id]).filter((x) => x?.g != null); return `${q.id} ${r.length}:${q.out.map((_, i) => r.filter((x) => x.g === i).length).join("/")}`; }; console.log("quests done:ending", QUESTS.map(line).join(" | "), "| relics/life", avg(L, (s) => s.gear.filter((g) => g.relic).length), "legend relic lives", L.filter((s) => s.gear.some((g) => g.relic && g.q === 4)).length); }
-console.log("death", hist(L, (s) => s.dead.cause.startsWith("พ่าย") ? "boss" : s.dead.cause), "title", hist(L, (s) => s.dead.title));
+
+// ---- Metrics
+const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[Math.floor(b.length / 2)] : 0; };
+const pct = (n, d) => (d ? (100 * n) / d : 0);
+function row(name, value, ok, hard = false) {
+  console.log(`${ok ? "PASS" : hard ? "FAIL" : "WARN"}  ${name.padEnd(42)} ${value}`);
+  if (!ok && hard) hardFail = true;
+}
+
+if (process.argv[1]?.endsWith("sim.mjs")) {
+staticChecks();
+const lives = [];
+const t0 = Date.now();
+for (let i = 0; i < N; i++) lives.push(playLife(`sim${i}`));
+const hunters = lives.filter((s) => s.hunter), civs = lives.filter((s) => !s.hunter);
+console.log(`\n${N} lives · policy ${POLICY} · ${((Date.now() - t0) / 1000).toFixed(1)}s · hunters ${hunters.length}`);
+
+const aw = pct(hunters.length, N);
+row("awaken 23–27%", aw.toFixed(1) + "%", aw >= 23 && aw <= 27, N >= 1000);
+const r0 = Array(8).fill(0);
+for (const s of hunters) r0[s.hunter.rank0]++;
+row("start rank F/E/D/C/B/A/S", r0.slice(0, 7).map((n) => pct(n, hunters.length).toFixed(0)).join("/"), true);
+const early = hunters.filter((s) => s.dead.cause !== "อายุขัย" && s.dead.ageY < 50).length;
+const earlyP = pct(early, hunters.length);
+const target = { careful: [0, 8], normal: [5, 20], reckless: [20, 30] }[POLICY];
+row(`hunter death <50 (${target[0]}–${target[1]}%)`, earlyP.toFixed(1) + "%", earlyP >= target[0] && earlyP <= target[1]);
+const old = pct(civs.filter((s) => s.dead.cause === "อายุขัย").length, civs.length);
+row("civilians die of old age ≥85%", old.toFixed(1) + "%", old >= 85);
+const perYear = (s) => (s.c.earned ?? 0) / Math.max(1, ageY(s) - 18);
+const hi = med(hunters.filter((s) => s.hunter.rank >= 3).map(perYear));
+const cv = med(civs.map(perYear));
+const lo = med(hunters.filter((s) => s.hunter.rank <= 1).map(perYear));
+row("income/yr C+ > civ > F–E", `${hi.toFixed(0)} > ${cv.toFixed(0)} > ${lo.toFixed(0)}`, hi > cv && cv > lo);
+// Among hunters who had room to grow (ceiling above start rank), how many got all the way up.
+const room = hunters.filter((s) => s.hunter.ceil > s.hunter.rank0);
+const ceil = pct(room.filter((s) => s.hunter.rank === s.hunter.ceil).length, room.length);
+row("hunters with room who reach ceiling 30–50%", ceil.toFixed(1) + "%", ceil >= 30 && ceil <= 50);
+const same = [0, 1, 2].every((i) => JSON.stringify(playLife("det" + i)) === JSON.stringify(playLife("det" + i)));
+row("determinism", same ? "same" : "DIFFERENT", same, true);
+const causes = {};
+for (const s of lives) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
+console.log("deaths", JSON.stringify(causes));
+console.log("median age", med(lives.map((s) => s.dead.ageY)), "· median floor", med(hunters.map((s) => s.c.floor ?? 0)));
+process.exitCode = hardFail ? 1 : 0;
+}

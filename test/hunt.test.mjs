@@ -13,7 +13,7 @@ test("floors 21–50 generate with rising difficulty and filler tag", () => {
 
 test("gate offers match hunter rank ±1", () => {
   const s = newLife("g"); s.ageM = 20 * 12; awakenCheck(s, "event");
-  s.hunter.rank = 3;
+  s.hunter.rank = 3; s.hunter.lv = 40;
   for (const g of gateOffers(s)) assert.ok(Math.abs(g.rank - 3) <= 1);
 });
 

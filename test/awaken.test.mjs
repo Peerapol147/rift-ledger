@@ -33,9 +33,12 @@ test("cannot rank up past ceiling", () => {
   assert.equal(canRankUp(t), true);
 });
 
-test("awakening rate at screening near 25%", () => {
+test("awakening rate at screening near 25% with a typical childhood", () => {
   let n = 0;
-  for (let i = 0; i < 4000; i++) { const s = newLife("aw" + i); s.ageM = 18 * 12; n += awakenCheck(s, "screen"); }
+  for (let i = 0; i < 4000; i++) {
+    const s = newLife("aw" + i); s.ageM = 18 * 12; s.c.nearRift = 2; s.c.trainHard = 1;
+    n += awakenCheck(s, "screen");
+  }
   assert.ok(n / 4000 >= 0.23 && n / 4000 <= 0.27, `rate ${n / 4000}`);
 });
 

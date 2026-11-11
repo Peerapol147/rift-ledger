@@ -4,10 +4,12 @@ import { cityOf } from "../data/world.js";
 import { FAMILIES } from "../data/families.js";
 // Every change to s.gold goes through addLedger, so the money tab can always say why.
 const LEDGER_MONTHS = 24;
+const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว"]);
 
 export function addLedger(s, label, amt) {
   if (!amt) return;
   s.gold += amt;
+  if (amt > 0 && !NOT_EARNED.has(label)) s.c.earned = (s.c.earned ?? 0) + amt;
   s.ledger.push({ m: s.ageM, label, amt });
   if (s.flags.fullLedger) return;
   const cut = s.ageM - LEDGER_MONTHS;

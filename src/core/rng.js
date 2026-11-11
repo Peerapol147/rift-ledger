@@ -8,7 +8,16 @@ export function hash(v) {
   return h;
 }
 
-export const mk = (seed, label = "") => ({ s: hash(seed + "|" + label) });
+// murmur3 finalizer: spreads nearby hashes so seeds like "sim1", "sim2" do not start correlated.
+function fmix(h) {
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+export const mk = (seed, label = "") => ({ s: fmix(hash(seed + "|" + label)) });
 
 // mulberry32
 export function rnd(r) {
