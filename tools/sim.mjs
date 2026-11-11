@@ -27,7 +27,7 @@ function staticChecks() {
   const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...bands, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
   for (const e of [...allEv, ...decisions]) {
     const opts = e.o;
-    if (/\{(?!name\})/.test(e.t ?? "")) fail(`unfilled token in event text "${e.t}"`);
+    if (/\{(?!name\}|m\})/.test(e.t ?? "")) fail(`unfilled token in event text "${e.t}"`);
     if (!opts.some((o) => !o.need)) fail(`no free option: ${e.id ?? e.t}`);
     for (const o of opts) {
       for (const out of [o.y, o.n]) {

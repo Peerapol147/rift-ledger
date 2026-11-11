@@ -82,6 +82,7 @@ export function openEvent(s, ev) {
     id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), opts: ev.o,
     important: !!ev.important, milestone: !!ev.milestone || String(ev.id).startsWith("cal"), noAuto: !!ev.noAuto,
   };
+  if (ev.member) s.evMember = ev.member;
 }
 
 export function choose(s, i) {
