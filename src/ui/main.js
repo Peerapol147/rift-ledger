@@ -151,7 +151,12 @@ function step() {
     const i = C.autoDecide(s, ui.policy);
     if (i < 0) return false;
     C.choose(s, i);
-  } else C.advance(s);
+  } else {
+    const y = C.ageY(s);
+    C.advance(s);
+    const n = !s.dead && C.ageY(s) > y ? C.yearSummary(s, y).lines.length : 0;
+    if (n) banner(`ครบ ${y + 1} ขวบ · ปีที่ผ่านมามี ${n} เรื่องสำคัญ`);
+  }
   return true;
 }
 

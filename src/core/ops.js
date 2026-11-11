@@ -10,6 +10,7 @@ import { tick } from "./clock.js";
 import { monthly } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { SKILLS } from "../data/skills.js";
+import { ITEMS } from "../data/items.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
@@ -126,7 +127,7 @@ export function stepOp(s) {
   } else {
     heroTurn(s, o, R);
     if (o.foes.every((f) => f.cur <= 0)) o.done = "won";
-    else foeTurn(s, o, R);
+    else { foeTurn(s, o, R); quickHeal(s, o); }
     if (!o.done && o.hp <= 0) o.done = "lost";
     else if (!o.done && o.prep.plan === "retreat" && !o.def.boss && o.hp < o.maxHp * 0.5) o.done = "fled";
     else if (!o.done && o.round >= MAX_ROUNDS) o.done = "fled";
@@ -198,8 +199,21 @@ function endOp(s) {
   return r;
 }
 
+// Up to 2 healing potions from the bag go in the quick slots.
 export function defaultPrep(s) {
-  return { plan: s.prefs?.plan ?? "careful", skills: s.hunter?.slots ?? [], quick: [], team: [] };
+  const quick = (s.items ?? []).filter((i) => ITEMS[i.id]?.use === "heal").slice(0, 2).map((i) => i.uid);
+  return { plan: s.prefs?.plan ?? "careful", skills: s.hunter?.slots ?? [], quick, team: [] };
+}
+
+// Below 30% hp the first quick potion is drunk once and leaves the bag.
+export function quickHeal(s, o) {
+  if (o.hp <= 0 || o.hp >= o.maxHp * 0.3 || !o.prep.quick?.length) return;
+  const uid = o.prep.quick.shift(), it = s.items.find((i) => i.uid === uid);
+  if (!it) return quickHeal(s, o);
+  o.hp = Math.min(o.maxHp, o.hp + ((ITEMS[it.id].amount ?? 0) / 100) * o.maxHp);
+  s.items = s.items.filter((i) => i !== it);
+  o.beats?.push({ who: "h", heal: true });
+  log(s, "เกต", `ดื่ม ${ITEMS[it.id].n} กลางการต่อสู้`);
 }
 
 export function jobOp(s, job) {
