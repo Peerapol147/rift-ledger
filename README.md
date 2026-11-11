@@ -4,7 +4,16 @@
 
 ## แก้เกม
 
-โปรเจกต์นี้ใช้เอฟเฟกต์จาก `pixelfx-main` ซึ่งต้อง clone ไว้เป็นโฟลเดอร์ข้าง `rift-ledger` ตาม path `../pixelfx-main` และติดตั้ง dependency ของ repo นั้นก่อน build (`esbuild` อยู่ใน `pixelfx-main/node_modules`) บนเครื่องใหม่ให้เตรียมสองโฟลเดอร์นี้ไว้ระดับเดียวกัน แล้วจึงรันคำสั่งด้านล่าง
+โปรเจกต์นี้ใช้เอฟเฟกต์จาก [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) โดย build คาดว่า repo นั้นจะอยู่เป็นโฟลเดอร์ `pixelfx-main` ข้าง `rift-ledger` ตาม path `../pixelfx-main` และต้องติดตั้ง dependency (`esbuild`) ใน repo นั้นก่อน บนเครื่องใหม่ให้เตรียมสองโฟลเดอร์ไว้ระดับเดียวกัน:
+
+```bash
+git clone https://github.com/Peerapol147/rift-ledger.git
+git clone https://github.com/patch-gg/pixelfx.git pixelfx-main
+cd pixelfx-main
+npm install
+cd ../rift-ledger
+node build.mjs
+```
 
 ```bash
 node build.mjs
