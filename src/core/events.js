@@ -66,6 +66,7 @@ export function eligible(s, ev) {
   const a = ageY(s);
   if (ev.age && (a < ev.age[0] || a > ev.age[1])) return false;
   if (ev.country && ev.country !== s.country) return false;
+  if (ev.city && ev.city !== s.city) return false;
   if (ev.who && !ev.who.some((id) => s.job?.id === id || s.hunter?.cls === id)) return false;
   if (ev.hunter === true && !s.hunter) return false;
   if (ev.hunter === false && s.hunter) return false;
