@@ -14,7 +14,9 @@ export function pinGoal(s, g) {
 }
 
 export function pinFromOption(s, opt) {
-  const unmet = Object.entries(opt.need ?? {}).find(([k, min]) => isKnown(k) && val(s, k) < min);
+  // the same needs optionView checks, nerve's steady mind included
+  const needs = opt.nerve ? { mind: 20, ...opt.need } : opt.need ?? {};
+  const unmet = Object.entries(needs).find(([k, min]) => isKnown(k) && val(s, k) < min);
   if (!unmet) return false;
   const [key, target] = unmet;
   pinGoal(s, { kind: key in STATS ? "stat" : key === "gold" ? "gold" : "other", key, target });
@@ -23,7 +25,7 @@ export function pinFromOption(s, opt) {
 
 export const unpinGoal = (s, key) => { s.goals = s.goals.filter((g) => g.key !== key); };
 
-const goalLabel = (key) => STATS[key] ?? (key === "gold" ? "เงิน" : needLabel(key, 1));
+const goalLabel = (key) => STATS[key] ?? (key === "gold" ? "เงิน" : key === "mind" ? "สุขภาพจิต" : needLabel(key, 1));
 
 export function goalProgress(s) {
   return s.goals.map((g) => {
