@@ -78,6 +78,7 @@ export function openEvent(s, ev) {
 }
 
 export function choose(s, i) {
+  if (s.ev?.op) return hooks.decide?.(s, i);
   const ev = s.ev;
   const opt = ev?.opts[i];
   if (!opt) return;
@@ -92,7 +93,7 @@ export function choose(s, i) {
   applyOutcome(s, out, opt.l);
 }
 
-export const hooks = { die: null, injure: null, changeMind: null, act: {} };
+export const hooks = { die: null, injure: null, changeMind: null, decide: null, act: {} };
 
 export function applyOutcome(s, out, label = "เหตุการณ์") {
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);

@@ -1,4 +1,4 @@
-import { tick, choose, optionView } from "../src/core/index.js";
+import { advance as tick, choose, optionView } from "../src/core/index.js";
 
 // Picks the first visible, unlocked option.
 export const firstOpen = (s) => s.ev.opts.findIndex((o) => { const v = optionView(s, o); return v.visible && !v.locked; });

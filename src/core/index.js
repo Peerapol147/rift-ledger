@@ -8,3 +8,4 @@ export * from "./work.js";
 export * from "./world.js";
 export * from "./hunt.js";
 export * from "./hunter.js";
+export * from "./ops.js";
