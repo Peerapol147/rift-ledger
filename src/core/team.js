@@ -3,7 +3,7 @@ import { pk, ri, ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
-import { monthly, gearHooks, afterOpHooks, hooks } from "./registry.js";
+import { monthly, books, gearHooks, afterOpHooks, hooks } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { NAMES } from "../data/families.js";
 import { HIRE_FEE, WAGE_SHARE, MOODS, TEAM_MAX } from "../data/team.js";
@@ -21,7 +21,7 @@ function member(s, R, rank) {
 }
 
 export const feeOf = (m) => HIRE_FEE[m.rank];
-export const moodWord = (v) => MOODS.find(([min]) => v >= min)[1];
+export const moodWord = (v) => (MOODS.find(([min]) => (Number(v) || 0) >= min) ?? MOODS.at(-1))[1];
 const present = (s) => s.team.filter((m) => m.alive && m.hurtUntilM <= s.ageM);
 
 // 0–3 offers a year, ranks around the player's own.
@@ -71,27 +71,32 @@ export function loseAlly(s, boss) {
   if (boss) {
     m.alive = false;
     log(s, "ทีม", `${m.n} ไม่ได้กลับออกมาจากเกต`, "bad");
-    for (const x of present(s)) x.loyalty -= 8;
+    for (const x of present(s)) x.loyalty = clampL(x.loyalty - 8);
   } else {
     m.hurtUntilM = s.ageM + 6;
-    m.loyalty -= 10;
+    m.loyalty = clampL(m.loyalty - 10);
     log(s, "ทีม", `${m.n} บาดเจ็บหนักเพราะถูกทิ้งไว้ข้างหลัง`, "bad");
   }
   return m;
 }
 
-function teamMonth(s) {
+const clampL = (v) => Math.max(0, Math.min(100, Number(v) || 0));
+
+function teamWages(s) {
   for (const m of s.team.filter((x) => x.alive)) {
     addLedger(s, "ค่าจ้างลูกทีม", -Math.round(feeOf(m) * WAGE_SHARE));
     if (s.gold < 0) m.loyalty -= 5;
-    m.loyalty = Math.max(0, Math.min(100, m.loyalty + (m.loyalty < 50 ? 0.5 : 0)));
+    m.loyalty = clampL(m.loyalty + (m.loyalty < 50 ? 0.5 : 0));
   }
   for (const m of s.team) if (m.sworn) m.loyalty = Math.max(m.loyalty, 60);
+}
+
+function teamMonth(s) {
   const low = s.team.find((m) => m.alive && m.loyalty < 20);
   if (low && !s.ev) {
     const betray = ch(stream(s, "loyal"), 0.4);
     const ev = EVENT_INDEX.get(betray ? "teamLowBetray" : "teamLowLeave");
-    openEvent(s, { ...ev, t: ev.t.replace("{m}", low.n), member: low.id });
+    openEvent(s, { ...ev, t: ev.t.replaceAll("{m}", () => low.n), member: low.id });
   }
 }
 
@@ -112,7 +117,7 @@ const evMember = (s) => s.team.find((x) => x.id === s.evMember);
 hooks.ally = (s, n) => { const m = evMember(s); if (m) m.loyalty = Math.max(0, Math.min(100, m.loyalty + n)); };
 // A teammate who will never betray: joins at full loyalty (hunters), or a lifelong friend (civilians).
 hooks.act.loyalAlly = (s) => {
-  if (!s.hunter || s.team.filter((x) => x.alive).length >= TEAM_MAX) return;
+  if (!s.hunter || s.party || s.team.filter((x) => x.alive).length >= TEAM_MAX) return;
   const m = member(s, stream(s, "recruit"), Math.max(0, s.hunter.rank - 1));
   m.loyalty = 100;
   m.sworn = true;
@@ -121,14 +126,18 @@ hooks.act.loyalAlly = (s) => {
 };
 hooks.act.allyLeave = (s) => { const m = evMember(s); if (m) dismiss(s, m.id); };
 
+// Copy a chapter with {m} replaced by the member's name in every string (names are never parsed as code or JSON).
+const named = (v, n) => (typeof v === "string" ? v.replaceAll("{m}", () => n)
+  : Array.isArray(v) ? v.map((x) => named(x, n)) : v && typeof v === "object"
+    ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, named(x, n)])) : v);
+
 function teamStoryMonth(s) {
   if (s.ev) return;
   for (const m of s.team) {
     if (!m.alive || m.story >= 3) continue;
     m.next ??= s.ageM + ri(stream(s, "tstory"), 10, 18);
     if (s.ageM < m.next) continue;
-    const chapter = JSON.parse(JSON.stringify(TEAM_STORIES[m.tpl % TEAM_STORIES.length][m.story])
-      .replaceAll("{m}", m.n));
+    const chapter = named(TEAM_STORIES[m.tpl % TEAM_STORIES.length][m.story], m.n);
     m.story++;
     m.next = s.ageM + ri(stream(s, "tstory"), 10, 18);
     openEvent(s, { ...chapter, id: `tm:${m.id}:${m.story}`, important: true, member: m.id });
@@ -142,4 +151,5 @@ afterOpHooks.push((s, o, r) => {
   const d = r === "won" ? 3 : r === "fled" ? -1 : -4;
   for (const m of present(s)) m.loyalty = Math.max(0, Math.min(100, m.loyalty + d));
 });
+books.push(teamWages);
 monthly.push(teamMonth, teamStoryMonth);

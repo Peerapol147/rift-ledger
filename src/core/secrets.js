@@ -33,7 +33,9 @@ export function secretMonth(s) {
 }
 
 // Rewards
-hooks.act.ceilUp = (s) => { if (s.hunter) s.hunter.ceil = Math.min(6, s.hunter.ceil + 1); };
+hooks.act.ceilUp = (s) => {
+  if (s.hunter) s.hunter.ceil = Math.max(s.hunter.ceil, Math.min(6, s.hunter.ceil + 1));
+};
 hooks.act.subwayGift = (s) => {
   if (s.hunter) hooks.act.ceilUp(s);
   else hooks.act.awakenEvent?.(s);

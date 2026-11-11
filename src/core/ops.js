@@ -151,7 +151,8 @@ export function decide(s, i) {
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   o.loot += out.loot ?? 0;
   o.score += out.score ?? 0;
-  if (opt.lose?.ally && hooks.loseAlly?.(s, !!o.def.boss)) o.lostAlly++;
+  // leaving someone behind: an own teammate pays for it, or in someone else's team the leader's trust does
+  if (opt.lose?.ally && (hooks.loseAlly?.(s, !!o.def.boss) || s.party)) o.lostAlly++;
   if (!ok && opt.risk) injure(s, "graveWound", o.def.boss ? null : 6);
   if (out.flee) o.done = o.done ?? "fled";
   if (o.hp <= 0) o.done = "lost";

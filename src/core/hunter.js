@@ -2,7 +2,7 @@
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX, hooks } from "./events.js";
-import { monthly } from "./registry.js";
+import { monthly, lastly } from "./registry.js";
 import { LV_CAP, canRankUp, rankUp, ceilingHint } from "./awaken.js";
 import { gateOffers, gateOp, towerOp } from "./hunt.js";
 import { estimateRisk } from "./ops.js";
@@ -60,6 +60,10 @@ function hunterMonth(s) {
   const hint = ceilingHint(s);
   if (hint && !s.c.ceilHinted) { s.c.ceilHinted = 1; log(s, "ฮันเตอร์", hint, ""); }
   if (s.mind < 20 && ch(stream(s, "burn"), 0.03)) return openEvent(s, EVENT_INDEX.get("burnout"));
+}
+
+// The routine monthly gate pick waits until no story, team or secret event wants the month.
+function huntMonth(s) {
   if (s.focus !== "hunt" || !canHunt(s)) return;
   if (s.hp < 50) {
     if (!s.c.restNoted) log(s, "ร่างกาย", "ร่างกายยังไม่พร้อมลงเกต คุณพักฟื้นจนกว่าจะหายดี", "");
@@ -102,3 +106,4 @@ hooks.act.huntBreak = (s) => { s.focus = "rest"; s.c.huntBreakUntil = s.ageM + 1
 hooks.act.hideRank = (s) => { s.flags.hiddenRank = true; };
 
 monthly.push(hunterMonth);
+lastly.push(huntMonth);

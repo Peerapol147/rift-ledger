@@ -1,7 +1,8 @@
 // Being a member of an NPC's team: the leader picks gates and plans, the player keeps their own decision points,
 // takes a smaller share, earns trust, can be promoted, kicked out, split off or betray. Spec §8 (owner request).
 import { ri, pk, ch } from "./rng.js";
-import { stream, log } from "./state.js";
+import { stream, log, stageOf } from "./state.js";
+import { canHunt } from "./hunter.js";
 import { openEvent } from "./events.js";
 import { addLedger } from "./money.js";
 import { monthly, gearHooks, afterOpHooks, hooks } from "./registry.js";
@@ -38,9 +39,11 @@ export function partyGateChoice(s) {
   });
 }
 
-hooks.act.partyGo = (s) => startOp(s, s.offers[0], { ...defaultPrep(s), plan: "careful", share: SHARE[s.party.role] });
-hooks.act.partySkip = (s) => { s.party.trust = clampT(s.party.trust - 3); };
-hooks.act.partyVice = (s) => { s.party.role = "vice"; log(s, "ทีม", "คุณได้เป็นรองหัวหน้าทีม", "leg"); };
+hooks.act.partyGo = (s) => s.party && s.offers?.[0] && 
+  startOp(s, s.offers[0], { ...defaultPrep(s), plan: "careful", share: SHARE[s.party.role] });
+hooks.act.partySkip = (s) => { if (s.party) s.party.trust = clampT(s.party.trust - 3); };
+hooks.act.partyVice = (s) => { if (!s.party) return; s.party.role = "vice"; log(s, "ทีม", "คุณได้เป็นรองหัวหน้าทีม",
+  "leg"); };
 hooks.act.partyInherit = (s) => leaveParty(s, "inherit");
 
 afterOpHooks.push((s, o, r) => {
@@ -77,7 +80,8 @@ export function partyMonth(s) {
   const p = s.party;
   if (!p || s.ev) return;
   if (p.trust < 20) return leaveParty(s, "kicked");
-  if (p.role === "member" && p.trust >= 80) {
+  if (p.role === "member" && p.trust >= 80 && s.ageM >= (s.c.viceAskM ?? 0)) {
+    s.c.viceAskM = s.ageM + 12;
     return openEvent(s, { id: "partyVice", tag: "ทีม", important: true, t: `${p.leader.n} อยากให้คุณเป็นรองหัวหน้าทีม`,
       o: [{ l: "รับตำแหน่ง", y: { act: "partyVice" } }, { l: "ยังไม่พร้อม", y: { m: "หัวหน้าเข้าใจ" } }] });
   }
@@ -94,7 +98,7 @@ hooks.act.partyLeave = (s) => leaveParty(s, "leave");
 // A yearly offer from a stronger hunter while you have no team and no party.
 monthly.push((s) => {
   partyMonth(s);
-  const free = s.hunter && !s.flags.stoppedHunting && !s.team.some((m) => m.alive);
+  const free = canHunt(s) && stageOf(s) !== "old" && !s.team.some((m) => m.alive);
   if (s.ev || s.party || !free || s.ageM % 12 !== 6) return;
   const R = stream(s, "party");
   if (!ch(R, 0.35)) return;
@@ -104,6 +108,7 @@ monthly.push((s) => {
   s.partyOffer = leader;
   openEvent(s, { id: "partyOffer", tag: "ทีม",
     t: `${leader.n} ฮันเตอร์แรงก์ที่สูงกว่าคุณ ชวนเข้าทีม แบ่งเงินน้อยกว่า แต่ได้เข้าเกตใหญ่`,
+    important: true,
     o: [{ l: "เข้าทีม", y: { act: "partyJoin" } }, { l: "ขอทำทีมของตัวเอง", y: { m: "เขายักไหล่แล้วเดินไป" } }] });
 });
 hooks.act.partyJoin = (s) => joinParty(s, s.partyOffer);

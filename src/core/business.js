@@ -3,7 +3,7 @@ import { pk, ri, ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { openEvent } from "./events.js";
 import { addLedger } from "./money.js";
-import { monthly, hooks } from "./registry.js";
+import { monthly, books, hooks } from "./registry.js";
 import { NAMES } from "../data/families.js";
 import { BUSINESSES, STAFF_MAX, STAFF_WAGE, STAFF_BONUS } from "../data/business.js";
 
@@ -33,14 +33,23 @@ export function hireStaff(s, w) {
 
 export const fireStaff = (s, id) => { s.staff = (s.staff ?? []).filter((w) => w.id !== id); };
 
-function businessMonth(s) {
+function businessBooks(s) {
   const owned = businesses(s);
   if (!owned.length) return;
   const staff = s.staff ?? [];
-  const boost = 1 + staff.reduce((a, w) => a + STAFF_BONUS * (w.skill / 2), 0);
+  const boost = 1 + staff.reduce((a, w) => a + STAFF_BONUS * ((Number(w.skill) || 1) / 2), 0);
   for (const f of owned) addLedger(s, `กำไรกิจการ: ${BUSINESSES[f].n}`, Math.round(BUSINESSES[f].base * boost));
   if (staff.length) addLedger(s, "ค่าจ้างลูกน้อง", -STAFF_WAGE * staff.length);
-  for (const w of staff) w.loyalty = Math.min(100, w.loyalty + 0.5);
+  // unpaid months hurt; otherwise loyalty drifts toward a level set by how good they are at the job
+  for (const w of staff) {
+    const d = s.gold < 0 ? -6 : w.loyalty < 40 + w.skill * 10 ? 0.5 : -0.3;
+    w.loyalty = Math.max(0, Math.min(100, w.loyalty + d));
+  }
+}
+
+function businessMonth(s) {
+  const staff = s.staff ?? [];
+  if (!businesses(s).length) return;
   const thief = staff.find((w) => w.loyalty < 20);
   if (thief && !s.ev && ch(stream(s, "staff"), 0.3)) {
     s.evMember = thief.id;
@@ -61,4 +70,5 @@ hooks.act.staffSteal = (s) => { addLedger(s, "ลูกน้องยักย�
 // Opening most businesses means leaving the old job.
 for (const f of Object.keys(BUSINESSES)) hooks.act["open:" + f] = (s) => { s.flags[f] = true; s.job = null; };
 
+books.push(businessBooks);
 monthly.push(businessMonth);

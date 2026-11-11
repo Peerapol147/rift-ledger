@@ -10,8 +10,8 @@ import { ALL_EVENTS } from "../data/events/index.js";
 
 for (const m of MILESTONES) EVENT_INDEX.set(m.id, m);
 
-import { monthly } from "./registry.js";
-export { monthly };
+import { monthly, books, lastly } from "./registry.js";
+export { monthly, books, lastly };
 const EVENT_CHANCE = 0.22;
 const COOLDOWN = 36; // months before the same random event can come back
 
@@ -63,7 +63,9 @@ export function tick(s) {
   bodyMonth(s, step);
   // The year rolls over first: a system that opens an event this month must not skip the old-age check.
   if (ageY(s) > yearBefore) { yearEnd(s); if (s.dead) return; }
+  for (const sys of books) { sys(s, step); if (s.dead) return; }
   for (const sys of monthly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
+  for (const sys of lastly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
   const ev = dueEvent(s) ?? randomEvent(s);
   if (!ev) return;
   s.c["last:" + ev.id] = s.ageM;

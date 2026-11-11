@@ -45,9 +45,11 @@ export function applyUnlocks(s, b) {
   const pool = [...FAMILIES, ...st.families.filter((f) => f.open)].filter((f) => f.country === s.country);
   const pick = wp(stream(s, "unlock"), pool);
   if (st.families.some((f) => f.open && f.id === pick.id)) {
+    const old = FAMILIES.find((f) => f.id === s.family);
+    for (const [k, v] of Object.entries(old?.st ?? {})) s.st[k] -= v;
     s.family = pick.id;
     for (const [k, v] of Object.entries(pick.st)) s.st[k] += v;
-    s.unlockFamily = pick;
+    s.unlockFamily = { ...pick, gold: Number(pick.gold) || 0 };
     log(s, "ชะตา", `ครอบครัวของคุณคือ${pick.n}: ${pick.d}`, "imp");
   }
   for (const x of st.bonuses) if (x.open) s.st[x.stat] *= 1 + x.pct / 100;

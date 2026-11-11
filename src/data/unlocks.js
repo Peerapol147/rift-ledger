@@ -18,6 +18,6 @@ export const STAT_BONUS = [
   { stat: "agi", pct: 2, n: "เคยตื่นพลังมาแล้วสามคลาส", need: [["count", "cls:3"]] },
   { stat: "cha", pct: 2, n: "เคยเป็นเจ้าของกิจการ", need: [["flag", "business"]] },
   { stat: "luk", pct: 2, n: "เคยได้ของที่พาคนกลับจากความตาย", need: [["flag", "gotToken"]] },
-  { stat: "int", pct: 2, n: "เคยไขเควสลับจนจบ", need: [["count", "secret:1"]] },
+  { stat: "int", pct: 2, n: "เคยตามเรื่องแปลกในชีวิตไปจนสุดทาง", need: [["count", "secret:1"]] },
 ];
 export const BONUS_CAP = 10;
