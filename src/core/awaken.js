@@ -28,10 +28,12 @@ export function rollCeil(r, rank) {
 // Three classes this seed leans toward. Fixed per seed, independent of play.
 export const aptitude = (s) => shuf(mk(s.seed, "apt"), Object.keys(CLASSES)).slice(0, 3);
 
-export function rollClass(s) {
+export function rollClass(s, rank = s.hunter?.rank ?? 0) {
   const r = stream(s, "cls");
-  const taken = new Set(s.world.roster.filter((n) => CLASSES[n.cls]?.rarity >= 3).map((n) => n.cls));
-  const tiers = RARITY.map((t, i) => ({ i, w: t.w })).filter((t) => avail(t.i, taken).length);
+  // Legendary classes are unique in the world; Mythic ones only answer an EX awakening.
+  const taken = new Set(s.world.roster.filter((n) => CLASSES[n.cls]?.rarity === 3).map((n) => n.cls));
+  const tierOk = (i) => (i === 4 ? rank === 7 : true) && avail(i, taken).length;
+  const tiers = RARITY.map((t, i) => ({ i, w: rank === 7 && i === 4 ? 30 : t.w })).filter((t) => tierOk(t.i));
   const tier = wp(r, tiers).i;
   const apt = aptitude(s);
   const pool = avail(tier, taken).map((id) => {
@@ -49,7 +51,7 @@ const startSkills = (cls) => CLASSES[cls].skills.filter(([lv]) => lv <= 1).map((
 function awaken(s, cause) {
   const r = stream(s, "rank");
   const rank = rollRank(r);
-  const cls = rollClass(s);
+  const cls = rollClass(s, rank);
   const skills = startSkills(cls);
   s.hunter = {
     rank, rank0: rank, ceil: rollCeil(r, rank), cls, lv: 1, xp: 0,

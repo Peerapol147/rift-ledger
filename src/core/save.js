@@ -5,10 +5,19 @@ const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
 
 export const serialize = (s) => JSON.stringify(s);
 
+// Top-level numbers the UI prints; anything that is not a finite number becomes 0 (or its numeric value).
+const NUMS = ["ageM", "gold", "fame", "debt", "hp", "mind", "lifeY", "mon0"];
+const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
 export function deserialize(str) {
   try {
     const s = JSON.parse(str);
     if (!s || s.v !== 2 || REQUIRED.some((k) => !(k in s))) return null;
+    if (typeof s.name !== "string" || typeof s.seed !== "string") return null;
+    for (const k of NUMS) s[k] = num(s[k]);
+    for (const k of Object.keys(s.st ?? {})) s.st[k] = num(s.st[k]);
+    if (s.hunter) for (const k of ["rank", "lv", "xp", "ceil"]) s.hunter[k] = num(s.hunter[k]);
+    for (const k of Object.keys(s.world?.records ?? {})) s.world.records[k] = num(s.world.records[k]);
     return s;
   } catch {
     return null;
@@ -37,7 +46,17 @@ export function slots(store, n = 3) {
 export function collection(store) {
   const empty = () => ({ titles: [], seen: {}, lives: 0 });
   const get = () => {
-    try { return { ...empty(), ...JSON.parse(store.get(BOOK) ?? "null") }; } catch { return empty(); }
+    let raw;
+    try { raw = JSON.parse(store.get(BOOK) ?? "null") ?? {}; } catch { raw = {}; }
+    const b = empty();
+    if (Array.isArray(raw.titles)) b.titles = raw.titles.filter((t) => typeof t === "string");
+    if (raw.seen && typeof raw.seen === "object" && !Array.isArray(raw.seen)) {
+      for (const [k, v] of Object.entries(raw.seen)) {
+        if (Array.isArray(v)) b.seen[k] = v.filter((x) => typeof x === "string");
+      }
+    }
+    b.lives = Number.isFinite(Number(raw.lives)) ? Number(raw.lives) : 0;
+    return b;
   };
   const put = (b) => store.set(BOOK, JSON.stringify(b));
   return {

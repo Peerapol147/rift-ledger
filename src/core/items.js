@@ -105,7 +105,8 @@ afterOpHooks.push((s, o, r) => {
   }
 });
 
-deathHooks.push((s) => {
+deathHooks.push((s, cause) => {
+  if (cause === "อายุขัย") return false; // a token pulls you back from a wound, not from the end of a life
   const tok = s.items.find((i) => i.id === "phoenixToken");
   if (!tok) return false;
   s.items = s.items.filter((i) => i !== tok);

@@ -23,6 +23,7 @@ function staticChecks() {
   const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
   for (const e of [...allEv, ...decisions]) {
     const opts = e.o;
+    if (/\{(?!name\})/.test(e.t ?? "")) fail(`unfilled token in event text "${e.t}"`);
     if (!opts.some((o) => !o.need)) fail(`no free option: ${e.id ?? e.t}`);
     for (const o of opts) {
       for (const out of [o.y, o.n]) {
@@ -99,7 +100,10 @@ const aw = pct(hunters.length, N);
 row("awaken 23–27%", aw.toFixed(1) + "%", aw >= 23 && aw <= 27, N >= 1000);
 const r0 = Array(8).fill(0);
 for (const s of hunters) r0[s.hunter.rank0]++;
-row("start rank F/E/D/C/B/A/S", r0.slice(0, 7).map((n) => pct(n, hunters.length).toFixed(0)).join("/"), true);
+// within 3 standard errors of the spec's weights for this many hunters
+const rankOk = [40, 20, 15, 10, 9, 5, 1].every((w, i) =>
+  Math.abs(pct(r0[i], hunters.length) - w) <= 3 * Math.sqrt((w * (100 - w)) / Math.max(1, hunters.length)) + 0.5);
+row("start rank F/E/D/C/B/A/S", r0.slice(0, 7).map((n) => pct(n, hunters.length).toFixed(0)).join("/"), rankOk, hunters.length >= 700);
 const early = hunters.filter((s) => s.dead.cause !== "อายุขัย" && s.dead.ageY < 50).length;
 const earlyP = pct(early, hunters.length);
 const target = { careful: [0, 8], normal: [5, 20], reckless: [20, 30] }[POLICY];

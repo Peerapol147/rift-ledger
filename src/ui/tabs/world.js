@@ -3,7 +3,7 @@ import { TOWERS, CALENDAR, CLASSES, RANKS, COUNTRIES } from "../../data/index.js
 import { esc } from "../dom.js";
 
 export function worldTab(s) {
-  const towers = Object.values(TOWERS).map((t) => `<div class="kv"><span>${esc(t.n)} · ${COUNTRIES[t.country].n}</span><b>ชั้น ${s.world.records[t.id]}</b></div>`).join("");
+  const towers = Object.values(TOWERS).map((t) => `<div class="kv"><span>${esc(t.n)} · ${COUNTRIES[t.country].n}</span><b>ชั้น ${Number(s.world.records[t.id])}</b></div>`).join("");
   const seen = CALENDAR.filter((e) => s.world.done[e.id]).map((e) => `<div>ปีที่ ${e.year} · ${esc(e.news.replace("{npc} ", ""))}</div>`).join("");
   const roster = s.world.roster.map((n) =>
     `<tr><td>${esc(n.title ?? n.n)}</td><td>${COUNTRIES[n.country].n}</td><td>${RANKS[n.rank]}</td><td>${esc(CLASSES[n.cls]?.n ?? "")}</td></tr>`).join("");

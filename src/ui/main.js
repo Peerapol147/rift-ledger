@@ -58,12 +58,17 @@ function startScreen() {
   $("#start").hidden = false; $("#game").hidden = true; $("#end").hidden = true;
 }
 
-function endScreen() {
+function endScreen() { showEnd(true); }
+
+// record: true the first time a life ends (collection + save); false when re-opening a finished save
+function showEnd(record) {
   const d = C.deathSummary(s);
-  book.addLife();
-  book.addTitle(d.role);
-  for (const id of Object.keys(s.world.done)) if (id.startsWith("cal")) book.addSeen("cal", id);
-  if (ui.slot >= 0) slots.save(ui.slot, s);
+  if (record) {
+    book.addLife();
+    book.addTitle(d.role);
+    for (const id of Object.keys(s.world.done)) if (id.startsWith("cal")) book.addSeen("cal", id);
+    if (ui.slot >= 0) slots.save(ui.slot, s);
+  }
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
     <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
@@ -158,7 +163,7 @@ function loop(t) {
     acc += dt;
     while (acc >= SPEEDS[ui.speed]) { acc -= SPEEDS[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
   }
-  if (s?.dead && $("#end").hidden) endScreen();
+  if (s?.dead && $("#end").hidden && !s.endShown) { s.endShown = true; endScreen(); }
   if (dirty) render();
 }
 
@@ -172,14 +177,20 @@ function act(a, el) {
       begin(C.newLife(seed));
       if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
     },
-    load: () => { const life = slots.load(+v); if (life) { ui.slot = +v; ui.settings = false; begin(life); } else banner("โหลดเซฟไม่สำเร็จ"); },
+    load: () => {
+      const life = slots.load(+v);
+      if (!life) return banner("โหลดเซฟไม่สำเร็จ");
+      ui.slot = +v; ui.settings = false;
+      begin(life);
+      if (life.dead) showEnd(false); // a finished life: show its end, do not count it again
+    },
     save: () => { slots.save(+v, s); ui.slot = +v; banner("บันทึกแล้ว"); },
     del: () => { slots.del(+v); if (!s || s.dead) startScreen(); },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
     quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
     choose: () => { C.choose(s, +v); fx(); },
-    pin: () => { C.pinFromOption(s, s.ev.opts[+v]); },
+    pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),
     speed: () => { ui.speed = +v; ui.paused = false; saveCfg(); },

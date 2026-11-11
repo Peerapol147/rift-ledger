@@ -1,6 +1,6 @@
 // Pinned goals, alerts and summaries. Alerts speak in-world; summaries never name hidden things. Spec §11.4.
 import { ageY, yearsAfterRift, monthOfYear } from "./state.js";
-import { val, isKnown } from "./events.js";
+import { val, isKnown, needLabel } from "./events.js";
 import { debtCap } from "./money.js";
 import { rankName } from "./awaken.js";
 import { jobTitle } from "./work.js";
@@ -23,7 +23,7 @@ export function pinFromOption(s, opt) {
 
 export const unpinGoal = (s, key) => { s.goals = s.goals.filter((g) => g.key !== key); };
 
-const goalLabel = (key) => STATS[key] ?? (key === "gold" ? "เงิน" : key);
+const goalLabel = (key) => STATS[key] ?? (key === "gold" ? "เงิน" : needLabel(key, 1));
 
 export function goalProgress(s) {
   return s.goals.map((g) => {

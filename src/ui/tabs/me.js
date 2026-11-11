@@ -22,7 +22,7 @@ export function meTab(s) {
       <div class="kv"><span>คลาส</span><b>${esc(c.n)}</b></div><div class="dim">${esc(c.d)}</div>
       <div class="kv"><span>บทบาท</span><b>${ROLES[c.role]}</b></div>
       <div class="kv"><span>แรงก์</span><b>${RANKS[h.rank]}${s.flags.hiddenRank ? " (ในบัตร: ซ่อนไว้)" : ""}</b></div>
-      <div class="kv"><span>เลเวล</span><b>${h.lv} / ${C.LV_CAP[h.rank]}</b></div>
+      <div class="kv"><span>เลเวล</span><b>${Number(h.lv)} / ${C.LV_CAP[h.rank]}</b></div>
       <div class="kv"><span>โจมตี · ป้องกัน · พลังชีวิต</span><b class="num">${Math.round(p.atk)} · ${Math.round(p.def)} · ${Math.round(p.hp)}</b></div>
       ${hint ? `<p class="dim" style="margin-top:6px">${esc(hint)}</p>` : ""}
       <h4>สกิล (ช่อง ${h.slots.length}/${C.slotsFor(h.rank)})</h4>${skills}`;

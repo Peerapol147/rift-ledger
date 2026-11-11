@@ -3,6 +3,7 @@ import { ch } from "./rng.js";
 import { stream, ageY, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { STATS } from "../data/stats.js";
+import { ROLES } from "../data/classes.js";
 import { ALL_EVENTS } from "../data/events/index.js";
 import { hooks, resolvers } from "./registry.js";
 
@@ -31,7 +32,7 @@ export function val(s, key) {
   return s.c[key] ?? (s.flags[key] ? 1 : 0);
 }
 
-function needLabel(key, min) {
+export function needLabel(key, min) {
   if (key in STATS) return `${STATS[key]} ${min}`;
   if (key === "gold") return `เงิน ₿${min}`;
   if (key === "hp") return `สุขภาพ ${min}`;
@@ -40,11 +41,12 @@ function needLabel(key, min) {
   if (kind === "skill") return `สกิล [${resolvers.skillName(id)}]`;
   if (kind === "job") return `อาชีพ [${resolvers.jobName(id)}]`;
   if (kind === "cls") return `คลาส [${resolvers.clsName(id)}]`;
-  return `บทบาท [${id}]`;
+  return `บทบาท [${ROLES[id] ?? id}]`;
 }
 
 export function optionView(s, opt) {
-  const need = Object.entries(opt.need ?? {});
+  // nerve: brave options need a steady mind (spec §6.4)
+  const need = Object.entries(opt.nerve ? { mind: 20, ...opt.need } : opt.need ?? {});
   const unmet = need.filter(([k, min]) => val(s, k) < min);
   const view = { label: opt.l, desc: opt.d ?? "", odds: null, locked: false, lockText: null, visible: true };
   if (unmet.some(([k]) => !isKnown(k))) return { ...view, visible: false };

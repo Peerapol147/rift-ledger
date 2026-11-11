@@ -9,7 +9,7 @@ const STAGE_TITLE = { kid: "เด็ก", teen: "วัยรุ่น", adult:
 
 function roleLine(s) {
   const st = C.stageOf(s);
-  if (s.hunter) return `ฮันเตอร์ · ${esc(CLASSES[s.hunter.cls].n)} · Lv.${s.hunter.lv}`;
+  if (s.hunter) return `ฮันเตอร์ · ${esc(CLASSES[s.hunter.cls]?.n)} · Lv.${Number(s.hunter.lv)}`;
   if (s.job) return esc(C.jobTitle(s)) + ` · ${esc(CAREERS[s.job.id].n)}`;
   return `${STAGE_TITLE[st]}ใน${esc(cityOf(s.city).n)}`;
 }
@@ -32,7 +32,7 @@ export function card(s) {
   ${xp}
   <div class="kv"><span>เงิน</span><b class="${s.gold < 0 ? "bad" : ""}">${money(s.gold)}</b></div>
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
-  ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${s.fame}</b></div>` : ""}
+  ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
   <div class="stats">${stats}</div>${alerts}${goals}
   <h3>แผนเดือนนี้</h3><div class="plan">${plans}</div>`;
 }

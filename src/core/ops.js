@@ -171,7 +171,8 @@ function endOp(s) {
     if (def.boss) injure(s, "bossScar", null);
     injure(s, "beaten", 3);
     if (s.hunter && def.kind !== "job") gainXp(s, def.foes.reduce((a, f) => a + f.lv, 0) * 0.2 * OP_XP);
-    log(s, "เกต", "คุณถูกลากออกมาโดยทีมกู้ภัยของสมาคม", "bad");
+    if (def.kind === "job") log(s, "งานใหญ่", "งานพังกลางทาง คุณบาดเจ็บและต้องพักรักษาตัว", "bad");
+    else log(s, "เกต", "คุณถูกลากออกมาโดยทีมกู้ภัยของสมาคม", "bad");
     return r;
   }
   const share = r === "won" ? 1 : 0.3;
