@@ -88,7 +88,7 @@ export function choose(s, i) {
   applyOutcome(s, out, opt.l);
 }
 
-export const hooks = { die: null, injure: null, changeMind: null };
+export const hooks = { die: null, injure: null, changeMind: null, act: {} };
 
 export function applyOutcome(s, out, label = "เหตุการณ์") {
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
@@ -97,6 +97,7 @@ export function applyOutcome(s, out, label = "เหตุการณ์") {
   Object.assign(s.flags, out.flags ?? {});
   if (out.mind) hooks.changeMind ? hooks.changeMind(s, out.mind) : (s.mind = clamp(s.mind + out.mind, 0, 100));
   if (out.injury) hooks.injure?.(s, out.injury[0], out.injury[1] ?? null);
+  if (out.act) hooks.act[out.act]?.(s);
   if (out.next) s.sched.push({ id: out.next[0], atM: s.ageM + out.next[1] });
   if (out.hp) {
     s.hp = Math.min(100, s.hp + out.hp);
