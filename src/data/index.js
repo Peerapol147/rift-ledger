@@ -10,3 +10,4 @@ export * from "./monsters.js";
 export * from "./gates.js";
 export * from "./towers.js";
 export * from "./calendar.js";
+export * from "./items.js";

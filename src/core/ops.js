@@ -14,7 +14,8 @@ import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
 const PLAN = { push: { atk: 1.15, def: 0.9 }, careful: { atk: 0.95, def: 1.1 }, retreat: { atk: 0.9, def: 1.15 } };
-export const gearHooks = []; // fn(s) -> { atk, def, hp } added to hero power (items, Task 10)
+export const gearHooks = []; // fn(s) -> { atk, def, hp } added to hero power (items)
+export const afterOpHooks = []; // fn(s, op, result) after rewards are paid
 
 export function heroPower(s) {
   const h = s.hunter;
@@ -145,6 +146,7 @@ function endOp(s) {
     s.c.floor = Math.max(s.c.floor ?? 0, def.floor);
     recordFloor(s, def.tower, def.floor, true);
   }
+  for (const f of afterOpHooks) f(s, o, r);
   log(s, "เกต", r === "won" ? `สำเร็จ ได้ ₿${gold}` : `ถอยออกมา ได้ ₿${gold}`, r === "won" ? "imp" : "");
   return r;
 }
