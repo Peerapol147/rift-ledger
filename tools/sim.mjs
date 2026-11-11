@@ -19,7 +19,10 @@ const fail = (msg) => { console.log("FAIL " + msg); hardFail = true; };
 function staticChecks() {
   const evIds = new Set([...ALL_EVENTS, ...D.MILESTONES].map((e) => e.id));
   const ids = new Set([...Object.keys(D.CLASSES), ...Object.keys(D.CAREERS)]);
-  const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {}))];
+  const story = Object.values(D.STORIES).flatMap((c) => c.chapters);
+  const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {})), ...story];
+  const roles = new Set(Object.keys(D.ROLES));
+  for (const [id, c] of Object.entries(D.STORIES)) for (const w of c.who) if (!ids.has(w) && !roles.has(w)) fail(`story ${id}: unknown who ${w}`);
   const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
   for (const e of [...allEv, ...decisions]) {
     const opts = e.o;

@@ -111,6 +111,7 @@ export function countUnseen(s, opts) {
 // lethal: only options the player saw marked with risk can kill; anything else leaves at least 1 health.
 export function applyOutcome(s, out, label = "เหตุการณ์", lethal = false) {
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
+  if (out.jobXp && s.job) s.job.xp += out.jobXp;
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
   for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;
