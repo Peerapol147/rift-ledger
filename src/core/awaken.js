@@ -97,6 +97,8 @@ export function ceilingHint(s) {
   return "ช่วงนี้ฝึกเท่าไรก็รู้สึกเหมือนชนกำแพงที่มองไม่เห็น";
 }
 
+hooks.act.awakenEvent = (s) => awakenCheck(s, "event");
+
 hooks.act.awakenScreen = (s) => {
   if (!awakenCheck(s, "screen")) log(s, "หมุดหมาย", "แสงบนแท่นดับลงอย่างเงียบๆ คุณยังเป็นคนธรรมดา", "");
 };

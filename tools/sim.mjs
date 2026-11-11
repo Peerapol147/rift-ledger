@@ -19,7 +19,8 @@ const fail = (msg) => { console.log("FAIL " + msg); hardFail = true; };
 function staticChecks() {
   const evIds = new Set([...ALL_EVENTS, ...D.MILESTONES].map((e) => e.id));
   const ids = new Set([...Object.keys(D.CLASSES), ...Object.keys(D.CAREERS)]);
-  const story = [...Object.values(D.STORIES).flatMap((c) => c.chapters), ...D.TEAM_STORIES.flat()];
+  const story = [...Object.values(D.STORIES).flatMap((c) => c.chapters), ...D.TEAM_STORIES.flat(),
+    ...Object.values(D.SECRETS).flatMap((q) => q.steps)];
   const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {})), ...story];
   const roles = new Set(Object.keys(D.ROLES));
   for (const [id, c] of Object.entries(D.STORIES)) for (const w of c.who) if (!ids.has(w) && !roles.has(w)) fail(`story ${id}: unknown who ${w}`);
@@ -127,6 +128,11 @@ const ceil = pct(room.filter((s) => s.hunter.rank === s.hunter.ceil).length, roo
 row("hunters with room who reach ceiling 30–50%", ceil.toFixed(1) + "%", ceil >= 30 && ceil <= 50);
 const same = [0, 1, 2].every((i) => JSON.stringify(playLife("det" + i)) === JSON.stringify(playLife("det" + i)));
 row("determinism", same ? "same" : "DIFFERENT", same, true);
+// Secret quests: share of lives that saw the first step of at least one of their three.
+const sqReach = pct(lives.filter((s) => (s.secrets ?? []).some((id) => (s.c["sqo:" + id] ?? 0) > 0)).length, N);
+row("lives that find a secret quest ≥30%", sqReach.toFixed(1) + "%", sqReach >= 30);
+const tokens = lives.filter((s) => s.flags.gotToken).length;
+console.log("phoenix tokens", tokens, "· secret quests finished", lives.reduce((a, s) => a + (s.secrets ?? []).filter((id) => (s.c["sq:" + id] ?? 0) >= D.SECRETS[id].steps.length).length, 0));
 const causes = {};
 for (const s of lives) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
 console.log("deaths", JSON.stringify(causes));

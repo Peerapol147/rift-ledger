@@ -86,6 +86,7 @@ function teamMonth(s) {
     if (s.gold < 0) m.loyalty -= 5;
     m.loyalty = Math.max(0, Math.min(100, m.loyalty + (m.loyalty < 50 ? 0.5 : 0)));
   }
+  for (const m of s.team) if (m.sworn) m.loyalty = Math.max(m.loyalty, 60);
   const low = s.team.find((m) => m.alive && m.loyalty < 20);
   if (low && !s.ev) {
     const betray = ch(stream(s, "loyal"), 0.4);
@@ -109,6 +110,15 @@ hooks.loseAlly = loseAlly;
 // Teammate stories: one chapter at a time, 10–18 months apart, each about one member's own life.
 const evMember = (s) => s.team.find((x) => x.id === s.evMember);
 hooks.ally = (s, n) => { const m = evMember(s); if (m) m.loyalty = Math.max(0, Math.min(100, m.loyalty + n)); };
+// A teammate who will never betray: joins at full loyalty (hunters), or a lifelong friend (civilians).
+hooks.act.loyalAlly = (s) => {
+  if (!s.hunter || s.team.filter((x) => x.alive).length >= TEAM_MAX) return;
+  const m = member(s, stream(s, "recruit"), Math.max(0, s.hunter.rank - 1));
+  m.loyalty = 100;
+  m.sworn = true;
+  s.team.push(m);
+  log(s, "ทีม", `${m.n} ขอเข้าทีมของคุณ และสาบานว่าจะไม่ทิ้งคุณ`, "leg");
+};
 hooks.act.allyLeave = (s) => { const m = evMember(s); if (m) dismiss(s, m.id); };
 
 function teamStoryMonth(s) {

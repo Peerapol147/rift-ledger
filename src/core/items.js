@@ -4,6 +4,7 @@ import { stream, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { deathHooks } from "./body.js";
 import { gearHooks, afterOpHooks } from "./ops.js";
+import { hooks } from "./registry.js";
 import { ITEMS, LOOT_TABLE } from "../data/items.js";
 
 export const bagCap = () => 20;
@@ -85,6 +86,15 @@ export function useItem(s, uid) {
   if (def.use === "learn" && s.hunter && !s.hunter.skills.includes(def.skill)) s.hunter.skills.push(def.skill);
   s.items = s.items.filter((i) => i.uid !== uid);
   return true;
+}
+
+// Story rewards: give:<itemId>. The Phoenix Token comes at most once per life.
+for (const id of Object.keys(ITEMS)) {
+  hooks.act["give:" + id] = (s) => {
+    if (id === "phoenixToken" && s.flags.gotToken) return;
+    if (id === "phoenixToken") s.flags.gotToken = true;
+    giveItem(s, id, "ของจากเรื่องราวในชีวิต");
+  };
 }
 
 gearHooks.push((s) => {

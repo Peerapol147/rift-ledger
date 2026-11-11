@@ -15,6 +15,7 @@ export const ITEMS = {
   coreStone: item("Gate Core Stone", "material", 1, 700),
   bookTelekinesis: item("Skill Book: Telekinesis", "book", 2, 6000, { use: "learn", skill: "telekinesis" }),
   phoenixToken: item("Phoenix Token", "relic", 4, 0, { use: "revive" }),
+  shadowlessBlade: item("Shadowless Blade", "weapon", 3, 30000, { slot: "weapon", stats: { atk: 70 } }),
 };
 
 // What a won operation can drop, weighted. loot points from decisions add rolls.

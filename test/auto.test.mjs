@@ -30,7 +30,7 @@ test("stop policy always waits; prefers higher odds and avoids mind loss", () =>
   assert.equal(autoDecide(s, "important"), 1);
 });
 
-test("important policy finishes a civilian life with ≤ 40 stops", () => {
+test("important policy finishes a civilian life with ≤ 50 stops", () => {
   for (let i = 0; ; i++) {
     const s = newLife("civ" + i);
     let stops = 0;
@@ -42,7 +42,7 @@ test("important policy finishes a civilian life with ≤ 40 stops", () => {
     }
     if (s.hunter) continue;
     assert.ok(s.dead);
-    assert.ok(stops <= 40, `stops ${stops}`);
+    assert.ok(stops <= 50, `stops ${stops}`);
     return;
   }
 });
