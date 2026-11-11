@@ -60,7 +60,10 @@ cd rift-ledger && npm install
 | กิจการของคนธรรมดา | `src/data/business.js` |
 | เควสลับ (สุ่ม 3 สายต่อชีวิต) | `src/data/secrets.js` |
 | ของที่ปลดจากสมุดสะสม | `src/data/unlocks.js` |
-| เหตุการณ์สุ่มตามเมือง อาชีพ วัย | `src/data/events/more.js` |
+| เหตุการณ์สุ่มตามเมือง อาชีพ วัย | `src/data/events/more.js`, `src/data/events/places2.js` |
+| เหตุการณ์ของระบบใหม่ (กิลด์ ช่าง ที่เก็บของ ฝ่ายต่างๆ) | `src/data/events/systems.js` |
+| ฝ่ายต่างๆ: ความหมายของตัวเลือกเดิม (`FAC_FROM`) และเรื่องระยะยาว (`FAC_ARCS`) | `src/data/factions.js` |
+| กิลด์ (สายปลอดภัย หัวกะทิ มืด) และเงื่อนไขตั้งกิลด์ | `src/data/guilds.js` |
 | ชื่อบาดแผล | `src/data/injuries.js` |
 | เมือง ประเทศ อัตราตื่นพลัง สัดส่วนแรงก์ | `src/data/world.js` |
 
