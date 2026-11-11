@@ -33,11 +33,12 @@
 
 ## Review Focus
 
-1. **Team in fights:** teammates add power and fill roles. A lost ally (`lose.ally`) removes or kills a real teammate, never an empty slot.
-2. **Betrayal and leaving:** these come only from low loyalty after things the player did, never at random with high loyalty.
-3. **Secret quest gating:** a seed's secret quests are fixed by the seed. Their first step is reachable in normal play by at least 30% of lives in the sim.
-4. **Book unlocks:** an unlock never applies twice. Starting a life with the book empty behaves exactly as today.
-5. **Saves:** team and book data round-trip. Old Phase 3 saves without `s.team` fields still load.
+1. **Being a member:** the leader's choices never override the player's own decision points, and a kicked-out player keeps their items.
+2. **Team in fights:** teammates add power and fill roles. A lost ally (`lose.ally`) removes or kills a real teammate, never an empty slot.
+3. **Betrayal and leaving:** these come only from low loyalty after things the player did, never at random with high loyalty.
+4. **Secret quest gating:** a seed's secret quests are fixed by the seed. Their first step is reachable in normal play by at least 30% of lives in the sim.
+5. **Book unlocks:** an unlock never applies twice. Starting a life with the book empty behaves exactly as today.
+6. **Saves:** team and book data round-trip. Old Phase 3 saves without `s.team` fields still load.
 
 ---
 
@@ -77,6 +78,39 @@
 - `lose.ally` hits a real member
 - low loyalty → leave event
 - mood words never show numbers
+
+### Task 1b: Joining someone else's team (owner request)
+
+The player can also be a **member** of a team led by an NPC. Sources are roster names, story characters, or a guild offer.
+
+**State:** `s.party = { leader: npcId, trust: 0..100, rank: "member" | "vice" }`. The player is in their own team or in someone else's, never both.
+
+**Who decides:**
+- The leader picks the gate (rank up to leader rank − 1) and the battle plan.
+- The player still decides their own decision points inside the gate.
+
+**Money and progress:**
+- Share is 40%, or 60% as vice.
+- XP gets +30%.
+- Team power from the leader's team applies.
+
+**Trust:**
+- Rises with wins and loyal choices. Falls with failed or selfish choices, including leaving an ally behind.
+- High trust: promotion to vice, then an offer to inherit the team when the leader retires.
+- Low trust: kicked out, or left behind inside a gate (a boss-op risk).
+
+**Exits:**
+- Leave peacefully.
+- Split off and take members whose loyalty to the player is at least 60.
+- Betray the leader: one big payout, a fame loss and a lasting enemy.
+
+**Civilians:** the same model as a trusted employee of an NPC-owned business. Promotion goes to partner, and inheritance or a takeover can happen.
+
+**Tests:**
+- Gate choice follows the leader, and the player's decision points still open.
+- The share is applied.
+- Trust drives promotion and the kick-out.
+- Splitting takes only members with loyalty ≥ 60.
 
 ### Task 2: Teammate stories (2–3 chapters each, random per member)
 
