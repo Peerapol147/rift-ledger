@@ -35,6 +35,7 @@ cd rift-ledger && npm install
 | `src/data/` | ข้อมูลเนื้อหาทั้งหมด แยกไฟล์ตามหมวด |
 | `src/ui/` | หน้าจอ อ่านสถานะจาก core และเรียกฟังก์ชันของ core |
 | `src/stage.js` และ `src/*-art.js` | ฉาก pixel art และเอฟเฟกต์ |
+| `src/fx/rift/` | เอฟเฟกต์ของเกมเราเอง (`gate-open` เกตเปิด, `gate-break` เกตแตก) สร้างด้วยวิธีของ pixelfx ตั้งชื่อ `rift/...` ใน `src/presets.js` |
 | `vendor/pixelfx/` | สำเนา `src/` ของ pixelfx 0.3.1 (MIT) วิธีอัปเดตอยู่ใน `vendor/pixelfx/README.md` |
 | `test/` | เทสต์ของ `src/core` |
 

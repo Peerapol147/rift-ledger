@@ -74,9 +74,16 @@ function endScreen() {
 }
 
 // ---- Effects on the stage, from differences between frames
-const snap = () => ({ hunter: !!s.hunter, rank: s.hunter?.rank, lv: s.hunter?.lv, gold: s.gold, year: C.ageY(s) });
+const snap = () => ({
+  hunter: !!s.hunter, rank: s.hunter?.rank, lv: s.hunter?.lv, gold: s.gold, year: C.ageY(s),
+  op: s.op && s.op.def.kind !== "job" ? s.op.def.id : null, ev: s.ev?.id ?? null, evTag: s.ev?.tag,
+});
+const BREAK_EVENTS = new Set(["adultBreakNear", "hunterBreakCall", "cal24", "cal27", "cal48"]);
 function fx() {
   const now = snap();
+  // a gate tears open when a gate or tower run starts; a gate breaks when a gate-break event opens
+  if (now.op && now.op !== prev.op) trigger({ n: "gateOpen" });
+  if (now.ev && now.ev !== prev.ev && BREAK_EVENTS.has(now.ev)) trigger({ n: "gateBreak" });
   if (now.hunter && !prev.hunter) trigger({ n: "awaken" });
   else if (now.rank > prev.rank) trigger({ n: "rank" });
   else if (now.lv > prev.lv) trigger({ n: "levelup" });

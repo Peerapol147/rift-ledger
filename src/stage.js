@@ -169,7 +169,9 @@ export function trigger(ev) {
   if (n === "fight") return playFight(ev.a);
   if (n === "minor") { if (performance.now() - lastMinor < 650 || (foe && !foe.m)) return; lastMinor = performance.now(); return playMinor(ev.a); }
   const L = PRESET[n]; if (!L) return;
-  L.forEach((name, i) => spawn(name, PX + i * 40, n === "event" ? GY - 34 : GY)); if (n === "surge" || n === "break") jolt(0.7);
+  // Rift gates stand where the foe would, in front of the hero; everything else plays on the hero.
+  L.forEach((name, i) => spawn(name, name.startsWith("rift/") ? EX : PX + i * 40, n === "event" ? GY - 34 : GY));
+  if (n === "surge" || n === "break" || n === "gateBreak") jolt(0.7);
 }
 export const skip = () => { if (seq) { seq.i = seq.R.length; seq.wait = 0; } };
 // The next frame is booked first, so one bad frame can never leave the stage black for the rest of the session.
