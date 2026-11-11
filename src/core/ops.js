@@ -10,6 +10,7 @@ import { tick } from "./clock.js";
 import { monthly } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { SKILLS } from "../data/skills.js";
+import { ITEMS } from "../data/items.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
@@ -126,7 +127,7 @@ export function stepOp(s) {
   } else {
     heroTurn(s, o, R);
     if (o.foes.every((f) => f.cur <= 0)) o.done = "won";
-    else foeTurn(s, o, R);
+    else { foeTurn(s, o, R); quickHeal(s, o); }
     if (!o.done && o.hp <= 0) o.done = "lost";
     else if (!o.done && o.prep.plan === "retreat" && !o.def.boss && o.hp < o.maxHp * 0.5) o.done = "fled";
     else if (!o.done && o.round >= MAX_ROUNDS) o.done = "fled";
@@ -145,10 +146,12 @@ export function decide(s, i) {
   s.ev = null;
   log(s, "เกต", `${opt.l}${out.m ? " → " + out.m : ""}`, ok ? "imp" : "bad");
   if (out.hp) o.hp += (out.hp / 100) * o.maxHp;
-  applyOutcome(s, { c: out.c, flags: out.flags, gold: out.gold, goldLabel: out.goldLabel, st: out.st, act: out.act },
-    opt.l);
+  applyOutcome(s, { c: out.c, flags: out.flags, gold: out.gold, goldLabel: out.goldLabel, st: out.st, act: out.act,
+    fac: out.fac }, opt.l);
   if (out.mind) hooks.changeMind(s, out.mind);
-  if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
+  // a hidden rank keeps the spotlight away: fame gains are halved
+  if (out.fame) s.fame = Math.max(0, s.fame + (s.flags.hiddenRank && out.fame > 0 ? Math.ceil(out.fame / 2)
+    : out.fame));
   o.loot += out.loot ?? 0;
   o.score += out.score ?? 0;
   // leaving someone behind: an own teammate pays for it, or in someone else's team the leader's trust does
@@ -167,6 +170,7 @@ function endOp(s) {
     s.lastFight = { foe, rounds: o.beats, win: r === "won" };
   }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
+  if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") {
     if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH)) {
       die(s, `พ่ายแก่ ${def.foes.find((f) => f.boss)?.n ?? def.t}`);
@@ -180,7 +184,8 @@ function endOp(s) {
     return r;
   }
   const share = (r === "won" ? 1 : 0.3) * (o.prep.share ?? 1);
-  const gold = Math.round(def.rewards.gold * share * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
+  const mul = def.kind === "job" ? 1 : hooks.payMul?.(s) ?? 1;
+  const gold = Math.round(def.rewards.gold * share * mul * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
   const xpShare = (r === "won" ? 1 : 0.3) * (o.prep.share ? 0.7 : 1); // in a party the leader does most of the killing
@@ -195,8 +200,21 @@ function endOp(s) {
   return r;
 }
 
+// Up to 2 unlocked healing potions from the bag go in the quick slots.
 export function defaultPrep(s) {
-  return { plan: s.prefs?.plan ?? "careful", skills: s.hunter?.slots ?? [], quick: [], team: [] };
+  const quick = (s.items ?? []).filter((i) => !i.lock && ITEMS[i.id]?.use === "heal").slice(0, 2).map((i) => i.uid);
+  return { plan: s.prefs?.plan ?? "careful", skills: s.hunter?.slots ?? [], quick, team: [] };
+}
+
+// Below 30% hp the first quick potion is drunk once and leaves the bag.
+export function quickHeal(s, o) {
+  if (o.hp <= 0 || o.hp >= o.maxHp * 0.3 || !o.prep.quick?.length) return;
+  const uid = o.prep.quick.shift(), it = s.items.find((i) => i.uid === uid);
+  if (!it) return quickHeal(s, o);
+  o.hp = Math.min(o.maxHp, o.hp + ((ITEMS[it.id].amount ?? 0) / 100) * o.maxHp);
+  s.items = s.items.filter((i) => i !== it);
+  o.beats?.push({ who: "h", heal: true });
+  log(s, "เกต", `ดื่ม ${ITEMS[it.id].n} กลางการต่อสู้`);
 }
 
 export function jobOp(s, job) {
@@ -214,7 +232,7 @@ export function advance(s) {
   tick(s);
 }
 
-for (const i of [0, 1, 2, 3]) {
+for (const i of [0, 1, 2, 3, 4, 5]) {
   hooks.act["gate" + i] = (s) => s.offers?.[i] && startOp(s, s.offers[i], defaultPrep(s));
 }
 hooks.decide = decide;

@@ -4,6 +4,7 @@ import { stream, ageY, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { STATS } from "../data/stats.js";
 import { ROLES } from "../data/classes.js";
+import { FACTIONS } from "../data/factions.js";
 import { ALL_EVENTS } from "../data/events/index.js";
 import { hooks, resolvers } from "./registry.js";
 
@@ -24,6 +25,7 @@ export function val(s, key) {
   if (key === "age") return ageY(s);
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
+  if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   const [kind, id] = key.split(":");
   if (kind === "skill") return s.hunter?.skills.includes(id) ? 1 : 0;
   if (kind === "job") return s.job?.id === id ? 1 : 0;
@@ -41,6 +43,7 @@ export function needLabel(key, min) {
   if (kind === "skill") return `สกิล [${resolvers.skillName(id)}]`;
   if (kind === "job") return `อาชีพ [${resolvers.jobName(id)}]`;
   if (kind === "cls") return `คลาส [${resolvers.clsName(id)}]`;
+  if (kind === "fac") return `ความไว้ใจจาก${FACTIONS[id] ?? id}`;
   return `บทบาท [${ROLES[id] ?? id}]`;
 }
 
@@ -119,9 +122,12 @@ export function countUnseen(s, opts) {
 
 // lethal: only options the player saw marked with risk can kill; anything else leaves at least 1 health.
 export function applyOutcome(s, out, label = "เหตุการณ์", lethal = false) {
-  if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
+  // a hidden rank keeps the spotlight away: fame gains are halved
+  if (out.fame) s.fame = Math.max(0, s.fame + (s.flags.hiddenRank && out.fame > 0 ? Math.ceil(out.fame / 2)
+    : out.fame));
   if (out.jobXp && s.job) s.job.xp += out.jobXp;
   if (out.ally) hooks.ally?.(s, out.ally);
+  hooks.facOutcome?.(s, out);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
   for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;

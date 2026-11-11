@@ -1,5 +1,5 @@
 import * as C from "../../core/index.js";
-import { TOWERS, CALENDAR, CLASSES, RANKS, COUNTRIES } from "../../data/index.js";
+import { TOWERS, CALENDAR, CLASSES, RANKS, COUNTRIES, FACTIONS } from "../../data/index.js";
 import { esc } from "../dom.js";
 
 export function worldTab(s) {
@@ -9,6 +9,7 @@ export function worldTab(s) {
     `<tr><td>${esc(n.title ?? n.n)}</td><td>${COUNTRIES[n.country].n}</td><td>${RANKS[n.rank]}</td><td>${esc(CLASSES[n.cls]?.n ?? "")}</td></tr>`).join("");
   return `<h3>ตอนนี้</h3><div>${esc(C.dateText(s))}</div>
     <h3>สถิติหอคอย</h3>${towers}${s.c.floor ? `<div class="dim">ชั้นสูงสุดของคุณ: ${s.c.floor}</div>` : ""}
+    <h3>ฝ่ายต่างๆ มองคุณ</h3>${Object.entries(FACTIONS).map(([k, n]) => `<div class="kv"><span>${n}</span><b>${C.facWord(s.fac?.[k])}</b></div>`).join("")}
     <h3>เหตุการณ์ที่ผ่านมา</h3>${seen || `<div class="dim">ยังไม่มี</div>`}
     <h3>ฮันเตอร์ที่โลกจับตา</h3><table>${roster}</table>`;
 }

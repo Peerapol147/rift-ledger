@@ -8,7 +8,7 @@ import { GATES } from "../data/gates.js";
 import { TOWERS, TOWER_DECISIONS } from "../data/towers.js";
 import { KIND_POWER, MONSTERS } from "../data/monsters.js";
 
-const GATE_LV = [6, 14, 24, 34, 46, 60, 78, 100];
+export const GATE_LV = [6, 14, 24, 34, 46, 60, 78, 100];
 
 export function foe(name, lv, el, boss = false) {
   const p = KIND_POWER[boss ? "boss" : MONSTERS[name]?.kind ?? "beast"];

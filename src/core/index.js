@@ -19,3 +19,4 @@ export * from "./party.js";
 export * from "./business.js";
 export * from "./secrets.js";
 export * from "./book.js";
+export * from "./factions.js";
