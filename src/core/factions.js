@@ -103,7 +103,7 @@ monthly.push((s) => {
       goldLabel: "ของจากตลาดมืด", act: "underBuy", fac: { assoc: -2 } } },
     { l: "ไม่เอา", y: { m: "ข้อความนั้นลบตัวเองไปในหนึ่งนาที" } }] });
 });
-hooks.act.underBuy = (s) => { if (s.underOffer) giveItem(s, s.underOffer, "ตลาดมืด"); };
+hooks.act.underBuy = (s) => { if (ITEMS[s.underOffer]) giveItem(s, s.underOffer, "ตลาดมืด"); };
 hooks.act.facTaxFine = (s) => {
   addLedger(s, "ค่าปรับภาษีย้อนหลัง", -Math.round(Math.max(0, s.gold) * 0.1));
   moveFac(s, { state: 15 });
