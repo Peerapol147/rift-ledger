@@ -84,6 +84,7 @@ export function choose(s, i) {
   if (!opt) return;
   const view = optionView(s, opt);
   if (!view.visible || view.locked) return;
+  countUnseen(s, ev.opts);
   const ok = view.odds == null || ch(stream(s, "ev"), view.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};
   s.ev = null;
@@ -91,6 +92,12 @@ export function choose(s, i) {
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
   log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
   applyOutcome(s, out, opt.l);
+}
+
+// Options the player could not see or could not pick, counted for the death summary (never named).
+export function countUnseen(s, opts) {
+  const n = opts.filter((o) => { const v = optionView(s, o); return !v.visible || v.locked; }).length;
+  s.c.unseen = (s.c.unseen ?? 0) + n;
 }
 
 export const hooks = { die: null, injure: null, changeMind: null, decide: null, act: {} };

@@ -1,7 +1,7 @@
 // Operations: one engine for gates, towers and civilian big jobs. prep → auto rounds → decision points. Spec §7.
 import { ch, rnd, wp } from "./rng.js";
 import { stream, ageY, log } from "./state.js";
-import { optionView, hooks } from "./events.js";
+import { optionView, hooks, countUnseen } from "./events.js";
 import { addLedger } from "./money.js";
 import { die, injure } from "./body.js";
 import { gainXp } from "./hunter.js";
@@ -109,6 +109,7 @@ export function decide(s, i) {
   if (!o || !opt) return;
   const v = optionView(s, opt);
   if (!v.visible || v.locked) return;
+  countUnseen(s, s.ev.opts);
   const ok = v.odds == null || ch(stream(s, "op"), v.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};
   s.ev = null;

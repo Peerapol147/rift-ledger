@@ -10,3 +10,4 @@ export * from "./hunt.js";
 export * from "./hunter.js";
 export * from "./ops.js";
 export * from "./items.js";
+export * from "./goals.js";
