@@ -20,3 +20,6 @@ export * from "./business.js";
 export * from "./secrets.js";
 export * from "./book.js";
 export * from "./factions.js";
+export * from "./storage.js";
+export * from "./forge.js";
+export * from "./legacy.js";

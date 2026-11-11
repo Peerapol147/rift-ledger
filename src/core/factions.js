@@ -29,6 +29,13 @@ hooks.facOutcome = (s, out) => {
 };
 
 hooks.payMul = gatePayMul;
+// Fighting a gate break in front of everyone shows your real rank; the association dislikes being lied to.
+hooks.act.breakHelp = (s) => {
+  if (!s.flags.hiddenRank) return;
+  s.flags.hiddenRank = false;
+  moveFac(s, { assoc: -5 });
+  log(s, "ฮันเตอร์", "ทุกคนเห็นพลังจริงของคุณ แรงก์ที่ซ่อนไว้ไม่เป็นความลับอีกต่อไป", "bad");
+};
 hooks.act.licPause = (s) => { s.c.huntBreakUntil = s.ageM + 3; };
 
 // Illegal gates: the association notices, the underground approves, and sometimes you get caught.

@@ -60,11 +60,22 @@ function startScreen() {
 
 function endScreen() { showEnd(true); }
 
+function legacyRows() {
+  const L = C.legacyOf(s);
+  return `<div class="kv"><span>มรดกทั้งหมด</span><b>₿${L.assets.toLocaleString("en-US")}</b></div>
+    ${L.kids ? `<div class="kv"><span>ลูก</span><b>${L.kids} คน</b></div>` : ""}
+    ${L.enemies.length ? `<div class="kv"><span>ศัตรูที่ทิ้งไว้</span><b>${esc(L.enemies.join(", "))}</b></div>` : ""}`;
+}
+
+// items stay put while a fight or a choice is open
+function busy() { if (s.ev || s.op) { banner("จัดการเรื่องที่ค้างอยู่ก่อน"); return true; } return false; }
+
 // record: true the first time a life ends (collection + save); false when re-opening a finished save
 function showEnd(record) {
   const d = C.deathSummary(s);
   if (record) {
     book.addLife();
+    book.setLegacy(C.legacyOf(s));
     book.addTitle(d.role);
     for (const [kind, id] of C.lifeRecord(s)) book.addSeen(kind, id);
     if (ui.slot >= 0) slots.save(ui.slot, s);
@@ -72,7 +83,7 @@ function showEnd(record) {
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
     <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
-    <div class="kv"><span>ชื่อเสียง</span><b>${d.fame}</b></div>${d.floor ? `<div class="kv"><span>ชั้นหอคอยสูงสุด</span><b>${d.floor}</b></div>` : ""}
+    <div class="kv"><span>ชื่อเสียง</span><b>${d.fame}</b></div>${legacyRows()}${d.floor ? `<div class="kv"><span>ชั้นหอคอยสูงสุด</span><b>${d.floor}</b></div>` : ""}
     <p class="dim" style="margin-top:10px">ชีวิตนี้มีทางที่คุณไม่ได้เห็น ${d.unseen} ทาง</p>
     <div class="row">${btn("new", "เริ่มชีวิตใหม่", 'class="pri"')}${btn("quit", "หน้าแรก")}</div></div>`;
   $("#end").hidden = false;
@@ -212,6 +223,9 @@ function act(a, el) {
     slot: () => toggleSlot(s, v),
     equip: () => C.equip(s, v), lock: () => { const it = s.items.find((i) => i.uid === v); C.lockItem(s, v, !it.lock); },
     sell: () => C.sellItem(s, v), use: () => C.useItem(s, v),
+    forge: () => { if (busy()) return; const r = C.forge(s, v); banner(r === "ok" ? "ตีบวกสำเร็จ" : r === "fail" ? "ตีบวกไม่สำเร็จ" : "ตีบวกไม่ได้"); },
+    stashHome: () => busy() || C.stash(s, v, "home") || banner("เก็บไม่ได้"), stashVault: () => busy() || C.stash(s, $("[data-c=vaultPick]")?.value, "vault") || banner("เก็บไม่ได้"),
+    takeHome: () => busy() || C.take(s, v, "home") || banner("กระเป๋าเต็ม"), takeVault: () => busy() || C.take(s, v, "vault") || banner("หยิบไม่ได้"),
     junk: () => banner(`ขายไป ${C.autoJunk(s, { belowRarity: ui.junk })} ชิ้น`),
     loadSave: () => { const n = "ชุด " + (Object.keys(s.loadouts ?? {}).length + 1); C.saveLoadout(s, n); },
     loadUse: () => C.useLoadout(s, v),

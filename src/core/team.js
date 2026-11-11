@@ -1,4 +1,5 @@
 // The player's team: hired NPC hunters with rank, class, role, loyalty and wounds. Spec §8.
+import { addEnemy } from "./legacy.js";
 import { pk, ri, ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
@@ -108,6 +109,7 @@ hooks.act.teamBetray = (s) => {
   addLedger(s, "ลูกทีมขโมยของ", -Math.round(Math.max(0, s.gold) * 0.3));
   const it = s.items.find((i) => !i.lock && !Object.values(s.equip).includes(i.uid));
   if (it) s.items = s.items.filter((x) => x !== it);
+  addEnemy(s, m.n, "ลูกทีมที่ขโมยของแล้วหนีไป");
   dismiss(s, m.id);
 };
 hooks.loseAlly = loseAlly;

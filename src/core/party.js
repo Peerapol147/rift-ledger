@@ -1,5 +1,6 @@
 // Being a member of an NPC's team: the leader picks gates and plans, the player keeps their own decision points,
 // takes a smaller share, earns trust, can be promoted, kicked out, split off or betray. Spec §8 (owner request).
+import { addEnemy } from "./legacy.js";
 import { ri, pk, ch } from "./rng.js";
 import { stream, log, stageOf } from "./state.js";
 import { canHunt } from "./hunter.js";
@@ -70,6 +71,7 @@ export function leaveParty(s, how) {
     addLedger(s, "เงินที่ขโมยจากทีมเดิม", 6000 + p.leader.rank * 3000);
     s.fame = Math.max(0, s.fame - 10);
     s.flags.partyEnemy = p.leader.n;
+    addEnemy(s, p.leader.n, "หัวหน้าทีมที่คุณหักหลัง");
   }
   const text = { leave: "คุณแยกทางกับทีมด้วยดี", split: "คุณแยกออกมาตั้งทีมเอง", betray: "คุณหอบเงินของทีมหนีไป",
     inherit: `${p.leader.n} เกษียณ และยกทีมให้คุณดูแล`, kicked: `${p.leader.n} ไล่คุณออกจากทีม` }[how];

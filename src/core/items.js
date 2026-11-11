@@ -6,6 +6,7 @@ import { deathHooks } from "./body.js";
 import { gearHooks, afterOpHooks } from "./ops.js";
 import { hooks } from "./registry.js";
 import { ITEMS, LOOT_TABLE } from "../data/items.js";
+import { plusMul } from "./forge.js";
 
 export const bagCap = () => 20;
 const inst = (s, uid) => s.items.find((i) => i.uid === uid);
@@ -40,10 +41,11 @@ export function sellItem(s, uid) {
 }
 
 export function compare(s, uid) {
-  const def = ITEMS[inst(s, uid)?.id];
-  const cur = ITEMS[inst(s, s.equip[def?.slot])?.id];
+  const a = inst(s, uid), def = ITEMS[a?.id];
+  const b = inst(s, s.equip[def?.slot]), cur = ITEMS[b?.id];
   const out = {};
-  for (const k of ["atk", "def", "hp"]) out[k] = (def?.stats?.[k] ?? 0) - (cur?.stats?.[k] ?? 0);
+  const v = (d, it, k) => (d?.stats?.[k] ?? 0) * plusMul(it);
+  for (const k of ["atk", "def", "hp"]) out[k] = Math.round(v(def, a, k) - v(cur, b, k));
   return out;
 }
 
@@ -100,8 +102,8 @@ for (const id of Object.keys(ITEMS)) {
 gearHooks.push((s) => {
   const out = { atk: 0, def: 0, hp: 0 };
   for (const uid of Object.values(s.equip)) {
-    const st = ITEMS[inst(s, uid)?.id]?.stats ?? {};
-    for (const k in out) out[k] += st[k] ?? 0;
+    const it = inst(s, uid), st = ITEMS[it?.id]?.stats ?? {};
+    for (const k in out) out[k] += (st[k] ?? 0) * plusMul(it);
   }
   return out;
 });
