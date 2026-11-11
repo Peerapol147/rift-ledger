@@ -49,6 +49,14 @@ export function deserialize(str) {
         paid: num(h.paid), guildDone: num(h.guildDone), grudgeDone: num(h.grudgeDone) };
     }
     if ("gen" in s) s.gen = Math.max(1, num(s.gen));
+    // teammates and staff: keep real records, numbers as numbers, ids plain (they go into button actions)
+    const okPerson = (m) => m && typeof m === "object" && typeof m.n === "string" && /^[\w-]+$/.test(String(m.id));
+    for (const k of ["team", "staff"]) {
+      if (!(k in s)) continue;
+      s[k] = Array.isArray(s[k]) ? s[k].filter(okPerson) : [];
+      const NUMF = ["rank", "lv", "loyalty", "hurtUntilM", "story", "tpl"];
+      for (const m of s[k]) for (const f of NUMF) if (f in m) m[f] = num(m[f]);
+    }
     if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
     return s;
   } catch {

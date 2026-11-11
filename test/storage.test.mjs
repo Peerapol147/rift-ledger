@@ -74,3 +74,11 @@ test("imported saves: bad uids are dropped, plus is a whole number 0..5, the tok
   const tok = C.giveItem(t, "phoenixToken", "t");
   assert.equal(C.stash(t, tok, "home"), false);
 });
+
+test("imported saves: teammates with odd ids or text numbers are cleaned", () => {
+  const s = adult("tm");
+  s.team = [{ id: 'x" onclick="y', n: "a", rank: 1 }, { id: "m1", n: "b", rank: "2", lv: "9", loyalty: "50" }, 5];
+  const t = C.deserialize(C.serialize(s));
+  assert.equal(t.team.length, 1);
+  assert.equal(t.team[0].rank, 2);
+});
