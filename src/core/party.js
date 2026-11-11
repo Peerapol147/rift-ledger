@@ -102,7 +102,7 @@ hooks.act.partyLeave = (s) => leaveParty(s, "leave");
 monthly.push((s) => {
   partyMonth(s);
   const free = canHunt(s) && stageOf(s) !== "old" && !s.team.some((m) => m.alive);
-  if (s.ev || s.party || s.guild || !free || s.ageM % 12 !== 6) return;
+  if (s.ev || s.party || s.guild || s.flags.blacklisted || !free || s.ageM % 12 !== 6) return;
   const R = stream(s, "party");
   if (!ch(R, 0.35)) return;
   const rank = Math.min(6, s.hunter.rank + ri(R, 1, 2));

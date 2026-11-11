@@ -19,6 +19,9 @@ export const ITEMS = {
 };
 
 // What a won operation can drop, weighted. loot points from decisions add rolls.
+// Items of one rarity that a shop could sell (no relics, nothing unique).
+export const RARITY_ITEMS = (r) => Object.keys(ITEMS).filter((k) => ITEMS[k].rarity === r && ITEMS[k].kind !== "relic");
+
 export const LOOT_TABLE = [
   { id: "manaShard", w: 10 },
   { id: "beastHide", w: 8 },

@@ -84,7 +84,7 @@ export function openGateChoice(s) {
   const next = (s.c.floor ?? 0) + 1;
   if (s.hunter.rank >= 1 && next <= 50) defs.push(towerOp(s, tower, next));
   // with friends underground, an unregistered gate one rank up: double pay, more bosses, no association watching
-  if ((s.fac?.under ?? 0) >= (hooks.guildPerk?.(s) === "shady" ? 10 : 20)) {
+  if (!s.flags.patronState && (s.fac?.under ?? 0) >= (hooks.guildPerk?.(s) === "shady" ? 10 : 20)) {
     const g = { ...gateOffers(s)[0] };
     g.rank = Math.min(6, g.rank + 1);
     g.lv = GATE_LV[g.rank];

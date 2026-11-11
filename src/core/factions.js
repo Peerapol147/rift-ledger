@@ -1,10 +1,15 @@
 // Faction standing: set at birth, moved by outcomes (fac: { id: n }) and by mapped counters/flags (FAC_FROM).
-import { onNewLife, hooks, monthly } from "./registry.js";
+import { onNewLife, hooks, monthly, books } from "./registry.js";
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { openEvent } from "./events.js";
-import { FACTIONS, FAC_WORDS, FAC_FROM } from "../data/factions.js";
+import { FACTIONS, FAC_WORDS, FAC_FROM, FAC_ARCS, FAC_HI } from "../data/factions.js";
+import { ITEMS, RARITY_ITEMS } from "../data/items.js";
+import { giveItem } from "./items.js";
+import { changeMind } from "./body.js";
+import { pk } from "./rng.js";
+import { ageY } from "./state.js";
 
 const clampF = (v) => Math.max(-100, Math.min(100, v));
 
@@ -64,3 +69,51 @@ monthly.push((s) => {
     ],
   });
 });
+
+// ---- Long-term arcs: once per life each, a faction that trusts you makes an offer; one that turns on you, trouble.
+monthly.push((s) => {
+  if (s.ev || ageY(s) < 18) return;
+  for (const [k, arc] of Object.entries(FAC_ARCS)) {
+    const v = s.fac?.[k] ?? 0;
+    for (const [side, ok] of [["hi", v >= FAC_HI], ["bad", v <= arc.lo]]) {
+      const e = arc[side], key = `fac${side}:${k}`;
+      if (!ok || s.c[key] || (e.hunter && !s.hunter)) continue;
+      s.c[key] = 1;
+      openEvent(s, { id: key, tag: "ฝ่ายต่างๆ", important: true, t: e.t, o: e.o });
+      return;
+    }
+  }
+});
+
+// Perks while the faction still likes you (the flag stays; the money stops if standing falls below 20).
+books.push((s, step = 1) => {
+  const f = s.fac ?? {};
+  if (s.flags.patronAssoc && (f.assoc ?? 0) >= 20) addLedger(s, "เบี้ยกรรมการสมาคม", 800 * step);
+  if (s.flags.patronState && (f.state ?? 0) >= 20) addLedger(s, "เงินเดือนที่ปรึกษารัฐ", 1000 * step);
+  if (s.flags.patronChurch && (f.church ?? 0) >= 20) changeMind(s, 2 * step);
+});
+
+// Once a year the underground's back door has one good thing at a friend's price.
+monthly.push((s) => {
+  if (s.ev || !s.flags.patronUnder || (s.fac?.under ?? 0) < 20 || s.ageM % 12 !== 9) return;
+  const id = pk(stream(s, "under"), RARITY_ITEMS(2)), d = ITEMS[id], price = Math.round(d.price * 0.6);
+  s.underOffer = id;
+  openEvent(s, { id: "underShop", tag: "ฝ่ายต่างๆ", t: `ข้อความจากเบอร์แปลก: ปีนี้มี ${d.n} ราคา ₿${price} สนใจไหม`,
+    o: [{ l: "ซื้อ", need: { gold: price }, y: { m: "ของถูกส่งมาในกล่องไม่มีชื่อผู้ส่ง", gold: -price,
+      goldLabel: "ของจากตลาดมืด", act: "underBuy", fac: { assoc: -2 } } },
+    { l: "ไม่เอา", y: { m: "ข้อความนั้นลบตัวเองไปในหนึ่งนาที" } }] });
+});
+hooks.act.underBuy = (s) => { if (s.underOffer) giveItem(s, s.underOffer, "ตลาดมืด"); };
+hooks.act.facTaxFine = (s) => {
+  addLedger(s, "ค่าปรับภาษีย้อนหลัง", -Math.round(Math.max(0, s.gold) * 0.1));
+  moveFac(s, { state: 15 });
+};
+// Research grant: money, and for a hunter, a straight answer about how far they can still grow.
+hooks.act.facResearchGrant = (s) => {
+  addLedger(s, "ทุนวิจัย", 3000);
+  const h = s.hunter;
+  if (!h) return;
+  const left = Math.max(0, h.ceil - h.rank);
+  const text = left ? "ผลตรวจบอกว่ามานาของคุณยังมีที่ว่างให้เติบโต" : "ผลตรวจบอกว่ามานาของคุณใกล้เต็มภาชนะแล้ว";
+  log(s, "นักวิจัย", text, "imp");
+};
