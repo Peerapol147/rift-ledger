@@ -62,3 +62,14 @@ test("moving city costs money; across countries halves job tier", () => {
   assert.ok(s.gold < 5000);
   assert.equal(s.flags.relicense, true);
 });
+
+test("a hunter who stopped hunting gets the default calendar view, not nothing", () => {
+  let s;
+  for (let i = 0; !s; i++) { const t = newLife("vw" + i); if (t.city === "bkk") s = t; }
+  s.ageM = 30 * 12; awakenCheck(s, "event"); s.flags.stoppedHunting = true;
+  s.ageM = (48 - 21) * 12 + 4 - (s.mon0 ?? 0);
+  for (const id of ["cal24", "cal27", "cal30", "cal33", "cal36", "cal38", "cal40", "cal42", "cal44", "cal46"]) s.world.done[id] = 1;
+  playUntil(s, (x) => x.ev?.id === "cal48" || x.dead || yearsAfterRift(x) > 48);
+  assert.equal(s.ev?.id, "cal48");
+  assert.ok(Array.isArray(s.ev.opts) && s.ev.opts.length > 0);
+});

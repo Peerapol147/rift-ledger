@@ -49,7 +49,9 @@ export function recordFloor(s, tower, floor, byPlayer) {
 
 function viewFor(s, entry) {
   const v = entry.views;
-  return (s.job && v[s.job.id]) ?? (s.hunter && !s.flags.stoppedHunting && v.hunter) ?? v.default;
+  if (s.job && v[s.job.id]) return v[s.job.id];
+  if (s.hunter && !s.flags.stoppedHunting && v.hunter) return v.hunter;
+  return v.default;
 }
 
 function runEntry(s, e) {
@@ -59,7 +61,8 @@ function runEntry(s, e) {
     s.world.records[e.tower] = e.floor;
     return news(s, text(e.news));
   }
-  if (e.country !== s.country) return news(s, e.news);
+  if (e.kind === "news") return news(s, e.news);
+  if (e.country && e.country !== s.country) return news(s, e.news);
   // same country, other city: the nearby view (watching it on the news, family calling) or just the news line
   if (e.city && e.city !== s.city) {
     if (!e.views.nearby) return news(s, e.news);
