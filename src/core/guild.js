@@ -22,7 +22,7 @@ export function guildsFor(s) {
 export function joinGuild(s, id) {
   const d = (GUILDS[s.country] ?? []).find((x) => x.id === id);
   if (!d || s.guild || s.party || !s.hunter) return false;
-  s.guild = { id, n: d.n, role: "member", standing: 30, since: s.ageM };
+  s.guild = { id, n: d.n, role: "member", standing: 50, since: s.ageM };
   log(s, "กิลด์", `คุณเข้าร่วม${d.n}`, "imp");
   return true;
 }
@@ -42,7 +42,7 @@ export const canFound = (s) => !!s.hunter && !s.party && s.guild?.role !== "mast
 
 export function foundGuild(s) {
   if (!canFound(s)) return false;
-  if (s.guild) leaveGuild(s, true);
+  if (s.guild) leaveGuild(s);
   addLedger(s, "ค่าจดทะเบียนกิลด์", -FOUND.gold);
   s.guild = { id: "own", n: `กิลด์ของ${s.name}`, role: "master", standing: 100, since: s.ageM };
   moveFac(s, { assoc: 5 });
@@ -56,16 +56,19 @@ afterOpHooks.push((s, o, r, gold) => {
   const d = guildDef(s);
   if (d && gold > 0) addLedger(s, "ส่วนแบ่งกิลด์", -Math.round(gold * d.cut * (s.guild.role === "officer" ? 0.5 : 1)));
   if (r === "won") s.guild.standing = clampG(s.guild.standing + (o.def.guildJob ? 4 : 1));
+  else if (r === "fled") s.guild.standing = clampG(s.guild.standing - (o.def.guildJob ? 4 : 1));
 });
 
 hooks.guildPerk = guildPerk;
+// a lost run (no payout, so no after-op hooks) still costs standing
+hooks.guildLoss = (s) => { if (s.guild && s.guild.role !== "master") s.guild.standing = clampG(s.guild.standing - 5); };
 hooks.bossDeathMul = (s) => (guildPerk(s) === "safe" ? 0.5 : 1);
 hooks.xpMul = (s) => (guildPerk(s) === "elite" ? 1.2 : 1);
 
 // Your own guild: dues from the name you made and the people you lead, against rent and staff.
 books.push((s, step = 1) => {
   if (s.guild?.role !== "master") return;
-  const inc = s.fame * 40 + s.team.filter((m) => m.alive).length * 600;
+  const inc = s.fame * 40 + s.team.filter((m) => m.alive).reduce((a, m) => a + 150 * (m.rank + 1), 0);
   addLedger(s, "รายได้กิลด์", Math.round(inc * step));
   addLedger(s, "ค่าดำเนินการกิลด์", -FOUND.upkeep * step);
 });

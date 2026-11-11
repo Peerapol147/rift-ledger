@@ -94,7 +94,8 @@ export function openGateChoice(s) {
   }
   // a guild member gets the guild's own contract: your rank, better pay, standing on a win
   if (s.guild && s.guild.role !== "master") {
-    const d = gateOp(s, { ...gateOffers(s)[0], boss: false });
+    const rank = s.hunter.rank;
+    const d = gateOp(s, { ...gateOffers(s)[0], rank, lv: GATE_LV[Math.min(6, rank)], boss: false });
     const gold = Math.round(d.rewards.gold * 1.3);
     defs.push({ ...d, guildJob: true, t: "งานกิลด์ · " + d.t, rewards: { ...d.rewards, gold } });
   }

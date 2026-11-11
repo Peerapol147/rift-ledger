@@ -19,7 +19,7 @@
 - **Leaving:** any time from the team tab. Locker items go home. Moving country leaves an NPC guild.
 - **Founding:** rank ≥ C, fame ≥ 40, ₿50,000 and no party.
   - Your team cap becomes 6.
-  - Monthly income is fame×40 + 600 per teammate, against ₿2,500 upkeep.
+  - Monthly income is fame×40 + 150×(rank+1) per teammate, against ₿2,500 upkeep.
   - Association standing +5.
 - **Guild locker:** 20 slots, open only while you are in a guild.
 - **Legacy:** a founded guild is listed. The book records `guildMaster`.

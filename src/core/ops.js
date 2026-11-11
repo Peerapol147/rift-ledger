@@ -171,6 +171,7 @@ function endOp(s) {
   }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
   if (def.illegal) hooks.illegalEnd?.(s, def);
+  if (r === "lost") hooks.guildLoss?.(s, def);
   if (r === "lost") {
     if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH * (hooks.bossDeathMul?.(s) ?? 1))) {
       die(s, `พ่ายแก่ ${def.foes.find((f) => f.boss)?.n ?? def.t}`);

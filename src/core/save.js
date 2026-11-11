@@ -40,6 +40,8 @@ export function deserialize(str) {
       s.guild = typeof g === "object" && typeof g.n === "string" && roles.includes(g.role)
         ? { id: String(g.id), n: g.n, role: g.role, standing: num(g.standing), since: num(g.since) } : null;
     }
+    // a locker without a guild would be unreachable: its items go home
+    if (!s.guild && s.store?.guild?.length) { s.store.home.push(...s.store.guild); s.store.guild = []; }
     if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
     return s;
   } catch {
