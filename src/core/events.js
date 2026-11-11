@@ -20,6 +20,8 @@ export function val(s, key) {
   if (key in STATS) return s.st[key];
   if (key === "gold" || key === "hp" || key === "mind") return s[key];
   if (key === "age") return ageY(s);
+  if (key === "rank") return s.hunter ? s.hunter.rank : -1;
+  if (key === "fame") return s.fame;
   const [kind, id] = key.split(":");
   if (kind === "skill") return s.hunter?.skills.includes(id) ? 1 : 0;
   if (kind === "job") return s.job?.id === id ? 1 : 0;
@@ -51,6 +53,8 @@ export function optionView(s, opt) {
     view.lockText = `ต้องการ ${needLabel(k, min)}` + (k in STATS ? ` · คุณมี ${Math.floor(val(s, k))}` : "");
   }
   if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0)) * 4), 5, 95);
+  else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
+  view.risk = opt.risk ?? 0;
   return view;
 }
 
@@ -91,6 +95,7 @@ export function choose(s, i) {
 export const hooks = { die: null, injure: null, changeMind: null, act: {} };
 
 export function applyOutcome(s, out, label = "เหตุการณ์") {
+  if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
   for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;

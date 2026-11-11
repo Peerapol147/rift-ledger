@@ -53,6 +53,7 @@ export function newLife(seed) {
     mind: 100,
     lifeY: 70 + ri(R, 0, 15),
     gold: 0,
+    fame: 0,
     debt: 0,
     ledger: [],
     flags: {},
