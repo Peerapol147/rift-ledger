@@ -23,7 +23,8 @@ function staticChecks() {
   const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {})), ...story];
   const roles = new Set(Object.keys(D.ROLES));
   for (const [id, c] of Object.entries(D.STORIES)) for (const w of c.who) if (!ids.has(w) && !roles.has(w)) fail(`story ${id}: unknown who ${w}`);
-  const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
+  const bands = Object.values(D.TOWERS).flatMap((t) => t.bands.flatMap((b) => b.decisions ?? []));
+  const decisions = [...D.GATES.flatMap((g) => g.decisions), ...D.TOWER_DECISIONS, ...bands, ...D.BIG_JOBS.flatMap((j) => j.decisions)];
   for (const e of [...allEv, ...decisions]) {
     const opts = e.o;
     if (/\{(?!name\})/.test(e.t ?? "")) fail(`unfilled token in event text "${e.t}"`);

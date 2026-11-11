@@ -20,7 +20,8 @@ export function genFloor(tower, floor) {
   const b = tower.bands.find((x) => floor >= x.from && floor <= x.to);
   const src = b ?? tower.chapters.find((x) => floor >= x.from && floor <= x.to);
   const lv = Math.round(4 + floor * 1.5);
-  return { floor, lv, t: src.t, mon: src.mon, bossName: src.boss, boss: floor % 5 === 0, filler: !b };
+  return { floor, lv, t: src.t, mon: src.mon, bossName: src.boss, boss: floor % 5 === 0, filler: !b,
+    decisions: b?.decisions };
 }
 
 export function gateOffers(s) {
@@ -60,7 +61,7 @@ export function towerOp(s, towerId, floor) {
   if (f.boss) foes.push(foe(f.bossName, f.lv + 4, T.el, true));
   return {
     id: `tower:${towerId}:${floor}`, kind: "tower", t: `${T.n} ชั้น ${floor} · ${f.t}`, tower: towerId, floor,
-    foes, decisions: TOWER_DECISIONS, boss: f.boss, rewards: { gold: 40 * floor, items: [] },
+    foes, decisions: f.decisions ?? TOWER_DECISIONS, boss: f.boss, rewards: { gold: 40 * floor, items: [] },
   };
 }
 

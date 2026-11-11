@@ -25,3 +25,16 @@ test("op defs have foes and decisions", () => {
   assert.equal(t.kind, "tower");
   assert.equal(GATES.length >= 3, true);
 });
+
+test("floors 1–20 use their band's own decisions; filler floors use the shared ones", async () => {
+  const { TOWER_DECISIONS } = await import("../src/data/index.js");
+  const s = newLife("tw"); s.ageM = 25 * 12; awakenCheck(s, "event");
+  for (const id of ["silent", "drowned"]) {
+    for (const f of [1, 7, 13, 20]) {
+      const op = towerOp(s, id, f);
+      assert.notEqual(op.decisions, TOWER_DECISIONS, `${id} ${f}`);
+      assert.ok(op.decisions.length >= 2);
+    }
+    assert.equal(towerOp(s, id, 30).decisions, TOWER_DECISIONS);
+  }
+});
