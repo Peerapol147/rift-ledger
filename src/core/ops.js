@@ -148,7 +148,9 @@ export function decide(s, i) {
   applyOutcome(s, { c: out.c, flags: out.flags, gold: out.gold, goldLabel: out.goldLabel, st: out.st, act: out.act },
     opt.l);
   if (out.mind) hooks.changeMind(s, out.mind);
-  if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
+  // a hidden rank keeps the spotlight away: fame gains are halved
+  if (out.fame) s.fame = Math.max(0, s.fame + (s.flags.hiddenRank && out.fame > 0 ? Math.ceil(out.fame / 2)
+    : out.fame));
   o.loot += out.loot ?? 0;
   o.score += out.score ?? 0;
   // leaving someone behind: an own teammate pays for it, or in someone else's team the leader's trust does

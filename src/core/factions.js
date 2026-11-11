@@ -1,5 +1,8 @@
 // Faction standing: set at birth, moved by outcomes (fac: { id: n }) and by mapped counters/flags (FAC_FROM).
-import { onNewLife, hooks, monthly } from "./registry.js";
+import { onNewLife, hooks, monthly, afterOpHooks } from "./registry.js";
+import { ch } from "./rng.js";
+import { stream, log } from "./state.js";
+import { addLedger } from "./money.js";
 import { openEvent } from "./events.js";
 import { FACTIONS, FAC_WORDS, FAC_FROM } from "../data/factions.js";
 
@@ -26,6 +29,17 @@ hooks.facOutcome = (s, out) => {
 };
 
 hooks.payMul = gatePayMul;
+
+// Illegal gates: the association notices, the underground approves, and sometimes you get caught.
+afterOpHooks.push((s, o) => {
+  if (!o.def.illegal) return;
+  moveFac(s, { assoc: -5, under: 3 });
+  if (ch(stream(s, "illegal"), 0.15)) {
+    addLedger(s, "ค่าปรับเกตเถื่อน", -2000 * ((o.def.rank ?? 1) + 1));
+    moveFac(s, { assoc: -10 });
+    log(s, "ฮันเตอร์", "สมาคมจับได้ว่าคุณเข้าเกตที่ไม่ได้ขึ้นทะเบียน", "bad");
+  }
+});
 
 // A hunter the association distrusts gets their license reviewed, once.
 monthly.push((s) => {

@@ -120,7 +120,9 @@ export function countUnseen(s, opts) {
 
 // lethal: only options the player saw marked with risk can kill; anything else leaves at least 1 health.
 export function applyOutcome(s, out, label = "เหตุการณ์", lethal = false) {
-  if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
+  // a hidden rank keeps the spotlight away: fame gains are halved
+  if (out.fame) s.fame = Math.max(0, s.fame + (s.flags.hiddenRank && out.fame > 0 ? Math.ceil(out.fame / 2)
+    : out.fame));
   if (out.jobXp && s.job) s.job.xp += out.jobXp;
   if (out.ally) hooks.ally?.(s, out.ally);
   hooks.facOutcome?.(s, out);

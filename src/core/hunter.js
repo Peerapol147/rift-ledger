@@ -83,6 +83,14 @@ export function openGateChoice(s) {
   const tower = COUNTRIES[s.country].tower;
   const next = (s.c.floor ?? 0) + 1;
   if (s.hunter.rank >= 1 && next <= 50) defs.push(towerOp(s, tower, next));
+  // with friends underground, an unregistered gate one rank up: double pay, more bosses, no association watching
+  if ((s.fac?.under ?? 0) >= 20) {
+    const g = { ...gateOffers(s)[0] };
+    g.rank = Math.min(6, g.rank + 1);
+    g.boss = ch(stream(s, "gate"), 0.25);
+    const d = gateOp(s, g);
+    defs.push({ ...d, illegal: true, t: "เกตเถื่อน · " + d.t, rewards: { ...d.rewards, gold: d.rewards.gold * 2 } });
+  }
   s.offers = defs;
   const info = (d) => {
     const lv = Math.max(...d.foes.map((f) => f.lv));
