@@ -34,7 +34,10 @@ const gapOf = (s, c) => ri(stream(s, "story"), c.gap[0], c.gap[1]);
 export function storyMonth(s) {
   for (const id of activeChains(s)) {
     const c = STORIES[id], key = "next:" + id;
-    if (s.c[key] == null) s.c[key] = s.ageM + gapOf(s, c);
+    // a chain coming back after a pause (other line of work, a hunting break) waits a fresh gap, not zero months
+    const seen = "seen:" + id, back = s.c[seen] != null && s.ageM - s.c[seen] > 3;
+    s.c[seen] = s.ageM;
+    if (s.c[key] == null || back) s.c[key] = s.ageM + gapOf(s, c);
     if (s.ageM < s.c[key]) continue;
     const n = s.c["ch:" + id] ?? 0;
     s.c["ch:" + id] = n + 1;

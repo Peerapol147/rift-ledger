@@ -50,3 +50,16 @@ test("story chapters are important and survive a full life without errors", () =
   assert.ok(important);
   assert.ok(s.dead);
 });
+
+test("a chain resumed after a pause waits a fresh gap", async () => {
+  const C = await import("../src/core/index.js");
+  const { STORIES } = await import("../src/data/stories/index.js");
+  const s = C.newLife("rs"); s.ageM = 30 * 12; s.ev = null; s.job = { id: "office", tier: 0, xp: 0 };
+  const id = C.activeChains(s)[0];
+  assert.ok(id, "an office worker has a chain");
+  s.c["next:" + id] = s.ageM - 50; s.c["seen:" + id] = s.ageM - 40;
+  C.storyMonth(s);
+  assert.equal(s.ev, null, "no chapter fires the month it resumes");
+  assert.ok(s.c["next:" + id] > s.ageM, "rescheduled");
+  assert.ok(STORIES[id]);
+});

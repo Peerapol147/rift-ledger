@@ -51,3 +51,11 @@ test("year summary lists notable lines", () => {
   const s = newLife("y");
   assert.ok(yearSummary(s, 0).lines.length >= 1);
 });
+
+test("pinning a brave option locked by nerve pins a steady mind", async () => {
+  const C = await import("../src/core/index.js");
+  const s = C.newLife("nv"); s.ageM = 25 * 12; s.mind = 10;
+  assert.ok(C.pinFromOption(s, { l: "x", nerve: true, y: {} }));
+  assert.equal(s.goals.at(-1).key, "mind");
+  assert.equal(s.goals.at(-1).target, 20);
+});
