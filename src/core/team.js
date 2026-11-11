@@ -7,6 +7,7 @@ import { monthly, gearHooks, afterOpHooks, hooks } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { NAMES } from "../data/families.js";
 import { HIRE_FEE, WAGE_SHARE, MOODS, TEAM_MAX } from "../data/team.js";
+import { TEAM_STORIES } from "../data/team-stories.js";
 
 const COMMON = Object.keys(CLASSES).filter((c) => CLASSES[c].rarity <= 2);
 
@@ -105,10 +106,30 @@ hooks.act.teamBetray = (s) => {
 };
 hooks.loseAlly = loseAlly;
 
+// Teammate stories: one chapter at a time, 10–18 months apart, each about one member's own life.
+const evMember = (s) => s.team.find((x) => x.id === s.evMember);
+hooks.ally = (s, n) => { const m = evMember(s); if (m) m.loyalty = Math.max(0, Math.min(100, m.loyalty + n)); };
+hooks.act.allyLeave = (s) => { const m = evMember(s); if (m) dismiss(s, m.id); };
+
+function teamStoryMonth(s) {
+  if (s.ev) return;
+  for (const m of s.team) {
+    if (!m.alive || m.story >= 3) continue;
+    m.next ??= s.ageM + ri(stream(s, "tstory"), 10, 18);
+    if (s.ageM < m.next) continue;
+    const chapter = JSON.parse(JSON.stringify(TEAM_STORIES[m.tpl % TEAM_STORIES.length][m.story])
+      .replaceAll("{m}", m.n));
+    m.story++;
+    m.next = s.ageM + ri(stream(s, "tstory"), 10, 18);
+    openEvent(s, { ...chapter, id: `tm:${m.id}:${m.story}`, important: true, member: m.id });
+    return;
+  }
+}
+
 gearHooks.push(teamPower);
 afterOpHooks.push((s, o, r) => {
   if (o.def.kind === "job") return;
   const d = r === "won" ? 3 : r === "fled" ? -1 : -4;
   for (const m of present(s)) m.loyalty = Math.max(0, Math.min(100, m.loyalty + d));
 });
-monthly.push(teamMonth);
+monthly.push(teamMonth, teamStoryMonth);

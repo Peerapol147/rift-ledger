@@ -19,7 +19,7 @@ const fail = (msg) => { console.log("FAIL " + msg); hardFail = true; };
 function staticChecks() {
   const evIds = new Set([...ALL_EVENTS, ...D.MILESTONES].map((e) => e.id));
   const ids = new Set([...Object.keys(D.CLASSES), ...Object.keys(D.CAREERS)]);
-  const story = Object.values(D.STORIES).flatMap((c) => c.chapters);
+  const story = [...Object.values(D.STORIES).flatMap((c) => c.chapters), ...D.TEAM_STORIES.flat()];
   const allEv = [...ALL_EVENTS, ...D.MILESTONES, ...D.CALENDAR.flatMap((c) => Object.values(c.views ?? {})), ...story];
   const roles = new Set(Object.keys(D.ROLES));
   for (const [id, c] of Object.entries(D.STORIES)) for (const w of c.who) if (!ids.has(w) && !roles.has(w)) fail(`story ${id}: unknown who ${w}`);
@@ -33,7 +33,7 @@ function staticChecks() {
     for (const o of opts) {
       for (const out of [o.y, o.n]) {
         if (out?.next && !evIds.has(out.next[0])) fail(`missing next ${out.next[0]}`);
-        for (const t of [out?.m ?? "", o.l]) if (/\{(?!name\})/.test(t)) fail(`unfilled token in "${t}"`);
+        for (const t of [out?.m ?? "", o.l]) if (/\{(?!name\}|m\})/.test(t)) fail(`unfilled token in "${t}"`);
       }
       for (const k of Object.keys(o.need ?? {})) {
         const [kind, id] = k.split(":");

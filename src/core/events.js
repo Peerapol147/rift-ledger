@@ -120,6 +120,7 @@ export function countUnseen(s, opts) {
 export function applyOutcome(s, out, label = "เหตุการณ์", lethal = false) {
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   if (out.jobXp && s.job) s.job.xp += out.jobXp;
+  if (out.ally) hooks.ally?.(s, out.ally);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
   for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;

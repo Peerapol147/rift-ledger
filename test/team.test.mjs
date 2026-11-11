@@ -51,3 +51,22 @@ test("low loyalty brings a leave-or-betray event; mood words carry no numbers", 
   assert.match(s.ev?.id ?? "", /^teamLow/);
   for (const v of [0, 30, 50, 70, 95]) assert.doesNotMatch(moodWord(v), /\d/);
 });
+
+test("each teammate gets their own three-chapter story that moves their loyalty", async () => {
+  const { choose, tick } = await import("../src/core/index.js");
+  const { CALENDAR } = await import("../src/data/index.js");
+  const s = hunter("ts");
+  for (const e of CALENDAR) s.world.done[e.id] = 1;
+  hire(s, recruitOffers(s)[0]);
+  const m = s.team[0];
+  let seen = 0;
+  for (let i = 0; i < 120 && m.alive; i++) {
+    if (s.ev) {
+      if (s.ev.id.startsWith("tm:")) { seen++; assert.ok(s.ev.t.includes(m.n)); assert.doesNotMatch(s.ev.t, /\{m\}/); }
+      choose(s, s.ev.opts.length - 1); continue;
+    }
+    s.op = null; tick(s);
+  }
+  assert.ok(seen >= 1 && seen <= 3);
+  assert.ok(m.story >= 1);
+});

@@ -15,3 +15,4 @@ export * from "./stories/index.js";
 export * from "./team.js";
 export * from "./injuries.js";
 export * from "./business.js";
+export * from "./team-stories.js";
