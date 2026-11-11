@@ -6,6 +6,20 @@ export const FACTIONS = { assoc: "สมาคมฮันเตอร์", stat
 export const FAC_WORDS = [[60, "ไว้วางใจ"], [25, "เป็นมิตร"], [-24, "เฉยๆ"], [-59, "ระแวง"], [-100, "เป็นศัตรู"]];
 
 export const FAC_FROM = {
+  // career and story choices that used to be recorded but never read
+  snitch: { assoc: 4, under: -10 }, offLeak: { under: 6, assoc: -4 }, docLegend: { church: 3, research: 3 },
+  hdocBent: { under: 5, assoc: -3 }, pressAccess: { state: 3 }, copCalm: { state: 3 }, copBrave: { state: 5 },
+  agRisk: { under: 3 }, agHonest: { assoc: 4 }, aprHero: { assoc: 3 }, fairMarket: { assoc: 2, under: -3 },
+  resFirst: { research: 5 }, resBrave: { research: 3 }, resLoyal: { research: 4 }, rescueStandard: { state: 4,
+    assoc: 2 },
+  rescueFund: { state: 3 }, rescueInspire: { church: 2 }, monsterChef: { research: 2 }, theWall: { state: 5, assoc: 3 },
+  vgMentor: { assoc: 3 }, stRecordRun: { assoc: 3 }, spTriage: { church: 3 }, spGuild: { assoc: 3 },
+    spLaw: { state: 4 },
+  supportSchool: { state: 3 }, underClinic: { under: 6, state: -3 }, scMerc: { under: 4 }, gateAtlas: { research: 6 },
+  gateBroker: { under: 5, assoc: -2 }, arCraft: { research: 3 }, drownedKind: { church: 4 },
+    silentNotebook: { research: 4 },
+  silentWarning: { state: 2 }, allyBlack: { under: 5 }, shopKit: { assoc: 2 }, porterBrave: { assoc: 2 },
+  schoolHunter: { assoc: 2 }, teachDream: { state: 2 },
   blackMarket: { under: 25, assoc: -15 }, shopGrey: { under: 5 }, aprBent: { under: 5, assoc: -3 },
     agDark: { under: 10 },
   porterSkim: { under: 3 }, vgIllegal: { under: 8, assoc: -5 }, stIllegal: { under: 8, assoc: -5 },

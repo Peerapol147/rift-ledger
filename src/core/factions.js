@@ -1,5 +1,5 @@
 // Faction standing: set at birth, moved by outcomes (fac: { id: n }) and by mapped counters/flags (FAC_FROM).
-import { onNewLife, hooks, monthly, books } from "./registry.js";
+import { onNewLife, hooks, monthly, books, afterOpHooks } from "./registry.js";
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { addLedger } from "./money.js";
@@ -34,6 +34,11 @@ hooks.facOutcome = (s, out) => {
 };
 
 hooks.payMul = gatePayMul;
+
+// Clean, registered work is how the association comes to trust a hunter: a little with every legal win.
+afterOpHooks.push((s, o, r) => {
+  if (r === "won" && !o.def.illegal && (o.def.kind === "gate" || o.def.kind === "tower")) moveFac(s, { assoc: 0.5 });
+});
 // Fighting a gate break in front of everyone shows your real rank; the association dislikes being lied to.
 hooks.act.breakHelp = (s) => {
   if (!s.flags.hiddenRank) return;
