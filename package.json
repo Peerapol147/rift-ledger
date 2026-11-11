@@ -2,6 +2,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "build": "node build.mjs",
+    "sim": "node tools/sim.mjs 1000 --policy normal"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
   }
 }

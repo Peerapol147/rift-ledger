@@ -6,18 +6,14 @@
 
 ## เตรียมเครื่อง
 
-build ใช้เอฟเฟกต์จาก [patch-gg/pixelfx](https://github.com/patch-gg/pixelfx) ซึ่งต้องอยู่เป็นโฟลเดอร์ `pixelfx-main` ข้าง `rift-ledger` และต้องติดตั้ง `esbuild` ในโฟลเดอร์นั้นก่อน
+ต้องมี [Node.js](https://nodejs.org) 20 ขึ้นไป เอฟเฟกต์ของ [pixelfx](https://github.com/patch-gg/pixelfx) (MIT) อยู่ใน `vendor/pixelfx` แล้ว ไม่ต้องโหลดแยก
 
 ```bash
 git clone https://github.com/Peerapol147/rift-ledger.git
 ```
 
 ```bash
-git clone https://github.com/patch-gg/pixelfx.git pixelfx-main
-```
-
-```bash
-cd pixelfx-main && npm install && cd ../rift-ledger
+cd rift-ledger && npm install
 ```
 
 ## คำสั่ง
@@ -27,7 +23,7 @@ cd pixelfx-main && npm install && cd ../rift-ledger
 | `npm test` | เทสต์ระบบใน `src/core` (ไม่ต้องใช้ pixelfx) |
 | `node tools/sim.mjs 1000 --policy normal` | เล่นอัตโนมัติ 1,000 ชีวิต ตรวจข้อมูลและเป้าสมดุล (`careful`, `normal`, `reckless`) |
 | `node tools/linelen.mjs` | หาบรรทัดที่ยาวเกิน 120 ตัวอักษรใน `src/core` และ `src/data` |
-| `node build.mjs` | สร้าง `play.html` ใหม่ |
+| `npm run build` | สร้าง `play.html` ใหม่ |
 
 `tools/sim.mjs` จะจบด้วย exit code 1 ถ้าข้อมูลอ้างถึงสิ่งที่ไม่มีอยู่ บรรทัดยาวเกิน อัตราตื่นพลังหลุดเป้า (เมื่อเล่น 1,000 ชีวิตขึ้นไป) หรือผลไม่เหมือนเดิมเมื่อเล่น seed เดิมซ้ำ
 
@@ -39,6 +35,7 @@ cd pixelfx-main && npm install && cd ../rift-ledger
 | `src/data/` | ข้อมูลเนื้อหาทั้งหมด แยกไฟล์ตามหมวด |
 | `src/ui/` | หน้าจอ อ่านสถานะจาก core และเรียกฟังก์ชันของ core |
 | `src/stage.js` และ `src/*-art.js` | ฉาก pixel art และเอฟเฟกต์ |
+| `vendor/pixelfx/` | สำเนา `src/` ของ pixelfx 0.3.1 (MIT) วิธีอัปเดตอยู่ใน `vendor/pixelfx/README.md` |
 | `test/` | เทสต์ของ `src/core` |
 
 ## เพิ่มเนื้อหา (แก้แค่ `src/data/`)

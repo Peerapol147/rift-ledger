@@ -1,7 +1,7 @@
 // node build.mjs → play.html (one double-clickable file). Bundles only the pixelfx effects the game names.
-// Needs ../pixelfx-main with its node_modules (see README).
+// Effects come from vendor/pixelfx (MIT). Run `npm install` once for esbuild.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import esbuild from "../pixelfx-main/node_modules/esbuild/lib/main.js";
+import esbuild from "esbuild";
 import { ELEMENTS, CLASSES, MONSTERS } from "./src/data/index.js";
 import { PRESET, AMBIENT, HIT, STYLE, LOOK } from "./src/presets.js";
 import { classArt, careerArt } from "./src/ui/art.js";
@@ -21,10 +21,10 @@ if (noStyle.length) fail(`No style in presets.js for art ids: ${noStyle.join(", 
 const noArt = [...new Set(Object.values(MONSTERS).map((m) => m.art))].filter((a) => !existsSync(`art/monsters/${a}.png`));
 if (noArt.length) fail(`Missing art/monsters picture: ${noArt.join(", ")}`);
 // moves/* act out a whole stock character, critters/* are creatures: neither is a skill visual.
-const body = list.filter((n) => /^(moves|critters)\//.test(n) || /\bo\.actor\b/.test(readFileSync(`../pixelfx-main/src/fx/${n}.js`, "utf8")));
+const body = list.filter((n) => /^(moves|critters)\//.test(n) || /\bo\.actor\b/.test(readFileSync(`vendor/pixelfx/src/fx/${n}.js`, "utf8")));
 if (body.length) fail(`These effects draw pixelfx's stock character, pick skill-only ones: ${body.join(", ")}`);
 
-writeFileSync("src/fxreg.gen.js", list.map((n, i) => `import * as f${i} from "../../pixelfx-main/src/fx/${n}.js";`).join("\n")
+writeFileSync("src/fxreg.gen.js", list.map((n, i) => `import * as f${i} from "../vendor/pixelfx/src/fx/${n}.js";`).join("\n")
   + `\nexport const REG = {${list.map((n, i) => `"${n}":f${i}`).join(",")}};\n`);
 const out = await esbuild.build({
   entryPoints: ["src/ui/main.js"], bundle: true, minify: true, format: "iife", target: "es2020",

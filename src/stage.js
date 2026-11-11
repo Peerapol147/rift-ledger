@@ -3,13 +3,13 @@ import { civilianArt } from "./civilian-art.js";
 import { HERO_RASTER } from "./hero-raster.js";
 import { idleRows, idlePose, civilianIdleRows } from "./hero-idle.js";
 import { SHADE_ART } from "./shade-art.js";
-import * as shadowFlames from "../../pixelfx-main/src/fx/shadow/shadow-flames.js";
+import * as shadowFlames from "../vendor/pixelfx/src/fx/shadow/shadow-flames.js";
 import { WEATHER, drawWeather } from "./weather-art.js";
 import { makeHeroArt, heightAt } from "./hero-art.js";
 import { placeLayers, LW } from "./place-art.js";
 import { monsterRaster } from "./monster-art.js";
 // Pixel stage: own backdrop and sprites, pixelfx for all effects. Acting follows pixelfx: wind-up, freeze on contact, target rocks back.
-import { createFrame, clearFrame, createFx, composite } from "../../pixelfx-main/src/core/index.js";
+import { createFrame, clearFrame, createFx, composite } from "../vendor/pixelfx/src/core/index.js";
 import { REG } from "./fxreg.gen.js";
 import { PRESET, AMBIENT, STYLE, LOOK } from "./presets.js";
 import { ELEMENTS } from "./data/elements.js";
