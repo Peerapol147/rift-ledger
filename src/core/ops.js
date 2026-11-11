@@ -1,7 +1,7 @@
 // Operations: one engine for gates, towers and civilian big jobs. prep → auto rounds → decision points. Spec §7.
 import { ch, rnd, wp, mk } from "./rng.js";
 import { stream, ageY, log } from "./state.js";
-import { optionView, hooks, countUnseen } from "./events.js";
+import { optionView, hooks, countUnseen, withEscape, applyOutcome } from "./events.js";
 import { addLedger } from "./money.js";
 import { die, injure } from "./body.js";
 import { gainXp } from "./hunter.js";
@@ -73,7 +73,8 @@ const DECISION_ROUNDS = [2, 5, 8];
 function openDecision(s) {
   const o = s.op, d = o.def.decisions[o.d++];
   const tag = o.def.kind === "job" ? "งานใหญ่" : "เกต";
-  s.ev = { id: "opDecision", tag, t: d.t, opts: d.o, op: true, important: !!o.def.boss || o.def.kind === "break" };
+  s.ev = { id: "opDecision", tag, t: d.t, opts: withEscape(s, d.o), op: true,
+    important: !!o.def.boss || o.def.kind === "break" };
 }
 
 function heroTurn(s, o, R) {
@@ -144,6 +145,8 @@ export function decide(s, i) {
   s.ev = null;
   log(s, "เกต", `${opt.l}${out.m ? " → " + out.m : ""}`, ok ? "imp" : "bad");
   if (out.hp) o.hp += (out.hp / 100) * o.maxHp;
+  applyOutcome(s, { c: out.c, flags: out.flags, gold: out.gold, goldLabel: out.goldLabel, st: out.st, act: out.act },
+    opt.l);
   if (out.mind) hooks.changeMind(s, out.mind);
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   o.loot += out.loot ?? 0;

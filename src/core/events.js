@@ -77,9 +77,16 @@ export function eligible(s, ev) {
 
 export const fill = (s, text) => (text ?? "").replaceAll("{name}", s.name);
 
+// Whatever the locks, an open event always has one option the player can take, so no life can freeze.
+const ESCAPE = { l: "ปล่อยให้เรื่องนี้ผ่านไป", y: { m: "คุณไม่ได้ทำอะไร และมันก็ผ่านไป", mind: -2 } };
+export function withEscape(s, opts) {
+  const free = opts.some((o) => { const v = optionView(s, o); return v.visible && !v.locked; });
+  return free ? opts : [...opts, ESCAPE];
+}
+
 export function openEvent(s, ev) {
   s.ev = {
-    id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), opts: ev.o,
+    id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), opts: withEscape(s, ev.o),
     important: !!ev.important, milestone: !!ev.milestone || String(ev.id).startsWith("cal"), noAuto: !!ev.noAuto,
   };
   if (ev.member) s.evMember = ev.member;

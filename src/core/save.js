@@ -7,6 +7,7 @@ export const serialize = (s) => JSON.stringify(s);
 
 // Top-level numbers the UI prints; anything that is not a finite number becomes 0 (or its numeric value).
 const NUMS = ["ageM", "gold", "fame", "debt", "hp", "mind", "lifeY", "mon0"];
+const TONES = new Set(["", "imp", "bad", "leg"]);
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 export function deserialize(str) {
@@ -18,6 +19,9 @@ export function deserialize(str) {
     for (const k of Object.keys(s.st ?? {})) s.st[k] = num(s.st[k]);
     if (s.hunter) for (const k of ["rank", "lv", "xp", "ceil"]) s.hunter[k] = num(s.hunter[k]);
     for (const k of Object.keys(s.world?.records ?? {})) s.world.records[k] = num(s.world.records[k]);
+    for (const k of Object.keys(s.c ?? {})) s.c[k] = num(s.c[k]);
+    for (const g of s.goals ?? []) g.target = num(g.target);
+    for (const l of s.log ?? []) if (!TONES.has(l.tone)) l.tone = "";
     return s;
   } catch {
     return null;

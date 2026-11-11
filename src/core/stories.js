@@ -1,7 +1,7 @@
 // Story chains: each career, class or hunter role has a fixed run of chapters that arrive every few months while
 // the life is in that line. Changing line pauses a chain; coming back resumes it. Spec §4.1 (3).
 import { ri } from "./rng.js";
-import { stream } from "./state.js";
+import { stream, stageOf } from "./state.js";
 import { openEvent } from "./events.js";
 import { canHunt } from "./hunter.js";
 import { monthly } from "./registry.js";
@@ -24,7 +24,7 @@ export function activeChains(s) {
   return Object.keys(STORIES).sort().filter((id) => {
     const c = STORIES[id];
     if ((s.c["ch:" + id] ?? 0) >= c.chapters.length) return false;
-    if (c.hunter && !canHunt(s)) return false;
+    if (c.hunter && (!canHunt(s) || stageOf(s) === "old")) return false;
     return c.who.some((w) => me.has(w));
   });
 }

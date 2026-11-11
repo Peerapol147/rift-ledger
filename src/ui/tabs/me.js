@@ -2,11 +2,7 @@ import * as C from "../../core/index.js";
 import { STATS, CLASSES, SKILLS, ROLES, RANKS } from "../../data/index.js";
 import { esc } from "../dom.js";
 
-const INJURY = {
-  arm: "แขนเสีย", rib: "ซี่โครงร้าว", trampled: "ฟกช้ำจากฝูงคน", clawScar: "แผลเป็นรอยกรงเล็บ", workHurt: "บาดเจ็บจากงาน",
-  graveWound: "บาดแผลฉกรรจ์", beaten: "บาดเจ็บจากเกต", bossScar: "แผลจากบอส", breakScar: "แผลจากวันเกตแตก",
-  breakWound: "บาดเจ็บจากเกตแตก", crushed: "ถูกซากทับ",
-};
+import { INJURY } from "../../data/injuries.js";
 
 export function meTab(s) {
   const stats = Object.entries(STATS).map(([k, n]) => `<tr><td>${n}</td><td class="n">${s.st[k].toFixed(1)}</td></tr>`).join("");

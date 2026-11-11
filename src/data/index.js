@@ -13,3 +13,4 @@ export * from "./calendar.js";
 export * from "./items.js";
 export * from "./stories/index.js";
 export * from "./team.js";
+export * from "./injuries.js";

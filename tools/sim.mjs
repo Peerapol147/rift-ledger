@@ -28,7 +28,8 @@ function staticChecks() {
   for (const e of [...allEv, ...decisions]) {
     const opts = e.o;
     if (/\{(?!name\}|m\})/.test(e.t ?? "")) fail(`unfilled token in event text "${e.t}"`);
-    if (!opts.some((o) => !o.need)) fail(`no free option: ${e.id ?? e.t}`);
+    if (!opts.some((o) => !o.need && !o.nerve)) fail(`no option free of need and nerve: ${e.id ?? e.t}`);
+    for (const o of opts) for (const out of [o.y, o.n]) if (out?.injury && !D.INJURY[out.injury[0]]) fail(`injury without a name: ${out.injury[0]}`);
     for (const o of opts) {
       for (const out of [o.y, o.n]) {
         if (out?.next && !evIds.has(out.next[0])) fail(`missing next ${out.next[0]}`);
