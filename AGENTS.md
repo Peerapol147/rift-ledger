@@ -9,6 +9,7 @@ Code agent (Claude) owns `src/`, `test/`, `tools/`, `docs/`. **Art agent (Codex)
 - Keep each PR to one topic. A PR is ready when `npm test` and `node tools/artcheck.mjs` pass (CI runs both).
 
 ## The art contract
+- **Start with `art/BRIEF.md`**: the full brief (world, style guide, every open request described, working method).
 - **Where art requests live:** `art/requests.json`. Each row: `id`, `type`, `name` (Thai in-game name), `folder`,
   `size` [w, h], `fly` (hovers), `now` (the picture it borrows today), `status` (`open` or `done`).
 - **To fulfil a monster request:**
