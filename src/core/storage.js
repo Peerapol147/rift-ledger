@@ -1,6 +1,8 @@
 // Storage beyond the bag: a home store that moves with you, and a rented bank vault bound to its country. Spec §9.2.
 import { addLedger } from "./money.js";
-import { books, onNewLife } from "./registry.js";
+import { books, onNewLife, hooks } from "./registry.js";
+import { pk } from "./rng.js";
+import { stream } from "./state.js";
 import { bagCap } from "./items.js";
 
 export const STORES = { home: { n: "บ้าน", cap: 30 }, vault: { n: "ตู้นิรภัยธนาคาร", cap: 40, rent: 150 },
@@ -36,6 +38,17 @@ export function take(s, uid, where) {
   if (where === "vault" && !st.vault.length) st.vaultCountry = null;
   return true;
 }
+
+// A theft takes one unlocked item from that store (seeded), never the whole store.
+const lose = (where) => (s) => {
+  const list = storeOf(s)[where].filter((i) => !i.lock);
+  if (!list.length) return;
+  const it = pk(stream(s, "theft"), list);
+  storeOf(s)[where] = storeOf(s)[where].filter((i) => i !== it);
+  if (where === "vault" && !storeOf(s).vault.length) storeOf(s).vaultCountry = null;
+};
+hooks.act.vaultLoss = lose("vault");
+hooks.act.homeLoss = lose("home");
 
 books.push((s, step = 1) => {
   if (s.store?.vault?.length) addLedger(s, "ค่าเช่าตู้นิรภัย", -STORES.vault.rent * step);

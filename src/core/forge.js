@@ -2,6 +2,7 @@
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { addLedger } from "./money.js";
+import { hooks } from "./registry.js";
 import { ITEMS } from "../data/items.js";
 
 export const MAX_PLUS = 5;
@@ -9,6 +10,12 @@ export const plusMul = (it) => 1 + (it?.plus ?? 0) * 0.1;
 export const forgeCost = (s, it) =>
   Math.round(ITEMS[it.id].price * 0.4 * ((it.plus ?? 0) + 1) * (s.flags.ownForge ? 0.7 : 1));
 export const forgeOdds = (it) => 1 - (it.plus ?? 0) * 0.15;
+
+// A lucky smith: +1 on the equipped weapon, free.
+hooks.act.forgeBless = (s) => {
+  const it = s.items.find((i) => i.uid === s.equip.weapon);
+  if (it && (it.plus ?? 0) < MAX_PLUS) it.plus = (it.plus ?? 0) + 1;
+};
 
 // -> "ok" | "fail" | null (cannot forge)
 export function forge(s, uid) {

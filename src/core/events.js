@@ -26,6 +26,9 @@ export function val(s, key) {
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
+  if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
+  if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
+  if (key === "forged") return Math.max(0, ...(s.items ?? []).map((i) => i.plus ?? 0));
   const [kind, id] = key.split(":");
   if (kind === "skill") return s.hunter?.skills.includes(id) ? 1 : 0;
   if (kind === "job") return s.job?.id === id ? 1 : 0;
