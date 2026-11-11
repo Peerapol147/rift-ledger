@@ -74,7 +74,10 @@ export function eligible(s, ev) {
 export const fill = (s, text) => (text ?? "").replaceAll("{name}", s.name);
 
 export function openEvent(s, ev) {
-  s.ev = { id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), important: !!ev.important, opts: ev.o };
+  s.ev = {
+    id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), opts: ev.o,
+    important: !!ev.important, milestone: !!ev.milestone || String(ev.id).startsWith("cal"), noAuto: !!ev.noAuto,
+  };
 }
 
 export function choose(s, i) {
