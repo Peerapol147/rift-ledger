@@ -16,7 +16,9 @@ const clampG = (v) => Math.max(0, Math.min(100, v));
 
 export function guildsFor(s) {
   const r = s.hunter?.rank ?? 0, under = s.fac?.under ?? 0;
-  return (GUILDS[s.country] ?? []).filter((x) => r >= x.minRank && (x.perk !== "shady" || under >= 10));
+  // a blacklisted hunter only gets the guild that does not ask
+  return (GUILDS[s.country] ?? []).filter((x) => r >= x.minRank && (x.perk !== "shady" || under >= 10)
+    && (!s.flags.blacklisted || x.perk === "shady"));
 }
 
 export function joinGuild(s, id) {
