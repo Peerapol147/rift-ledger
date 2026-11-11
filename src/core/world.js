@@ -89,6 +89,8 @@ export function moveCity(s, cityId) {
   addLedger(s, "ค่าย้ายบ้าน", -to.cost * 3);
   if (country !== s.country) {
     s.flags.relicense = true;
+    const n = s.store?.home?.length ?? 0;
+    if (n) addLedger(s, "ค่าขนของย้ายประเทศ", -40 * n);
     if (s.job) s.job.tier = Math.floor(s.job.tier / 2);
     s.country = country;
   }

@@ -17,10 +17,13 @@ export function itemsTab(s, ui) {
     const acts = [
       d.slot && !eq.has(it.uid) ? btn("equip:" + it.uid, "สวม", 'class="sm"') : "",
       d.use && d.use !== "revive" ? btn("use:" + it.uid, "ใช้", 'class="sm"') : "",
+      d.slot && (it.plus ?? 0) < C.MAX_PLUS
+        ? btn("forge:" + it.uid, `ตีบวก ${money(C.forgeCost(s, it))} · ${Math.round(C.forgeOdds(it) * 100)}%`, 'class="sm"') : "",
+      !eq.has(it.uid) ? btn("stashHome:" + it.uid, "เก็บบ้าน", 'class="sm"') : "",
       btn("lock:" + it.uid, it.lock ? "🔒" : "🔓", 'class="sm" title="ล็อกกันขาย"'),
       !it.lock && !eq.has(it.uid) ? btn("sell:" + it.uid, "ขาย " + money(d.price * 0.5), 'class="sm"') : "",
     ].join("");
-    return `<div class="item" style="--rc:${r.c}"><span><b>${esc(d.n)}</b> ${eq.has(it.uid) ? "(สวมอยู่)" : ""}
+    return `<div class="item" style="--rc:${r.c}"><span><b>${esc(d.n)}${it.plus ? ` +${it.plus}` : ""}</b> ${eq.has(it.uid) ? "(สวมอยู่)" : ""}
       <small class="dim">${r.n} · ได้จาก ${esc(it.from)}</small> ${d.slot ? delta(C.compare(s, it.uid)) : ""}</span><span>${acts}</span></div>`;
   }).join("") || `<div class="dim">ไม่มีของที่ตรงเงื่อนไข</div>`;
   const kindSel = Object.entries(KINDS).map(([k, n]) => `<option value="${k}" ${f.kind === k || (!f.kind && !k) ? "selected" : ""}>${n}</option>`).join("");
@@ -33,5 +36,22 @@ export function itemsTab(s, ui) {
     <div style="margin-top:8px">${rows}</div>
     <h4>ขายของขยะอัตโนมัติ (ไม่แตะของที่ล็อกหรือสวมอยู่)</h4>
     <div class="row"><select data-c="junk">${junk}</select>${btn("junk", "ขายเลย", 'class="sm"')}</div>
+    ${storeHtml(s)}
     <h4>ชุดอุปกรณ์</h4><div class="row">${btn("loadSave", "บันทึกชุดปัจจุบัน", 'class="sm"')}${loads}</div>`;
+}
+
+function storeHtml(s) {
+  const st = C.storeOf(s);
+  const part = (where, take) => {
+    const list = st[where], meta = C.STORES[where];
+    const open = C.storeOpen(s, where);
+    const rows = list.map((it) => `<div class="item" style="--rc:${RARITY[ITEMS[it.id].rarity].c}"><span><b>${esc(ITEMS[it.id].n)}${
+      it.plus ? ` +${it.plus}` : ""}</b></span><span>${open ? btn(take + ":" + it.uid, "หยิบใส่กระเป๋า", 'class="sm"') : ""}</span></div>`).join("");
+    const note = where === "vault" ? ` · ค่าเช่า ${money(meta.rent)}/เดือนเมื่อมีของ${open ? "" : " · อยู่ต่างประเทศ"}` : "";
+    return `<h4>${meta.n} ${list.length}/${meta.cap}<small class="dim">${note}</small></h4>${rows || `<div class="dim">ว่าง</div>`}`;
+  };
+  const vaultPick = s.items.filter((i) => !Object.values(s.equip).includes(i.uid))
+    .map((i) => `<option value="${i.uid}">${esc(ITEMS[i.id].n)}${i.plus ? " +" + i.plus : ""}</option>`).join("");
+  return `<h3>ที่เก็บของ</h3>${part("home", "takeHome")}${part("vault", "takeVault")}
+    ${vaultPick && C.storeOpen(s, "vault") ? `<div class="row"><select data-c="vaultPick">${vaultPick}</select>${btn("stashVault", "ฝากตู้นิรภัย", 'class="sm"')}</div>` : ""}`;
 }

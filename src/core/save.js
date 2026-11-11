@@ -22,6 +22,9 @@ export function deserialize(str) {
     for (const k of Object.keys(s.c ?? {})) s.c[k] = num(s.c[k]);
     for (const g of s.goals ?? []) g.target = num(g.target);
     for (const l of s.log ?? []) if (!TONES.has(l.tone)) l.tone = "";
+    for (const i of [...(s.items ?? []), ...(s.store?.home ?? []), ...(s.store?.vault ?? [])]) {
+      if ("plus" in i) i.plus = Math.min(5, num(i.plus));
+    }
     return s;
   } catch {
     return null;
@@ -60,6 +63,11 @@ export function collection(store) {
       }
     }
     b.lives = Number.isFinite(Number(raw.lives)) ? Number(raw.lives) : 0;
+    const L = raw.legacy;
+    if (L && typeof L === "object") {
+      b.legacy = { kids: Number(L.kids) || 0, assets: Number(L.assets) || 0,
+        enemies: Array.isArray(L.enemies) ? L.enemies.filter((e) => typeof e === "string").slice(0, 10) : [] };
+    }
     return b;
   };
   const put = (b) => store.set(BOOK, JSON.stringify(b));
@@ -68,5 +76,6 @@ export function collection(store) {
     addTitle(t) { const b = get(); if (!b.titles.includes(t)) b.titles.push(t); put(b); },
     addSeen(kind, id) { const b = get(); (b.seen[kind] ??= []).includes(id) || b.seen[kind].push(id); put(b); },
     addLife() { const b = get(); b.lives++; put(b); },
+    setLegacy(l) { const b = get(); b.legacy = l; put(b); },
   };
 }
