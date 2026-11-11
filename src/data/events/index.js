@@ -4,5 +4,6 @@ import { ADULT_EVENTS } from "./adult.js";
 import { HUNTER_EVENTS } from "./hunter.js";
 import { MORE_EVENTS } from "./more.js";
 import { SYSTEM_EVENTS } from "./systems.js";
+import { PLACE_EVENTS_2 } from "./places2.js";
 export const ALL_EVENTS = [...KID_EVENTS, ...TEEN_EVENTS, ...ADULT_EVENTS, ...HUNTER_EVENTS, ...MORE_EVENTS,
-  ...SYSTEM_EVENTS];
+  ...SYSTEM_EVENTS, ...PLACE_EVENTS_2];
