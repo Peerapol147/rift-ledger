@@ -8,7 +8,8 @@ import { ALL_EVENTS } from "../src/data/events/index.js";
 
 const args = process.argv.slice(2);
 const N = +args.find((a) => /^\d+$/.test(a)) || 300;
-const POLICY = args[args.indexOf("--policy") + 1] ?? "normal";
+const POLICY = args.includes("--policy") ? args[args.indexOf("--policy") + 1] : "normal";
+if (!["careful", "normal", "reckless"].includes(POLICY)) throw new Error(`unknown --policy ${POLICY}`);
 const HUNT_P = { careful: 0.4, normal: 0.6, reckless: 0.85 }[POLICY];
 const PLAN = { careful: "retreat", normal: "careful", reckless: "push" }[POLICY];
 let hardFail = false;
