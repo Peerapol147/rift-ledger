@@ -12,17 +12,37 @@ const raw = (s, k) => { const a = D.LINES[k], m = (s.lineN ||= {}); m[k] = (m[k]
 const line = (s, k, c = {}) => fill(raw(s, k), c);
 const text = (s, m) => (m?.[0] === "@" ? line(s, m.slice(1)) : m || "");
 export const fmt = (n) => Math.round(n).toLocaleString("en-US");
-export const log = (s, t, tag = "", cls = "", r = "") => { s.log.push({ y: Math.floor(s.ageM / 12), t, tag, cls, r }); if (s.log.length > 600) s.log.splice(0, 80); };
+// Legendary lines are also kept apart (s.hl) for the closing page, since the log itself forgets its oldest entries.
+export const log = (s, t, tag = "", cls = "", r = "") => { const y = Math.floor(s.ageM / 12); s.log.push({ y, t, tag, cls, r }); if (s.log.length > 600) s.log.splice(0, 80); if (cls === "leg") { (s.hl ||= []).push({ y, t, tag }); if (s.hl.length > 40) s.hl.splice(8, 1); } };
 
 // Stat drills. Gains shrink as a stat grows, and the month earns no hunt income, so drilling is a real trade against levelling.
 const TRAIN = { body: [["str", 0.34], ["agi", 0.14]], mind: [["int", 0.32], ["wil", 0.16]], soc: [["cha", 0.3], ["luk", 0.1]] };
-function drill(s, f) { for (const [k, v] of TRAIN[f]) s.st[k] += v * clamp(1.3 - s.st[k] / 90, 0.35, 1.1); if (f === "body") hurt(s, -1.5); }
+function drill(s, f) { s.c.drill = (s.c.drill || 0) + 1; for (const [k, v] of TRAIN[f]) s.st[k] += v * clamp(1.3 - s.st[k] / 90, 0.35, 1.1); if (f === "body") hurt(s, -1.5); }
 export const FOCUS = {
   k: { play: { n: "วิ่งเล่น", st: { luk: 0.1, agi: 0.17, cha: 0.08 } }, study: { n: "ตั้งใจเรียน", st: { int: 0.28, wil: 0.08 } }, sport: { n: "ออกกำลัง", st: { str: 0.26, agi: 0.1 } }, help: { n: "ช่วยงานบ้าน", st: { cha: 0.16, wil: 0.14 }, pay: 4 } },
   h: { hunt: { n: "ล่ารอยแยก" }, tower: { n: "ไต่หอ" }, train: { n: "ฝึกฝน" }, body: { n: "ฝึกกาย" }, mind: { n: "ฝึกปัญญา" }, soc: { n: "สร้างชื่อ" }, guild: { n: "งานกิลด์" }, craft: { n: "ฝึกตีเหล็ก" }, rest: { n: "พักฟื้น" } },
   c: { work: { n: "ทำงาน" }, study: { n: "พัฒนาตัวเอง" }, body: { n: "ออกกำลัง" }, soc: { n: "สร้างสายสัมพันธ์" }, craft: { n: "งานช่างเสริม" }, rest: { n: "อยู่กับครอบครัว" } },
 };
 
+// Three classes the seed leans toward, strongest first. The awakening roll favours them, and far more when the stat each one lives on has been trained, so a childhood plan can pull a leaning in or push past it.
+const APT_W = [3, 2, 1.2];
+const aptOf = (R) => { const r = R("apt"), rows = Object.entries(CLASSES).map(([id, c]) => ({ id, w: c.w || 1 })), out = []; while (out.length < 3) { const id = wp(r, rows).id; if (!out.some((o) => CLASSES[o].main === CLASSES[id].main)) out.push(id); } return out; }; // three different stats, so the childhood plan is a real choice
+// Birth talents: one open gift every life, plus a secret one (about half of lives) that stays hidden until the awakening years. The secret roll skips the common tier so it always feels like a find.
+const talentPick = (r, minT, not) => { const tier = wp(r, D.TALENT_TIERS.map((T, t) => ({ t, w: t < minT ? 0 : T.w }))).t; return wp(r, D.TALENTS.filter((x) => x.t === tier && x.id !== not).map((x) => ({ id: x.id, w: 1 }))).id; };
+const talentOf = (R) => { const r = R("tal"), open = talentPick(r, 0), sec = ch(r, 0.5) ? talentPick(r, 1, open) : null; return { open, sec }; };
+export const talOf = (id) => D.TALENTS.find((x) => x.id === id);
+export const talSecretOut = (s) => !!s.w.tal?.sec && (s.hunter || s.ageM >= 192);
+const expectedAt = (s) => (s.ageM < 192 ? 6 + (s.ageM / 12) * 0.75 : s.hunter ? 12 + s.lv * 1.35 : 16 + s.cr * 7);
+const aptFit = (s, id) => clamp(Math.pow(s.st[CLASSES[id].main] / expectedAt(s), 2), 0.1, 6);
+export function aptOdds(s) { const apt = s.w.apt || []; if (!apt.length) return []; const ws = apt.map((id, i) => APT_W[i] * aptFit(s, id)), tot = ws.reduce((a, b) => a + b, 1.5); return [...apt.map((id, i) => ({ id, n: CLASSES[id].n, st: CLASSES[id].main, p: Math.round((100 * ws[i]) / tot) })), { id: null, n: "คลาสอื่นตามค่าสถานะที่สูงสุด", p: Math.round(150 / tot) }]; }
+// A civilian's power can still wake: a yearly roll from 22 to 55, lifted by potential, a clean name, a high post and awakening bonuses.
+export const lateP = (s) => (s.w.pot / 100) * 0.01 + (s.karma > 30 ? 0.004 : 0) + Math.max(0, s.cr - 2) * 0.003 + mod(s, "awaken") / 2000;
+// Trained passives (breakthrough paths and way chapters) land at a rarity like skills: months drilled and luck pull the roll up, rank or post sets the ceiling, and the bonus scales with it.
+export const GRADE_X = (g) => 1 + g * 0.15;
+const scaleM = (m, x) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, Math.round(v * x * 10) / 10]));
+function rollGrade(s) { const rk = s.hunter ? s.rank : s.cr, lift = clamp((s.c.drill || 0) / 30, 0, 2) + clamp((stat(s, "luk") - expectedAt(s)) / 25, 0, 1); return wp(s.r, SKILL_GRADES.map((G, x) => ({ x, w: G.w * Math.pow(1.3, x * lift), r: G.r })).filter((o) => o.r <= rk + 1)).x; }
+export const perkGrade = (s, id) => s.pg?.[id] || 0;
+export const perkM = (s, id) => scaleM(D.perkOf(id).m, GRADE_X(perkGrade(s, id)));
 // Seed offers four trades, and the household you grew up in adds one it knows.
 const careerOffer = (R, fam) => { const a = shuf(R("car"), Object.keys(CAREERS)).slice(0, 4), f = shuf(R("fjob"), fam.job || []).find((x) => !a.includes(x)); return f ? [...a, f] : a; };
 export const perkText = (m) => Object.entries(m).map(([k, v]) => `${D.MOD_N[k] || STATS[k] || k} ${v > 0 ? "+" : ""}${v}${k === "life" ? " ปี" : STATS[k] ? "" : "%"}`).join(" · ");
@@ -31,6 +51,10 @@ export const halve = (m) => Object.fromEntries(Object.entries(m).map(([k, v]) =>
 export const fits = (s, who) => !who || who.includes(s.cls) || who.includes(s.career) || who.includes(s.pastJob) || who.includes(D.FAMILIES[s.fam].id) || (s.paths || []).some((p) => who.includes(p)) || (s.hunter && who.includes(placeOf(s).id));
 // Where a hunter is staying. Older saves have no s.at and start at the home rifts.
 export const placeOf = (s) => D.PLACES[s.at || 0];
+// The association's age rules: the tower pass is for adults, and each place carries its own minimum (PLACES[].age).
+export const TOWER_AGE = 18;
+export const towerOk = (s) => s.hunter && age(s) >= TOWER_AGE;
+export const placeOk = (s, P) => age(s) >= (P.age || 0);
 // A place far below your level stops paying full rate, so moving on matters.
 export const placePay = (s, P = placeOf(s)) => P.pay * (s.lv > P.lv + 30 ? 0.75 : 1);
 
@@ -57,7 +81,7 @@ export function newLife(seed, name, legacy) {
     v: 1, seed, name, y0, mon0: ri(w, 0, 11), ageM: 0, fam: D.FAMILIES.indexOf(fam), st: { str: 5, agi: 5, int: 5, wil: 5, cha: 5, luk: 5 }, latent, rev: 0, r: R("run"),
     hunter: false, cls: null, spc: null, rank: 0, lv: 1, xp: 0, career: null, pastJob: null, cr: 0, cxp: 0, cMonths: 0, lateAw: 0, health: 100, gold: fam.gold + (legacy?.gold || 0), fame: 0, karma: 0, floor: 0, main: 0,
     sk: [], eq: [], gear: [], wear: { weapon: null, armor: null, charm: null }, gid: 1, mat: {}, pot: 1, stone: 0, token: 0, craft: fam.craft || 0, anvil: 0, guild: null, npcs, spouse: null, kids: [], c: {}, flags: {}, q: [], seen: {}, focus: "play", ev: null, dead: null, log: [], nextMain: 16 * 12, nextExam: 0, spcCd: 0, snap: null,
-    w: { awakenAge: ri(w, 16, 19), pot, ceil, lateAge: hasLate ? 12 * ri(w, 30, 44) : 0, aff: shuf(R("aff"), els).slice(0, 2), specials, arcs: shuf(R("arc"), [...new Set(EVENTS.filter((e) => e.arc).map((e) => e.arc))]).slice(0, 8), careers: careerOffer(R, fam), tower, cal, guilds, price: 1, priceT: 0, rival: 0, life: ri(w, 66, 84) },
+    w: { awakenAge: ri(w, 16, 19), pot, ceil, lateAge: hasLate ? 12 * ri(w, 30, 44) : 0, aff: shuf(R("aff"), els).slice(0, 2), specials, arcs: shuf(R("arc"), [...new Set(EVENTS.filter((e) => e.arc).map((e) => e.arc))]).slice(0, 8), careers: careerOffer(R, fam), apt: aptOf(R), tal: talentOf(R), tower, cal, guilds, price: 1, priceT: 0, rival: 0, life: ri(w, 66, 84) },
   };
   for (const k in fam.st) s.st[k] += fam.st[k];
   s.fame = fam.fame || 0; s.karma = fam.karma || 0;
@@ -77,13 +101,16 @@ export function sources(s) {
   const o = [], add = (n, m) => m && o.push({ n, m });
   s.latent.forEach((i, x) => add(x < s.rev ? `พลังแฝง: ${LATENTS[i].n}` : "พลังแฝงที่ยังไม่ตื่น", LATENTS[i].m));
   add(`ที่มา: ${D.FAMILIES[s.fam].n}`, D.FAMILIES[s.fam].m);
+  if (s.w.tal) { add(`พรสวรรค์: ${talOf(s.w.tal.open).n}`, talOf(s.w.tal.open).m); if (talSecretOut(s)) add(`พรสวรรค์ลับ: ${talOf(s.w.tal.sec).n}`, talOf(s.w.tal.sec).m); }
   if (s.cls) add(`คลาส: ${CLASSES[s.cls].n}`, CLASSES[s.cls].m);
   if (s.spc) add(`คลาสพิเศษ: ${spc(s.spc).n}`, spc(s.spc).m);
   if (s.career) add(`อาชีพ: ${CAREERS[s.career].n}`, CAREERS[s.career].m);
   if (s.pastJob) add(`อาชีพเดิม: ${CAREERS[s.pastJob].n}`, halve(CAREERS[s.pastJob].m));
   (s.paths || []).forEach((id) => add(`วัยเด็ก: ${D.PATHS[id].n}`, D.PATHS[id].m));
-  (s.perks || []).forEach((id) => { const p = D.perkOf(id); add(`สายฝึก: ${p.n}`, p.m); });
-  for (const f in s.disc || {}) { const n = discLv(s, f), X = D.DISC[f]; if (n) add(`วิถี${X.n} บทที่ ${n}`, discM(X, n)); }
+  (s.perks || []).forEach((id) => add(`สายฝึก: ${D.perkOf(id).n} (${SKILL_GRADES[perkGrade(s, id)].n})`, perkM(s, id)));
+  for (const f in s.disc || {}) { const n = discLv(s, f), X = D.DISC[f]; if (n) add(`วิถี${X.n} บทที่ ${n}`, discM(s, f, n)); }
+  for (const id of Object.values(s.wear || {})) { const g = id != null && s.gear.find((x) => x.id === id); if (g?.relic) add(`ของล้ำค่า: ${g.base}`, D.RELICS[g.relic].m); }
+  (s.marks || []).forEach((x) => D.MARKS[x.id] && add(`ติดตัว: ${D.MARKS[x.id].n}`, D.MARKS[x.id].m)); // what a past choice left on you, until it fades
   for (const k in s.wear) { const g = gearOf(s, s.wear[k]); if (g && g.affix != null) add(`อุปกรณ์: ${gearName(g)}`, AFFIX[g.affix].m); }
   if (s.guild) { if (s.guild.own) for (const k in HALLS) add(`${HALLS[k].n} Lv.${s.guild.hall[k]}`, s.guild.hall[k] && { [HALLS[k].m]: HALLS[k].v * s.guild.hall[k] }); else add(`กิลด์: ${s.guild.n}`, s.guild.m); }
   return o;
@@ -96,13 +123,17 @@ const tier = (s) => (s.hunter ? 1 + s.rank * 1.1 : 1 + s.cr * 0.5);
 export const lifespan = (s) => s.w.life + (s.hunter ? RANK_LIFE[s.rank] : 0) + mod(s, "life");
 
 const V = { age: (s) => s.ageM / 12, level: (s) => s.lv, rank: (s) => s.rank, floor: (s) => s.floor, gold: (s) => s.gold, fame: (s) => s.fame, karma: (s) => s.karma, craft: (s) => s.craft, guild: (s) => (s.guild ? 1 : 0), own: (s) => (s.guild?.own ? 1 : 0), mems: (s) => s.guild?.mem?.length || 0, sk: (s) => s.sk.length, els: (s) => new Set(s.sk.map((x) => x.id.split("_")[1])).size, kids: (s) => s.kids.length, spouse: (s) => (s.spouse != null ? 1 : 0), hunter: (s) => +s.hunter, luk: (s) => stat(s, "luk"), rel: (s) => Math.max(...s.npcs.map((n) => (n.alive ? n.rel : -99))), lateAw: (s) => s.lateAw, cyears: (s) => s.cMonths / 12, cr: (s) => s.cr };
+export const willOf = (s) => s.will ?? D.WILL.start;
+const trv = (s, k) => s.tr?.[k] || 0;
+Object.assign(V, { will: willOf, home: (s) => s.home ?? 5, side: (s) => s.side || 0 });
+for (const [k, [, a, b]] of Object.entries(D.COMPOS)) V[k] = (s) => trv(s, a) + trv(s, b);
 export const val = (s, k) => (V[k] ? V[k](s) : s.c[k] || 0);
 export const met = (s, d) => Object.entries(d.if || d.need || {}).every(([k, v]) => val(s, k) >= v) && Object.entries(d.max || {}).every(([k, v]) => val(s, k) <= v);
-export const NEED_LABEL = { hunts: "ล่ารอยแยก", boss: "ล้มบอส", crafts: "สร้างอาวุธ", enh: "ตีบวกสูงสุด", karma: "กรรม", level: "เลเวล", guild: "สังกัดกิลด์", saved: "ช่วยชีวิต", own: "มีกิลด์ของตัวเอง", mems: "สมาชิกกิลด์", floor: "ชั้นหอ", lateAw: "ตื่นพลังช้า", els: "ธาตุที่รู้", sk: "จำนวนวิชา", cyears: "ปีที่เป็นคนธรรมดา", lucky: "ทอยชะตา" };
+export const NEED_LABEL = { hunts: "ล่ารอยแยก", boss: "ล้มบอส", crafts: "สร้างอาวุธ", enh: "ตีบวกสูงสุด", karma: "กรรม", level: "เลเวล", guild: "สังกัดกิลด์", saved: "ช่วยชีวิต", own: "มีกิลด์ของตัวเอง", mems: "สมาชิกกิลด์", floor: "ชั้นหอ", lateAw: "ตื่นพลังช้า", els: "ธาตุที่รู้", sk: "จำนวนวิชา", cyears: "ปีที่เป็นคนธรรมดา", lucky: "ทอยชะตา", gold: "เงิน", will: "แรงใจ", rel: "คนสนิท", home: "ครอบครัว", side: "ฝั่งผู้คน", ...Object.fromEntries(Object.entries(D.COMPOS).map(([k, c]) => [k, c[0]])) };
 
 // One stat test for the whole game. Compared to what's expected at your stage of life, so odds stay meaningful.
 export function odds(s, k, d = 0) {
-  const expected = s.ageM < 192 ? 6 + (s.ageM / 12) * 0.75 : s.hunter ? 12 + s.lv * 1.35 : 16 + s.cr * 7;
+  const expected = expectedAt(s);
   // A hunter's stats spread apart with level, so the gap counts for less or every check lands on 5% or 95%.
   const spread = s.hunter ? 1 + s.lv / 25 : 1;
   return Math.round(clamp(50 + ((stat(s, k) - expected) * 2.2 + (stat(s, "luk") - expected) * 0.25) / spread + d * 2, 5, 95));
@@ -113,7 +144,7 @@ export const sk = (s, id) => { const [f, e, g] = id.split("_"), F = FORMS[f], G 
 // Top rarities lift the ceilings too, or a divine dodge or heal would do no more than a legendary one.
 export const skCap = { step: (g) => 0.45 + SKILL_GRADES[g].up * 0.03, heal: (g) => 0.5 + SKILL_GRADES[g].up * 0.1 };
 export const gearOf = (s, id) => (id == null ? null : s.gear.find((g) => g.id === id));
-export const gearName = (g) => `${g.base}${g.affix != null ? AFFIX[g.affix].n : ""} ${GRADES[g.g].n}${g.plus ? ` +${g.plus}` : ""}`;
+export const gearName = (g) => g.relic ? `${g.base}${g.plus ? ` +${g.plus}` : ""}` : `${g.base}${g.affix != null ? AFFIX[g.affix].n : ""} ${GRADES[g.g].n}${g.plus ? ` +${g.plus}` : ""}`;
 export const gearPw = (g) => GRADES[g.g].p * QUAL[g.q].p * (1 + g.plus * 0.1) * (g.slot === "weapon" ? WEAPONS[g.t].atk : g.slot === "charm" ? 0.4 : 1);
 export function derive(s) {
   const cl = s.cls ? CLASSES[s.cls] : null, main = cl ? cl.main : "str", eq = s.eq.map((id) => sk(s, id)), sum = (k) => eq.filter((x) => x.k === k).reduce((a, x) => a + x.p, 0);
@@ -138,14 +169,14 @@ function simulate(a, b, r, rec) {
   const sa = Math.max(0, ha) / a.hp, sb = Math.max(0, hb) / b.hp;
   return { win: hb <= 0 || (ha > 0 && sa > sb), share: Math.min(1, sa), rounds: R };
 }
-export function fight(s, foe) { const r = simulate(derive(s), foe, s.r, true); s.c.fights = (s.c.fights || 0) + 1; return { ...r, foe: { n: foe.n, boss: foe.boss, el: foe.el }, wfx: derive(s).wfx }; }
+export function fight(s, foe) { const r = simulate(derive(s), foe, s.r, true); s.c.fights = (s.c.fights || 0) + 1; if (foe.n) { const b = ((s.bst ||= {})[foe.n] ||= [0, 0]); b[0]++; if (r.win) b[1]++; } return { ...r, foe: { n: foe.n, boss: foe.boss, el: foe.el, lv: foe.lv, hp: foe.hp }, wfx: derive(s).wfx }; } // s.bst: name -> [met, beaten], the picture book reads it
 export function winOdds(s, foe) { const a = derive(s), r = { s: hash(s.ageM + foe.n) }; let w = 0; for (let i = 0; i < 60; i++) if (simulate(a, foe, r).win) w++; return Math.round((w / 60) * 100); }
 // The stat a test "asks for": at this value the chance is NEED_P%. Below it you can still try, at worse odds. Shown to the player beside their own number.
 export const NEED_P = 75;
 // A passed stat test trains the stat it used: a little, and less as the stat grows (same curve as drills).
 export const growOf = (s, k) => Math.round(8 * clamp(1.3 - s.st[k] / 90, 0.35, 1.1)) / 100;
 export function needOf(s, k, d = 0) {
-  const e = s.ageM < 192 ? 6 + (s.ageM / 12) * 0.75 : s.hunter ? 12 + s.lv * 1.35 : 16 + s.cr * 7, sp = s.hunter ? 1 + s.lv / 25 : 1, t = (NEED_P - 50 - d * 2) * sp;
+  const e = expectedAt(s), sp = s.hunter ? 1 + s.lv / 25 : 1, t = (NEED_P - 50 - d * 2) * sp;
   return Math.max(1, Math.ceil(e + (k === "luk" ? t / 2.45 : (t - (stat(s, "luk") - e) * 0.25) / 2.2)));
 }
 const afterFight = (s, res) => { if (res.win) s.health = clamp(s.health - (1 - res.share) * 13, 1, 100); };
@@ -156,9 +187,31 @@ const H = {
   xp: (s, v) => gainXp(s, v * huntXp(s)), hp: (s, v) => hurt(s, v), fame: (s, v) => { s.fame += v * (v > 0 ? 1 + mod(s, "fame") / 100 : 1); }, karma: (s, v) => (s.karma = clamp(s.karma + v * (v * s.karma > 0 ? 1 - Math.abs(s.karma) / 130 : 1), -100, 100)), // the further along a path, the harder each step
   sta: (s, v) => { for (const k in v) s.st[k] += v[k]; }, mat: (s, v) => { for (let i = 0; i < v; i++) dropMat(s); }, pot: (s, v) => (s.pot += v), stone: (s, v) => (s.stone += v), skill: (s, v) => { for (let i = 0; i < v; i++) learn(s); }, gear: (s, v) => { for (let i = 0; i < v; i++) dropGear(s); },
   path: (s, v) => { (s.paths ||= []).push(v); const p = D.PATHS[v]; if (!s.w.careers.includes(p.job)) s.w.careers.push(p.job); log(s, `วัยเด็กของคุณเดินไปทาง "${p.n}"`, "สายทาง", "imp"); },
-  perk: (s, v) => { (s.perks ||= []).push(v); emit("skill"); log(s, `ทางฝึก "${D.perkOf(v).n}" ฝังลงในร่างของคุณ`, "ปั้นสเตตัส", "leg"); }, flag: (s, v) => (s.flags[v] = 1), next: (s, [id, m]) => s.q.push({ id, at: s.ageM + m, ctx: s.ctx }), rel: (s, v) => { const n = s.npcs[s.ctx?.ni]; if (n) n.rel = clamp(n.rel + v, -100, 100); }, c: (s, v) => { for (const k in v) s.c[k] = (s.c[k] || 0) + v[k]; }, main: (s, v) => (s.main += v), floor: (s, v) => setFloor(s, s.floor + v),
+  perk: (s, v) => { const g = rollGrade(s); (s.perks ||= []).push(v); (s.pg ||= {})[v] = g; emit("skill"); log(s, `ทางฝึก "${D.perkOf(v).n}" ฝังลงในร่างของคุณ ระดับ${SKILL_GRADES[g].n} · ${perkText(perkM(s, v))}`, "ปั้นสเตตัส", g >= 3 ? "leg" : "good"); }, flag: (s, v) => (s.flags[v] = 1), next: (s, [id, m]) => s.q.push({ id, at: s.ageM + m, ctx: s.ctx }), rel: (s, v) => { const n = s.npcs[s.ctx?.ni]; if (n) n.rel = clamp(n.rel + v, -100, 100); }, c: (s, v) => { for (const k in v) s.c[k] = (s.c[k] || 0) + v[k]; }, main: (s, v) => (s.main += v), floor: (s, v) => setFloor(s, s.floor + v),
   marry: (s) => { s.spouse = s.ctx.ni; s.npcs[s.spouse].rel = 100; emit("love"); }, child: (s) => { s.kids.push(pk(s.r, D.GIVEN)); emit("love"); }, cxp: (s, v) => (s.cxp += v), rankUp: (s) => rankUp(s), crUp: (s) => { s.cr++; s.main = 0; s.cxp = 0; emit("rank"); log(s, `เลื่อนตำแหน่งเป็น ${CAREERS[s.career].t[s.cr]}`, "อาชีพ", "imp"); }, awaken: (s) => awaken(s), career: (s, v) => { if (s.career && s.career !== v) s.pastJob = s.career; s.career = v; s.cr = 0; s.cxp = 0; s.main = 0; s.focus = "work"; s.nextMain = s.ageM + 4; log(s, `เริ่มต้นอาชีพ ${CAREERS[v].n} ตำแหน่ง ${CAREERS[v].t[0]}`, "อาชีพ", "imp"); }, setSpc: (s, v) => { s.spc = v; const x = spc(v); gainSkill(s, 3, x.el); emit("awaken"); log(s, `เปลี่ยนสู่คลาสพิเศษ: ${x.n}`, "คลาสพิเศษ", "leg"); }, guildRep: (s, v) => { if (s.guild) s.guild.rep = Math.max(0, s.guild.rep + v); }, spcFail: (s, v) => { s.spcCd = s.ageM + 12; if (typeof v !== "string") return; const k = "sf_" + v; s.c[k] = (s.c[k] || 0) + 1; if (s.c[k] >= SPC_TRIES) { s.w.specials = s.w.specials.filter((x) => x !== v); log(s, `ทางสู่${spc(v).n}ปิดลงแล้ว ชีวิตนี้คงไม่ได้เดินทางนั้น`, "คลาสพิเศษ", "bad"); } }, examFail: (s, v) => (s.nextExam = s.ageM + (v > 1 ? v : 8)), // a postponed exam comes back in v months, a failed one in 8
 };
+// A choice can leave a mark: a row of D.MARKS that bends stats or bonuses for some months, then fades by itself (tick).
+// Effect form: mark: ["id", months]. Taking the same mark again restarts its clock instead of stacking.
+H.will = (s, v) => { const was = willOf(s); s.will = clamp(was + v, D.WILL.min, D.WILL.max); if (was >= 0 && s.will < 0) H.mark(s, ["broken", 12]); };
+H.tr = (s, o) => { s.tr = s.tr || {}; for (const k in o) s.tr[k] = clamp((s.tr[k] || 0) + o[k], 0, 10); };
+H.home = (s, v) => { s.home = clamp((s.home ?? 5) + v, 0, 10); };
+H.side = (s, v) => { s.side = clamp((s.side || 0) + v, -5, 5); };
+H.die = (s, cause) => die(s, cause);
+// Quests: choices bank points, and the ending adds how far the listed stats and way have come for someone at this level.
+const questOf = (id) => D.QUESTS.find((q) => q.id === id);
+const qScore = (s, Q) => { const need = s.hunter ? 12 + 0.8 * s.lv : 14 + 6 * s.cr, st = (Q.st.reduce((a, k) => a + clamp(stat(s, k) / need, 0, 2), 0) / Q.st.length) * 1.5; return (s.qs?.[Q.id]?.p || 0) + st + (Q.comp ? val(s, Q.comp) / 10 : 0); };
+function gainRelic(s, id) { const R = D.RELICS[id], x = mkGear(s, R.slot, R.t, clamp(matGrade(s) + R.up, 0, 5), R.q); x.base = R.n; x.affix = null; x.relic = id; s.wear[x.slot] = x.id; emit("loot"); log(s, `ได้รับของล้ำค่า: ${R.n} คุณภาพ${QUAL[R.q].n} · ${R.d} (${perkText(R.m)})`, "ของ", "leg"); return R.n; }
+const pickItem = (s, Q, it) => (typeof it === "string" ? it : it?.by ? it.by[Object.keys(it.by).sort((a, b) => stat(s, b) - stat(s, a))[0]] : null);
+H.qp = (s, [id, v]) => { const m = (s.qs ||= {}); (m[id] ||= { p: 0 }).p += v; };
+H.qEnd = (s, id) => { const Q = questOf(id), T = D.QUEST_TIERS[Q.tier], sc = qScore(s, Q), i = Q.out.reduce((b, o, j) => (sc >= o.min ? j : b), 0), o = Q.out[i], rec = ((s.qs ||= {})[id] ||= { p: 0 }); rec.g = i; rec.sc = Math.round(sc * 10) / 10; log(s, `จบ${T.n} 「${Q.n}」: ${o.n} ${o.m}`, T.n, Q.tier ? "leg" : "imp"); if (o.r) apply(s, o.r); const it = pickItem(s, Q, o.item); if (it) rec.item = gainRelic(s, it); if (o.ev) H.next(s, o.ev); };
+// Named quests are the main line of every seed: never rolled, delivered in table order as soon as a life qualifies, with a gap so they don't pile up.
+function openQuest(s) { if (s.ageM < (s.nextQuest ?? 0)) return false; const i = EVENTS.findIndex((e) => e.k === "q" && met(s, e) && fits(s, e.who)); if (i < 0) return false; const e = EVENTS[i]; s.nextQuest = s.ageM + D.QUEST_GAP; s.seen[i] = s.ageM; open(s, e, e.tag); return true; }
+export const questLog = (s) => Object.entries(s.qs || {}).map(([id, r]) => { const Q = questOf(id); return { n: Q.n, tier: D.QUEST_TIERS[Q.tier].n, c: D.QUEST_TIERS[Q.tier].c, done: r.g != null, end: r.g != null ? Q.out[r.g].n : "", item: r.item, sc: r.sc, keys: [...Q.st.map((k) => STATS[k]), D.COMPOS[Q.comp]?.[0]].filter(Boolean).join(" · ") }; });
+const loanYears = (s, L) => Math.max(L.yrs, Math.round((lifespan(s) - s.ageM / 12) * L.share));
+H.loan = (s) => { const L = D.LOANS[s.loans || 0], y = loanYears(s, L); s.loans = (s.loans || 0) + 1; s.c.loan = s.loans; s.ageM += y * 12; for (const k in s.st) s.st[k] *= 1 - L.cut; if (s.hunter) s.lv = Math.max(1, Math.floor(s.lv * (1 - L.cut))); H.will(s, L.will); s.health = Math.max(s.health, 35); log(s, `เซ็นงวดชีวิตที่ ${s.loans}: อายุเพิ่ม ${y} ปี เลเวลและค่าสถานะลด ${Math.round(L.cut * 100)}%`, "งวดชีวิต", "leg"); emit("heal"); };
+H.mark = (s, [id, mo]) => { const M = D.MARKS[id]; if (!M) return; s.marks = (s.marks || []).filter((x) => x.id !== id); s.marks.push({ id, till: s.ageM + mo }); log(s, `ติดตัวไปอีกราว ${mo} เดือน: ${M.n} (${perkText(M.m)})`, "ติดตัว", M.bad ? "bad" : "good"); };
+export const markList = (s) => (s.marks || []).filter((x) => D.MARKS[x.id]).map((x) => ({ ...D.MARKS[x.id], left: Math.max(1, x.till - s.ageM) }));
+function fadeMarks(s) { if (!s.marks?.length) return; const gone = s.marks.filter((x) => x.till <= s.ageM); if (!gone.length) return; s.marks = s.marks.filter((x) => x.till > s.ageM); for (const x of gone) if (D.MARKS[x.id]) log(s, `"${D.MARKS[x.id].n}" จางไปจากตัวคุณแล้ว`, "ติดตัว"); }
 export function apply(s, e) { for (const k in e) if (k !== "m") H[k]?.(s, e[k]); }
 function hurt(s, v) { s.health = clamp(s.health + v * (v > 0 ? 1 + mod(s, "heal") / 200 : 1 - clamp(mod(s, "safe"), 0, 60) / 100), 0, 100); if (s.health <= 0) { s.health = 1; if (s.ageM > 192 && ch(s.r, 0.3)) fatal(s, "บาดแผลสาหัส"); } }
 export const huntXp = (s) => (15 + s.lv * 5) * (1 + mod(s, "xp") / 100);
@@ -180,7 +233,9 @@ const autoWear = (s, g) => { const c = gearOf(s, s.wear[g.slot]); if (!c || gear
 
 function awaken(s) {
   s.hunter = true; s.rev = s.latent.length; s.lv = 1; s.xp = 0; if (s.career) { s.lateAw = 1; s.pastJob = s.career; }
-  const stats = Object.entries(CLASSES).map(([id, c]) => ({ id, w: (2 + Math.max(0, s.st[c.main] - 8) * 0.8) * (c.w || 1) })), rc = mk(s.seed, "cls"); s.cls = wp(rc, stats).id;
+  const rc = mk(s.seed, "cls"), any = () => wp(rc, Object.entries(CLASSES).filter(([id]) => !(s.w.apt || []).includes(id)).map(([id, c]) => ({ id, w: (2 + Math.max(0, s.st[c.main] - 8) * 0.8) * (c.w || 1) }))).id, apt = s.w.apt || [];
+  s.cls = (apt.length ? wp(rc, [...apt.map((id, i) => ({ id, w: APT_W[i] * aptFit(s, id) })), { id: null, w: 1.5 }]).id : null) || any();
+  if (s.lateAw && !s.w.specials.includes("late")) s.w.specials.push("late", "twoworld");
   s.rank = s.w.pot > 83 ? 2 : s.w.pot > 62 ? 1 : 0; const c = CLASSES[s.cls];
   gainSkill(s, 0, c.els[0]); gainSkill(s, 1, c.els[0]); s.focus = "hunt"; s.nextMain = s.ageM + 3; s.career = null;
   mkWeaponStart(s); emit("awaken"); log(s, `พลังที่หลับอยู่ตื่นขึ้นแล้ว ผลตรวจของสมาคมระบุว่าคุณคือ${c.n} แรงก์ ${RANKS[s.rank]}`, "ปลุกพลัง", "leg");
@@ -192,13 +247,19 @@ function setFloor(s, f) { s.floor = Math.max(s.floor, f); s.c.floorMax = s.floor
 // ---- Events
 function pickNpc(s, best) { const a = s.npcs.map((n, i) => ({ n, i })).filter((x) => x.n.alive && x.i !== s.w.rival); return best ? a.sort((x, y) => y.n.rel - x.n.rel)[0].i : pk(s.r, a).i; }
 // need = {stat: min}: the option only appears once your total stat reaches it, so training opens routes others never see.
-const meets = (s, need) => !need || Object.entries(need).every(([k, v]) => stat(s, k) >= v);
+// A key that is not a stat is read like an event condition (counter, gold, karma, rel...), so an earlier choice can open or close a later option.
+const meets = (s, need) => !need || Object.entries(need).every(([k, v]) => (STATS[k] ? stat(s, k) : val(s, k)) >= v);
+const showable = (need) => need && Object.keys(need).every((k) => STATS[k] || NEED_LABEL[k]);
+export const needHave = (s, k) => Math.floor(STATS[k] ? stat(s, k) : val(s, k));
 function toOpt(x) { const [l, st, d, y, n, foe, who, need] = x, o = { l, y, n, who, need }; if (st === "fight") o.fight = { m: 1 + d, ...foe }; else if (st) { o.s = st; o.d = d; } return o; }
 const here = (s) => (s.hunter && s.at ? placeOf(s).n : pk(s.r, ZONES));
 function open(s, def, tag, ctx) {
   ctx = ctx || { z: here(s), mon: pk(s.r, MON) };
   if (ctx.ni == null) { ctx.ni = pickNpc(s, def.if?.rel); ctx.npc = s.npcs[ctx.ni].n; } ctx.rival = s.npcs[s.w.rival].n;
-  s.ev = { t: fill(def.t, ctx), lt: def.lt, tag, ctx, o: def.o.map((x) => (Array.isArray(x) ? toOpt(x) : x)).filter((o) => fits(s, o.who) && meets(s, o.need)) };
+  // A locked road stays on the page when its price is something the player can read and work toward; hidden story counters still hide the option.
+  const all = def.o.map((x) => (Array.isArray(x) ? toOpt(x) : x)).filter((o) => fits(s, o.who)), free = all.filter((o) => meets(s, o.need)), shut = free.length ? all.filter((o) => !meets(s, o.need) && showable(o.need)).slice(0, 2) : [];
+  for (const o of shut) o.locked = 1;
+  s.ev = { t: fill(def.t, ctx), lt: def.lt, tag, ctx, noAp: def.noAp, o: all.filter((o) => free.includes(o) || shut.includes(o)) };
   for (const o of s.ev.o) if (o.fight && !o.fight.lv) Object.assign(o.fight, { lv: Math.max(1, s.lv + 1), n: o.fight.n || pk(s.r, MON), el: o.fight.el || pk(s.r, Object.keys(ELEMENTS)) });
   emit("event");
 }
@@ -210,33 +271,45 @@ export const optOdds = (s, o) => (o.p != null ? o.p : o.fight ? winOdds(s, enemy
 const STYLE = { str: { gold: 40, hp: -4 }, agi: { mat: 1 }, int: { xp: 0.4 }, wil: { hp: 4 }, cha: { fame: 2 }, luk: { gold: 25 } };
 const styled = (y, k) => { const o = { ...y }; for (const [a, v] of Object.entries(STYLE[k])) o[a] = (o[a] || 0) + v; return o; };
 // What a choice changed, as short "+2 ปัญญา · −₡300" text for the log line.
-const SNAP = { gold: "₡", health: "สุขภาพ", fame: "ชื่อเสียง", karma: "กรรม", lv: "Lv", craft: "ฝีมือช่าง" };
-const pickSnap = (s) => ({ ...Object.fromEntries(Object.keys(STATS).map((k) => [k, s.st[k]])), ...Object.fromEntries(Object.keys(SNAP).map((k) => [k, s[k] || 0])), sk: s.sk.length, gear: s.gear.length });
+const SNAP = { gold: "₡", health: "สุขภาพ", fame: "ชื่อเสียง", karma: "กรรม", lv: "Lv", craft: "ฝีมือช่าง", will: "แรงใจ", home: "ครอบครัว", side: "ฝั่งผู้คน" };
+const pickSnap = (s) => ({ ...Object.fromEntries(Object.keys(STATS).map((k) => [k, s.st[k]])), ...Object.fromEntries(Object.keys(SNAP).map((k) => [k, k === "home" ? s.home ?? 5 : s[k] || 0])), sk: s.sk.length, _g: s.gear.map(gearName), _r: Object.fromEntries((s.npcs || []).map((n) => [n.n, n.rel])) });
 function diffText(a, b) {
   const out = [], num = (v) => (Math.abs(v) >= 10 ? fmtN(Math.round(Math.abs(v))) : (Math.round(Math.abs(v) * 10) / 10).toString()), sg = (v) => (v > 0 ? "+" : "−");
-  for (const k in a) { const d = b[k] - a[k]; if (Math.abs(d) < 0.05) continue;
-    if (k === "gold") out.push(`${sg(d)}₡${num(d)}`); else if (k === "sk") out.push(`วิชาใหม่ ${d}`); else if (k === "gear") { if (d > 0) out.push(`อุปกรณ์ใหม่ ${d}`); } else out.push(`${STATS[k] || SNAP[k]} ${sg(d)}${num(d)}`); }
+  for (const k in a) { if (k[0] === "_") continue; const d = b[k] - a[k]; if (Math.abs(d) < 0.05) continue;
+    if (k === "gold") out.push(`${sg(d)}₡${num(d)}`); else if (k === "sk") out.push(`วิชาใหม่ ${d}`); else out.push(`${STATS[k] || SNAP[k]} ${sg(d)}${num(d)}`); }
+  const left = [...a._g]; for (const g of b._g) { const i = left.indexOf(g); if (i >= 0) left.splice(i, 1); else out.push(`ได้รับ ${g}`); }
+  for (const n in b._r) { const d = b._r[n] - (a._r[n] ?? b._r[n]); if (Math.abs(d) >= 1) out.push(`ความสัมพันธ์ ${n} ${sg(d)}${num(d)}`); }
   return out.join(" · ");
 }
 const fmtN = (v) => v.toLocaleString("en-US");
 export function choose(s, i) {
+  if (s.ev.o[i]?.locked) return;
   const before = pickSnap(s);
   const ev = s.ev, o = ev.o[i]; s.ev = null; s.ctx = ev.ctx; let ok = true, roll = "";
   if (o.fight) { const res = fight(s, enemy(o.fight)); ok = res.win; afterFight(s, res); emit("fight", res); roll = ok ? "ชนะ" : "แพ้"; if (ok && o.fight.boss) s.c.boss = (s.c.boss || 0) + 1; if (!ok && (o.fight.boss || ev.tag === "โลก") && !s.dead) deathRoll(s, o.fight); }
   else { const p = optOdds(s, o); if (p != null) { ok = ch(s.r, p / 100); roll = ok ? "สำเร็จ" : "พลาด"; } }
   if (ok && o.s && !o.fight) s.st[o.s] += growOf(s, o.s);
-  if (o.ap || o.need) s.habit = s.habit?.k === o.s ? { k: o.s, n: s.habit.n + 1 } : { k: o.s, n: 1 }; else if (o.s || o.fight) s.habit = null;
+  if ((o.ap || o.need) && o.s) s.habit = s.habit?.k === o.s ? { k: o.s, n: s.habit.n + 1 } : { k: o.s, n: 1 }; else if (o.s || o.fight) s.habit = null;
   const out = ok ? o.y : o.n || {};
   const m = text(s, out.m);
   log(s, [ev.lt || ev.t, line(s, "pick", { l: o.l.replace(/^บททดสอบ: /, "รับบททดสอบ") }), m && (ok || /แต่|ทว่า/.test(m) ? m : "แต่" + m)].filter(Boolean).join(" "), ev.tag, ok ? "imp" : "bad", roll);
   const entry = s.log[s.log.length - 1];
   if (!s.dead) apply(s, out);
+  if (!s.dead && ok && s.ageM < 216 && !out.tr) { const k = o.s ? D.TR_OF[o.s] : out.karma > 0 ? "spi" : out.karma < 0 ? "cun" : null; if (k) H.tr(s, { [k]: D.WILL.kidStep }); }
   entry.d = diffText(before, pickSnap(s));
 }
 function deathRoll(s, f, x = 1) { const a = derive(s), e = enemy(f), p = clamp((0.05 * e.atk) / a.atk, 0.03, 0.14) * x; if (ch(s.r, p)) fatal(s, `พ่ายแก่ ${f.n}`); }
 // Every combat or injury death comes through here, so the token covers them all. Old age does not.
-function fatal(s, cause) { if (s.token > 0) { s.token--; log(s, "แผ่นย้ายชีพแตกออก คุณลืมตาอีกครั้ง", "รอดตาย", "leg"); emit("heal"); } else die(s, cause); }
-export function autoChoice(s) { let best = 0, bv = -1e9; s.ev.o.forEach((o, i) => { const p = optOdds(s, o); const v = p == null ? 52 : o.fight && p < 50 ? p - 25 : p; if (v > bv) { bv = v; best = i; } }); return best; }
+function fatal(s, cause) { if (s.pendLoan) return; if (s.token > 0) { s.token--; log(s, "แผ่นย้ายชีพแตกออก คุณลืมตาอีกครั้ง", "รอดตาย", "leg"); emit("heal"); } else if ((s.loans || 0) < D.LOANS.length) { s.pendLoan = cause; s.health = Math.max(s.health, 20); } else die(s, cause); }
+// The dealer's table: the next tick after a fatal blow, up to three signed returns at rising cost.
+function openLoan(s) { const cause = s.pendLoan, L = D.LOANS[s.loans || 0]; s.pendLoan = null; open(s, { noAp: 1, t: L.t, o: [{ l: L.ok, note: `อายุเพิ่ม ${loanYears(s, L)} ปี · ${s.hunter ? "เลเวลและ" : ""}ค่าสถานะทั้งหมดลด ${Math.round(L.cut * 100)}% · แรงใจ ${L.will}`, y: { m: L.m, loan: 1 } }, { l: "วางปากกา แล้วปล่อยมือ", note: "ชีวิตนี้จบตรงนี้", y: { die: cause } }] }, "งวดชีวิต"); }
+export function fatesOf(s) { const seen = {}, friend = s.npcs.filter((n) => n.alive).sort((a, b) => b.rel - a.rel)[0]?.n || "ใครบางคน"; return D.FATES.filter((r) => { if (seen[r.g] || Object.entries(r.if || {}).some(([k, v]) => val(s, k) < v) || Object.entries(r.max || {}).some(([k, v]) => val(s, k) > v)) return false; return (seen[r.g] = 1); }).map((r) => r.t.replace("{friend}", friend)); }
+export const traitText = (s) => Object.keys(D.TRAITS).map((k) => `${D.TRAITS[k]} ${trv(s, k)}`).join(" · ");
+export const compoTop = (s) => Object.entries(D.COMPOS).map(([k, c]) => ({ n: c[0], v: val(s, k) })).sort((a, b) => b.v - a.v);
+export const willBand = (s) => [...D.WILL.bands].reverse().find(([m]) => willOf(s) >= m)[1];
+function lifeChapter(s) { const a = s.ageM / 12, i = D.LIFE_CH.reduce((b, r, j) => (a >= r[0] ? j : b), -1); H.will(s, D.WILL.year); if (i <= (s.chap ?? -1)) return; s.chap = i; const r = D.LIFE_CH[i]; H.will(s, D.WILL.chapter); log(s, `${r[1]} ${r[2]}`, "บทชีวิต", "leg"); if (r[3]) { const [x, y] = compoTop(s); log(s, `สิ่งที่ติดตัวมาตั้งแต่เด็ก: ${x.n} ${x.v} และ ${y.n} ${y.v}`, "บทชีวิต", "imp"); } }
+// -1 means no option is safe to take for the player, so auto stops and waits.
+export function autoChoice(s) { let best = -1, bv = -1e9; s.ev.o.forEach((o, i) => { if (o.locked || o.push || o.y?.will < 0) return; const p = optOdds(s, o); const v = p == null ? 52 : o.fight && p < 50 ? p - 25 : p; if (v > bv) { bv = v; best = i; } }); return best; }
 export function die(s, cause) {
   const a = age(s); s.dead = { cause, age: a, title: lifeTitle(s), score: score(s) }; emit("death");
   log(s, `${s.name} จากไปเมื่ออายุ ${a} ปี (${cause})`, "จบชีวิต", "leg");
@@ -250,14 +323,16 @@ function lifeTitle(s) {
 // ---- The monthly clock
 export function tick(s) {
   if (s.dead || s.ev) return;
-  const step = s.ageM < 180 ? 3 : 1, st = stage(s); s.ageM += step;
+  if (s.will == null) s.will = D.WILL.start;
+  if (s.pendLoan) return openLoan(s);
+  const step = s.ageM < 180 ? 3 : 1, st = stage(s); s.ageM += step; fadeMarks(s);
   if (s.w.priceT > 0 && (s.w.priceT -= step) <= 0) { s.w.price = 1; log(s, line(s, "price"), "โลก"); }
   if (st !== "k") living(s, step);
   doFocus(s, st, step); if (s.dead) return;
   if (s.guild) guildMonth(s);
   npcMonth(s);
   news(s, step);
-  if (s.ageM % 12 < step) yearEnd(s);
+  if (s.ageM % 12 < step) { yearEnd(s); lifeChapter(s); }
   if (s.ageM === 144 || (s.ageM > 144 && s.rev === 0)) { s.rev = 1; log(s, `คุณเริ่มรู้สึกถึงบางอย่างในตัว: ${LATENTS[s.latent[0]].n}`, "พลังแฝง", "imp"); }
   aging(s); if (s.dead || s.ev) return;
   schedule(s);
@@ -280,8 +355,8 @@ function doFocus(s, st, step) {
   }
   if (s.health < 22 && f !== "rest") { hurt(s, 4); s.gold -= 40; if (!s.sick) { s.sick = 1; log(s, line(s, "hosp"), "ฟื้นฟู", "bad"); } return; }
   if (s.sick && s.health >= 45) { s.sick = 0; log(s, line(s, "healed"), "ฟื้นฟู", "good"); }
-  if (f === "hunt") hunt(s); else if (f === "tower") climb(s);
-  else if (f === "train") { const m = CLASSES[s.cls].main; s.st[m] += 0.28; s.st.wil += 0.12; gainXp(s, huntXp(s) * 0.35); trainSkill(s, 4); }
+  if (f === "hunt") hunt(s); else if (f === "tower") { if (towerOk(s)) climb(s); else { s.focus = "hunt"; hunt(s); } } // under-age hunters are turned back at the gate and hunt instead
+  else if (f === "train") { const m = CLASSES[s.cls].main; s.c.drill = (s.c.drill || 0) + 1; s.st[m] += 0.28; s.st.wil += 0.12; gainXp(s, huntXp(s) * 0.35); trainSkill(s, 4); }
   else if (TRAIN[f]) { drill(s, f); gainXp(s, huntXp(s) * 0.1); }
   else if (f === "guild") guildWork(s);
   else if (f === "craft") { s.craft = clamp(s.craft + 0.7 * (1 + mod(s, "craft") / 100), 0, 100); s.gold += 60 * tier(s); gainXp(s, huntXp(s) * 0.15); }
@@ -375,6 +450,7 @@ function schedule(s) {
   const d = s.q.findIndex((x) => x.at <= s.ageM); if (d >= 0) { const q = s.q.splice(d, 1)[0], def = EVENTS.find((e) => e.id === q.id); if (def) { open(s, def, def.tag || "ชะตา", q.ctx); return addApproach(s); } }
   if (!s.hunter && !s.career && s.ageM >= s.w.awakenAge * 12) return openAwaken(s);
   if (!s.hunter && s.w.lateAge && s.ageM >= s.w.lateAge && !s.flags.lateDone) return openLate(s);
+  if (!s.hunter && s.career && !s.flags.lateDone && age(s) >= 25 && age(s) <= 50 && s.ageM >= (s.nextLate ?? 0)) { s.nextLate = s.ageM + 12; if (ch(s.r, lateP(s))) return openLate(s); }
   for (const c of s.w.cal) {
     if (!c.ann && s.ageM >= c.at - 12) { c.ann = 1; const W = WORLD.find((x) => x.id === c.id); log(s, `สมาคมติดประกาศล่วงหน้าราวหนึ่งปี: ${W.n} ${fill(W.d, c)}`, "โลก", "imp"); }
     if (!c.done && s.ageM >= c.at) { c.done = 1; return openWorld(s, c); }
@@ -383,6 +459,7 @@ function schedule(s) {
   if (stage(s) === "k") { const x = D.CROSS[s.cross || 0]; if (x && s.ageM >= x.age * 12) return openCross(s, x); }
   if (stage(s) === "k") return randomEvent(s, 0.3);
   if (s.hunter && s.ageM >= s.spcCd && !s.spc) { const ready = s.w.specials.map(spc).filter((x) => met(s, x) && (age(s) < SPC_AGE || x.id === "late")); if (ready.length) return openSpecial(s, ready.slice(0, 3)); }
+  if (stage(s) !== "k" && openQuest(s)) return;
   if (s.ageM >= s.nextExam && examReady(s)) return openExam(s);
   if (s.ageM >= s.nextMain) return openMain(s);
   if ((s.hunter || (s.career && !retired(s))) && s.ageM >= (s.nextDisc ?? 0) - (WAY_F.has(s.focus) ? 3 : 0) && openDisc(s)) return;
@@ -394,25 +471,48 @@ function openCross(s, x) {
 }
 // Approach options: an event with a stat test gets up to two more ways to the same result, tested on your best other stats. Same rewards, other stat, so every build has a way through.
 const AP_N = { str: "ใช้กำลังเข้าจัดการ", agi: "ใช้ความว่องไวแก้สถานการณ์", int: "คิดหาทางอ้อมที่ฉลาดกว่า", wil: "ตั้งสติและอดทนจนถึงที่สุด", cha: "พูดคุยให้อีกฝ่ายยอมถอย", luk: "ปล่อยให้ดวงเป็นคนตัดสิน" };
-function addApproach(s) {
-  const ev = s.ev; if (!ev || ev.o.length >= 4) return;
-  const base = ev.o.find((o) => o.s && !o.fight); if (!base) return;
+function addApproach(s) { addWays(s); addPush(s); }
+// Spend will to force the hardest tested option. Cost follows how long the odds are, and auto play never spends it.
+function addPush(s) {
+  const ev = s.ev; if (!ev || ev.noAp || ev.o.length >= 5) return;
+  const b = ev.o.filter((o) => !o.locked && o.s && !o.fight && !o.ap).map((o) => ({ o, p: optOdds(s, o) })).filter((x) => x.p < 70).sort((x, y) => x.p - y.p)[0]; if (!b) return;
+  const c = b.p >= 50 ? 5 : b.p >= 25 ? 10 : 20; if (willOf(s) < c) return;
+  ev.o.push({ l: `ฝืนให้ได้: ${b.o.l}`, push: 1, note: `ใช้แรงใจ ${c} แล้วเรื่องนี้จะสำเร็จแน่นอน`, y: { ...b.o.y, will: -c } });
+}
+function addWays(s) {
+  const ev = s.ev; if (!ev || ev.noAp || ev.o.filter((o) => !o.locked).length >= 4) return; // noAp rows are trade-offs: an extra "same reward, other stat" way would hand out a best pick
+  const base = ev.o.find((o) => o.s && !o.fight && !o.locked); if (!base) return;
   // Only ways that beat the obvious one are offered: a worse chance for the same reward is not a choice.
   const bp = odds(s, base.s, base.d), ks = Object.keys(STATS).filter((k) => k !== base.s && !ev.o.some((o) => o.s === k) && optOdds(s, { s: k, d: base.d, ap: 1 }) > bp).sort((a, b) => odds(s, b, base.d) - odds(s, a, base.d)).slice(0, Math.min(2, 4 - ev.o.length));
   for (const k of ks) ev.o.push({ l: AP_N[k], s: k, d: base.d, ap: 1, y: { ...styled(base.y, k), m: "วิธีที่คุณเลือกได้ผลเกินคาด", sta: { ...(base.y.sta || {}), [k]: ((base.y.sta || {})[k] || 0) + 0.4 } }, n: { ...(base.n || {}), m: "วิธีของคุณไม่เข้ากับสถานการณ์นี้" } });
 }
 const BT_LINE = { str: "กล้ามเนื้อของคุณจำท่าเองได้แล้ว", agi: "เท้าของคุณเริ่มรู้ทางก่อนสมอง", int: "ความคิดของคุณเริ่มวิ่งนำคำถาม", wil: "ใจของคุณนิ่งจนเสียงรอบตัวเงียบลง", cha: "คนรอบตัวเริ่มหยุดฟังก่อนคุณพูด", luk: "สิ่งเล็กๆ เริ่มเรียงตัวเข้าข้างคุณ" };
 // One breakthrough per month: a trained base stat crossing a tier asks the player to commit to one of two paths.
+// It never arrives as a bare menu: someone from this life's surroundings notices the stat and offers the two paths (D.SPOTTERS).
+// Not before age 6, and "let me think" brings the same person's question back half a year later.
+const BT_AGE = 72, BT_WAIT = 6;
+function spotter(s, k) {
+  const st = stage(s), hunOk = (r) => s.npcs.some((n, i) => n.alive && !!n.hun === !!r.hun && i !== s.w.rival);
+  const ok = D.SPOTTERS.filter((r) => r.at.includes(st) && fits(s, r.who) && (!r.k || r.k.includes(k)) && (r.hun == null || hunOk(r))), used = s.spot || [], unseen = ok.filter((r) => !used.includes(r.id));
+  const r = wp(s.r, (unseen.length ? unseen : ok).map((v) => ({ v, w: v.who || v.k ? 3 : 1 }))).v; // rows tied to this household or stat come up more than the generic ones
+  s.spot = [...used, r.id].slice(-4); return r;
+}
 function breakthrough(s) {
+  if (s.ageM < BT_AGE) return;
   const bt = (s.bt ||= {});
   for (const k in STATS) {
     const t = bt[k] || 0, at = D.PERK_AT(k);
-    if (t >= at.length || s.st[k] < at[t]) continue;
+    if (t >= at.length || s.st[k] < at[t] || (s.btCd?.[k] || 0) > s.ageM) continue;
     bt[k] = t + 1;
-    open(s, { t: `${STATS[k]}ของคุณทะลุ ${at[t]}: ${BT_LINE[k]} ถึงเวลาเลือกว่าจะปั้นมันไปทางไหน`, o: [0, 1].map((a) => { const p = D.perkOf(`${k}_${a}_${t}`); return { l: p.n, note: `${p.d} · ${perkText(p.m)}`, y: { m: "ทางฝึกนี้เป็นของคุณแล้ว", perk: `${k}_${a}_${t}` } }; }) }, "ปั้นสเตตัส");
+    const r = spotter(s, k), ctx = { z: here(s), mon: "", sn: STATS[k], sign: BT_LINE[k] };
+    if (r.hun != null) { const c = s.npcs.map((n, i) => ({ n, i })).filter((x) => x.n.alive && !!x.n.hun === !!r.hun && x.i !== s.w.rival); ctx.ni = pk(s.r, c).i; ctx.npc = s.npcs[ctx.ni].n; }
+    const o = [0, 1].map((a) => { const p = D.perkOf(`${k}_${a}_${t}`); return { l: `ฝึก${p.n}`, note: `${p.d} · ${perkText(p.m)}`, y: { m: "และเริ่มฝึกทางนั้นตั้งแต่วันถัดมา", perk: `${k}_${a}_${t}`, ...(r.hun != null ? { rel: 4 } : {}) } }; });
+    o.push({ l: "ขอเวลาคิดก่อน", note: `ยังไม่เลือกตอนนี้ เรื่องนี้จะกลับมาอีกครั้งในราว ${BT_WAIT} เดือน`, y: { m: "อีกฝ่ายพยักหน้า แล้วบอกว่าของแบบนี้ไม่ควรรีบ", btWait: k } });
+    open(s, { lt: `มีคนทักเรื่อง${STATS[k]}ของคุณ (ถึง ${at[t]} แล้ว):`, t: `${r.t} · เลือกได้ทางเดียว และมันจะติดตัวไปทั้งชีวิต`, o }, "ปั้นสเตตัส", ctx);
     return true;
   }
 }
+H.btWait = (s, k) => { s.bt[k]--; (s.btCd ||= {})[k] = s.ageM + BT_WAIT; };
 // ---- Ways (วิถี). The story that grows the fighting side your class or trade leans on: three ways per job, read off its main stat, bonuses and weapon, so new classes need no rows.
 const DISC_ST = { str: ["body", "hp"], agi: ["dodge", "acc"], int: ["mag", "wit"], wil: ["hp", "mag"], cha: ["wit", "mag"], luk: ["crit", "dodge"] };
 const DISC_M = { def: "body", safe: "body", hp: "hp", heal: "hp", life: "hp", crit: "crit", dodge: "dodge", xp: "wit", quest: "wit", gold: "wit", cxp: "wit", craft: "wit" };
@@ -420,7 +520,8 @@ const DISC_WP = { 1: "crit", 3: "body", 4: "body", 5: "acc", 6: "acc", 7: "mag",
 export const DISC_CAP = [5, 3, 2]; // chapters open on the main, second and third way
 const WAY_F = new Set(["train", "body", "mind", "study"]); // months spent training bring the next lesson sooner
 export const discLv = (s, f) => Math.floor((s.disc?.[f] || 0) + 1e-6);
-const discM = (X, n) => Object.fromEntries(Object.entries(X.m).map(([k, v]) => [k, Math.round(v * n * 10) / 10]));
+const discM = (s, f, n) => { const gs = s.dg?.[f] || [], X = D.DISC[f]; let x = 0; for (let k = 0; k < n; k++) x += GRADE_X(gs[k] || 0); return scaleM(X.m, x); };
+export const discGrades = (s, f) => s.dg?.[f] || [];
 export function discOf(s) {
   const job = s.hunter ? CLASSES[s.cls] : CAREERS[s.career]; if (!job) return [];
   const w = {}, add = (k, v) => k && (w[k] = (w[k] || 0) + v), [a, b] = DISC_ST[job.main || job.st];
@@ -428,11 +529,11 @@ export function discOf(s) {
   return Object.keys(D.DISC).filter((k) => s.hunter || k !== "mag").sort((x, y) => (w[y] || 0) - (w[x] || 0)).slice(0, 3);
 }
 // For the UI: the three ways of the current job, then anything learned in an earlier job.
-export const discList = (s) => { const fit = discOf(s); return [...fit, ...Object.keys(s.disc || {}).filter((f) => !fit.includes(f) && discLv(s, f))].map((f) => { const X = D.DISC[f], i = fit.indexOf(f), lv = discLv(s, f); return { n: `วิถี${X.n} · บทที่ ${lv}/${i < 0 ? lv : DISC_CAP[i]}`, d: `${X.d} · บทละ ${perkText(X.m)}`, m: lv ? discM(X, lv) : {} }; }); };
+export const discList = (s) => { const fit = discOf(s); return [...fit, ...Object.keys(s.disc || {}).filter((f) => !fit.includes(f) && discLv(s, f))].map((f) => { const X = D.DISC[f], i = fit.indexOf(f), lv = discLv(s, f); return { n: `วิถี${X.n} · บทที่ ${lv}/${i < 0 ? lv : DISC_CAP[i]}`, d: `${X.d} · บทละ ${perkText(X.m)}`, m: lv ? discM(s, f, lv) : {}, gs: discGrades(s, f).slice(0, lv) }; }); };
 H.disc = (s, [f, v]) => {
   const d = (s.disc ||= {}), a = discLv(s, f), cap = DISC_CAP[discOf(s).indexOf(f)] ?? 5, X = D.DISC[f];
   d[f] = Math.min(cap, (d[f] || 0) + v); const b = discLv(s, f);
-  if (b > a) { emit("skill"); log(s, `วิถี${X.n}จบบทที่ ${b} "${D.DISC_T[b - 1]}" · ${perkText(discM(X, b))}${b === 5 ? " ไม่มีบทต่อไปให้เรียนแล้ว ที่เหลือคือของคุณเอง" : ""}`, "วิถี", "leg"); if (b === 5) s.fame += 5; }
+  if (b > a) { const dg = ((s.dg ||= {})[f] ||= []); while (dg.length < b) dg.push(rollGrade(s)); emit("skill"); log(s, `วิถี${X.n}จบบทที่ ${b} "${D.DISC_T[b - 1]}" ระดับ${SKILL_GRADES[dg[b - 1]].n} · รวม ${perkText(discM(s, f, b))}${b === 5 ? " ไม่มีบทต่อไปให้เรียนแล้ว ที่เหลือคือของคุณเอง" : ""}`, "วิถี", "leg"); if (b === 5) s.fame += 5; }
 };
 // A chapter opens only when your standing has caught up with it (rank or position), like a ceiling that lifts as you rise.
 function openDisc(s) {
@@ -454,7 +555,8 @@ function randomEvent(s, p) {
   if (!ch(s.r, arrived ? 0.7 : p)) return; const k = stage(s);
   let list = EVENTS.filter((e, i) => e.k !== "x" && (e.k === k || (e.k === "a" && k !== "k")) && (!e.arc || s.w.arcs.includes(e.arc)) && !(e.arc && s.seen[i] != null) && (s.seen[i] == null || s.ageM - s.seen[i] > 50) && met(s, e) && fits(s, e.who));
   // The month you arrive somewhere, that place's own events come first.
-  const local = arrived && list.filter((e) => e.who?.includes(placeOf(s).id)); if (local?.length) list = local;
+  // Unless a main-line chapter is waiting: local events must not starve the story.
+  const local = arrived && list.filter((e) => e.who?.includes(placeOf(s).id)); if (local?.length && !list.some((e) => e.tag === "บัญชีฟ้าแตก")) list = local;
   if (!list.length) return; const e = wp(s.r, list); s.seen[EVENTS.indexOf(e)] = s.ageM; open(s, e, e.tag || (e.arc ? "ชะตา" : k === "h" ? "ฮันเตอร์" : "ชีวิต")); addApproach(s);
 }
 function openAwaken(s) {
@@ -477,7 +579,7 @@ const SPC_TRIES = 2;
 export const SPC_AGE = 55;
 function openSpecial(s, L) { s.spcCd = s.ageM + 4; const x0 = L[0]; open(s, { t: `${L.length > 1 ? "หลายทางเปิดพร้อมกัน เลือกได้ทางเดียว" : x0.n}: ${x0.q}`, o: [...L.map((x) => ({ l: L.length > 1 ? `บททดสอบ: ${x.n}` : "ก้าวเข้าสู่บททดสอบ", note: `${L.length > 1 ? x.d + " · " : ""}พลาดได้อีก ${SPC_TRIES - (s.c["sf_" + x.id] || 0)} ครั้งก่อนทางนี้ปิด`, fight: { lv: s.lv + 5, m: 1.4, n: `เงาของ${x.n}`, el: x.el }, y: { m: "ขีดจำกัดเดิมแตกออก", setSpc: x.id }, n: { m: "ยังไม่ใช่เวลาของคุณ", hp: -18, spcFail: x.id } })), { l: "ปฏิเสธไปก่อน", y: { m: "มันจะกลับมาอีก", spcFail: 1 } }] }, "คลาสพิเศษ"); }
 const examNeed = (s) => (s.hunter ? 3 + s.rank * 3 : 3 + s.cr * 3);
-export const examInfo = (s) => ({ need: examNeed(s), have: s.main, ready: examReady(s) });
+export const examInfo = (s) => ({ need: examNeed(s), have: Math.min(s.main, examNeed(s)), ready: examReady(s), cxp: Math.floor(s.cxp), cxpNeed: Math.ceil(90 * Math.pow(s.cr + 1, D.CIV_ECON.promo)) });
 function examReady(s) { if (s.hunter) return s.rank < RANKS.length - 1 && s.lv >= LVCAP[s.rank] - 2 && s.main >= examNeed(s); return s.career && !retired(s) && s.cr < 4 && s.cxp >= 90 * Math.pow(s.cr + 1, D.CIV_ECON.promo) && s.main >= examNeed(s); }
 function openExam(s) {
   if (s.hunter) { const R = RANKS[s.rank + 1]; open(s, { t: line(s, "exam", { R }), o: [{ l: "เข้าสอบ", fight: { lv: s.lv + 2, m: 1.1 + s.rank * 0.03 + Math.max(0, s.rank + 1 - s.w.ceil) * 0.9, n: `ผู้คุมสอบแรงก์ ${R}`, el: pk(s.r, Object.keys(ELEMENTS)) }, y: { m: "ใบอนุญาตใหม่ยังอุ่นอยู่เลย", rankUp: 1 }, n: { m: "@examFail", hp: -14, examFail: 1 } }, { l: "ขอเลื่อนสอบ", y: { m: "@examDelay", examFail: 3 } }] }, "แรงก์"); return; }
@@ -531,7 +633,7 @@ export const SHOP = [{ id: "pot", n: "ยารักษาบาดแผล", 
 export function buy(s, id) { const x = SHOP.find((a) => a.id === id); if (id === "anvil" && s.anvil >= 5) return; if (x.hunter && !s.hunter) return; if (!pay(s, x.price(s), x.n)) return; if (id === "anvil") { s.anvil++; emit("rank"); } else if (id === "book") learn(s); else { s[id]++; emit("coin"); } log(s, `ซื้อ ${x.n}`, "ตลาด"); }
 // Travel: a one-way fare moves where you hunt and which local events can find you. Going home is free.
 export function travel(s, i) {
-  const P = D.PLACES[i]; if (!P || !s.hunter || (s.at || 0) === i) return; if (!pay(s, P.fare, `ค่าเดินทางไป${P.n}`)) return;
+  const P = D.PLACES[i]; if (!P || !s.hunter || (s.at || 0) === i || !placeOk(s, P)) return; if (!pay(s, P.fare, `ค่าเดินทางไป${P.n}`)) return;
   s.at = i; s.arrive = 1; emit("quest");
   log(s, `เดินทางไป${P.n}: ${P.d}${s.lv < P.lv ? " · ที่นี่อันตรายเกินเลเวลของคุณ" : ""}`, "เดินทาง", s.lv < P.lv ? "bad" : "imp");
 }
@@ -540,7 +642,7 @@ export function autoPlan(s) {
   if (s.ev || s.dead || stage(s) === "k" || retired(s)) return;
   if (s.health < 40 && s.focus !== "rest") { s.autoBack = s.focus; s.focus = "rest"; return; }
   if (s.focus === "rest" && s.health >= 85) { s.focus = s.autoBack || (s.hunter ? "hunt" : "work"); s.autoBack = null; }
-  if (s.hunter && s.focus === "hunt") { const cur = s.at || 0, i = D.PLACES.reduce((b, p, j) => (p.lv <= s.lv && s.gold > p.fare * 3 ? j : b), 0); if (i !== cur && (i > cur || placeOf(s).lv > s.lv)) travel(s, i); }
+  if (s.hunter && s.focus === "hunt") { const cur = s.at || 0, i = D.PLACES.reduce((b, p, j) => (p.lv <= s.lv && placeOk(s, p) && s.gold > p.fare * 3 ? j : b), 0); if (i !== cur && (i > cur || placeOf(s).lv > s.lv)) travel(s, i); }
 }
 export const foundCost = 12000;
 export function foundGuild(s, n) { if (!need(s, s.hunter && s.rank >= 2, "ต้องเป็นฮันเตอร์แรงก์ C ขึ้นไป")) return; if (!need(s, !s.guild, "ต้องออกจากกิลด์เดิมก่อน")) return; if (!pay(s, foundCost, "ค่าจดทะเบียน")) return; s.guild = { own: 1, n, rep: 10, funds: 2000, mem: [], hall: { forge: 0, train: 0, watch: 0 }, loy: 70 }; s.fame += 8; emit("rank"); log(s, `ก่อตั้งกิลด์ "${n}"`, "กิลด์", "leg"); }

@@ -4,6 +4,8 @@
 
 ## แก้เกม
 
+โปรเจกต์นี้ใช้เอฟเฟกต์จาก `pixelfx-main` ซึ่งต้อง clone ไว้เป็นโฟลเดอร์ข้าง `rift-ledger` ตาม path `../pixelfx-main` และติดตั้ง dependency ของ repo นั้นก่อน build (`esbuild` อยู่ใน `pixelfx-main/node_modules`) บนเครื่องใหม่ให้เตรียมสองโฟลเดอร์นี้ไว้ระดับเดียวกัน แล้วจึงรันคำสั่งด้านล่าง
+
 ```bash
 node build.mjs
 ```

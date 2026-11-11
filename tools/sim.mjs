@@ -1,10 +1,11 @@
 // Sweep many seeds on full auto: crashes, determinism, and how lives are distributed. node tools/sim.mjs [lives]
-import { newLife, tick, choose, autoChoice, age, FOCUS, buy, craft, enhance, stage, foundGuild, joinGuild, recruit, fxOut, gearOf } from "../src/engine.js";
+import { newLife, tick, choose, autoChoice, age, FOCUS, buy, craft, enhance, stage, foundGuild, joinGuild, recruit, fxOut, gearOf, placeOk } from "../src/engine.js";
 import { travel } from "../src/engine.js";
+import { QUESTS, RELICS } from "../src/data.js";
 import { EVENTS, WORLD, NEWS, CLASSES, CAREERS, MOD_N, STATS, FAMILIES, WEAPONS, PATHS, CROSS, PLACES } from "../src/data.js";
 const N = +process.argv[2] || 300;
 // Static story check: every next target exists, every counter gated on is produced somewhere, no {tokens} in text the engine does not fill.
-{ const ids = new Set(EVENTS.filter((e) => e.id).map((e) => e.id)), made = new Set("age level rank floor gold fame karma craft guild own mems sk els kids spouse hunter luk rel lateAw cyears hunts boss cr".split(" ")), bad = [];
+{ const ids = new Set(EVENTS.filter((e) => e.id).map((e) => e.id)), made = new Set("age level rank floor gold fame karma craft guild own mems sk els kids spouse hunter luk rel lateAw cyears hunts boss cr loan".split(" ")), bad = [];
   // Trade check: ids don't collide, every who is a real id, every class and career has its own lines and at least one story row.
   const jobIds = [...Object.keys(CLASSES), ...Object.keys(CAREERS)], known = new Set([...jobIds, ...FAMILIES.map((f) => f.id), ...Object.keys(PATHS), ...PLACES.map((p) => p.id)]), used = new Set(), who = (w, at) => (w || []).forEach((id) => { used.add(id); known.has(id) || bad.push(`${at}: who ${id}`); });
   if (new Set(jobIds).size !== jobIds.length) bad.push("class and career ids collide");
@@ -20,12 +21,15 @@ const N = +process.argv[2] || 300;
   NEWS.forEach((n) => { walk(n.e, n); if (n.once) made.add(n.once); });
   EVENTS.forEach((e) => { walk(e.o, e); e.o.forEach((x) => Array.isArray(x) && /\{\w+\}/.test(x[0]) && bad.push(`${e.id}: token in label`)); });
   EVENTS.forEach((e) => Object.keys({ ...e.if, ...e.max }).forEach((k) => made.has(k) || bad.push(`${e.id}: counter ${k} never set`)));
+  for (const q of QUESTS) for (const o of q.out) { if (o.ev && !ids.has(o.ev[0])) bad.push(`${q.id}: ev ${o.ev[0]}`); for (const r of typeof o.item === "string" ? [o.item] : Object.values(o.item?.by || {})) RELICS[r] || bad.push(`${q.id}: item ${r}`); for (const k of Object.keys(o.item?.by || {})) q.st.includes(k) || bad.push(`${q.id}: by ${k}`); }
+  for (const q of QUESTS) q.scenes.forEach((S, i) => S.o.some(([, , , , , e, , , need]) => !need && !(e?.will < 0)) || bad.push(`${q.id} scene ${i}: no free option, a low-will life would be stuck`));
+  for (const r of Object.values(RELICS)) Object.keys(r.m).forEach((k) => MOD_N[k] || STATS[k] || bad.push(`${r.n}: bonus ${k}`));
   if (ids.size !== EVENTS.filter((e) => e.id).length) bad.push("duplicate id");
   if (bad.length) throw new Error("story check\n" + bad.join("\n")); }
 function play(seed) {
   const s = newLife(seed, "ทดสอบ"); let guard = 0;
   while (!s.dead && guard++ < 40000) {
-    if (s.ev) { choose(s, autoChoice(s)); continue; }
+    if (s.ev) { const p = process.env.RL_WILL ? s.ev.o.findIndex((o) => o.push) : -1; choose(s, p >= 0 ? p : autoChoice(s)); continue; }
     const st = stage(s);
     if (st === "k") s.focus = ["study", "sport", "play", "help"][s.ageM % 4];
     if (st === "c") { s.focus = s.ageM % 20 === 0 ? "study" : "work"; if (s.gold > 2000 && s.pot < 2) buy(s, "pot"); }
@@ -33,7 +37,7 @@ function play(seed) {
       s.focus = s.health < 45 ? "rest" : s.ageM % 3 === 0 ? "tower" : s.ageM % 11 === 0 ? "guild" : "hunt";
       if (s.pot < 3 && s.gold > 800) buy(s, "pot");
       // Move each year to the toughest place at or below your level, if the fare leaves money for potions.
-      if (s.ageM % 12 === 0) { const i = PLACES.reduce((b, p, j) => (p.lv <= s.lv && s.gold > p.fare * 3 ? j : b), 0); travel(s, i); }
+      if (s.ageM % 12 === 0) { const i = PLACES.reduce((b, p, j) => (p.lv <= s.lv && placeOk(s, p) && s.gold > p.fare * 3 ? j : b), 0); travel(s, i); }
       if (!s.guild && s.rank >= 2 && s.gold > 20000) foundGuild(s, "ทดสอบ"); else if (!s.guild && s.ageM % 40 === 0) joinGuild(s, 0);
       if (s.guild?.own && s.ageM % 30 === 0) recruit(s, s.ageM % 24);
       if (s.anvil < 5 && s.gold > 15000) buy(s, "anvil");
@@ -59,4 +63,7 @@ console.log("civ: age", avg(C, age), "cr", hist(C, (s) => s.cr), "gold", avg(C, 
 console.log("story led", hist(H, (s) => s.c.led || 0), "quit", H.filter((s) => s.c.ledQuit > 0).length, "loophole", H.filter((s) => s.c.ledLoop).length, "| cled", hist(C, (s) => s.c.cled || 0), "| arcs/life", avg(L, (s) => s.w.arcs.length), "| no-story hunters age", H.filter((s) => !s.c.led).map((s) => Math.floor(age(s))).join(","));
 console.log("place at death", hist(H, (s) => PLACES[s.at || 0].id), "| local events seen", L.reduce((a, s) => a + EVENTS.filter((e, i) => e.who?.some((w) => w.startsWith("z_")) && s.seen[i] != null).length, 0));
 { const ch = (s) => Object.values(s.disc || {}).reduce((a, v) => a + Math.floor(v + 1e-6), 0); console.log("ways: chapters hunter", avg(H, ch), "civ", avg(C, ch), "| by way", hist(L.flatMap((s) => Object.entries(s.disc || {}).filter((x) => x[1] >= 1).map((x) => x[0])), (k) => k), "| full 5", L.filter((s) => Object.values(s.disc || {}).some((v) => v >= 5)).length); }
+console.log("apt hit", hist(H, (s) => { const i = (s.w.apt || []).indexOf(s.cls); return i < 0 ? "other" : "apt" + (i + 1); }), "| late awakened", H.filter((s) => s.lateAw).length, "| perk grades", hist(L.flatMap((s) => Object.values(s.pg || {})), (g) => g), "| way grades", hist(L.flatMap((s) => Object.values(s.dg || {}).flat()), (g) => g));
+{ const tv = (s, a, b) => (s.tr?.[a] || 0) + (s.tr?.[b] || 0), med = (f) => [...L].map(f).sort((x, y) => x - y)[L.length >> 1]; console.log("loans", hist(L, (s) => s.loans || 0), "| will avg", avg(L, (s) => s.will ?? 0), "broken", L.filter((s) => (s.will ?? 0) < 0).length, "| home", hist(L, (s) => s.home ?? 5), "| side", hist(L, (s) => s.side || 0), "| median nego/front/scheme/under/lore/rally", ["kn dis", "act dis", "kn cun", "act cun", "kn spi", "act spi"].map((x) => med((s) => tv(s, ...x.split(" ")))).join("/")); }
+{ const line = (q) => { const r = L.map((s) => s.qs?.[q.id]).filter((x) => x?.g != null); return `${q.id} ${r.length}:${q.out.map((_, i) => r.filter((x) => x.g === i).length).join("/")}`; }; console.log("quests done:ending", QUESTS.map(line).join(" | "), "| relics/life", avg(L, (s) => s.gear.filter((g) => g.relic).length), "legend relic lives", L.filter((s) => s.gear.some((g) => g.relic && g.q === 4)).length); }
 console.log("death", hist(L, (s) => s.dead.cause.startsWith("พ่าย") ? "boss" : s.dead.cause), "title", hist(L, (s) => s.dead.title));
