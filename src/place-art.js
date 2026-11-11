@@ -32,7 +32,7 @@ const banner = (p, x, y, w, h, c, trim) => { p.r(x - 1, y - 2, w + 2, 2, trim); 
 const tree = (p, x, base, h, trunk, leaf, lean = 0) => { p.l(x, base, x + lean, base - h, trunk, 3); if (leaf) { p.e(x + lean + 1, base - h - 4, 11, 7, leaf); p.e(x + lean - 7, base - h + 2, 7, 5, leaf); p.e(x + lean + 9, base - h + 1, 7, 5, leaf); } else { p.l(x + lean, base - h * 0.7, x + lean - 9, base - h - 4, trunk); p.l(x + lean, base - h * 0.5, x + lean + 10, base - h * 0.9, trunk); p.l(x + lean + 1, base - h, x + lean + 5, base - h - 8, trunk); } };
 
 const ART = {
-  // ── Hunting grounds (data.js PLACES) ──
+  // ── Hunting grounds (scene art, used by stage.js) ──
   z_bridge(far, mid, near, front) {
     const A = "#8497a6", ru = "#6b4636", rd = "#4a3028", rl = "#9a6a4a";
     for (const x of [48, 304]) { far.r(x, 28, 5, 100, A); far.r(x + 36, 28, 5, 100, A); far.r(x, 38, 41, 3, A); far.r(x, 66, 41, 3, A); far.l(x - 70, 98, x + 2, 28, A); far.l(x + 38, 28, x + 110, 98, A); for (let i = 1; i < 7; i++) { far.r(x - i * 10, 28 + i * 10, 1, 70 - i * 10, A); far.r(x + 40 + i * 10, 28 + i * 10, 1, 70 - i * 10, A); } }

@@ -22,7 +22,7 @@ import deathManager from "../art/monsters/boss/death-manager.png";
 import cableDragon from "../art/monsters/boss/cable-dragon.png";
 import thingOnTopFloor from "../art/monsters/boss/thing-on-top-floor.png";
 import riftMother from "../art/monsters/boss/rift-mother.png";
-import { MONSTERS, monsterOf, tintOf } from "./monsters.js";
+import { MONSTERS, monsterOf, tintOf } from "./data/monsters.js";
 
 const ART = {
   "beast/sewer-hound": sewerHound, "beast/acid-snail": acidSnail, "beast/flying-fish": flyingFish, "beast/signal-bat": signalBat, "beast/glass-frog": glassFrog,

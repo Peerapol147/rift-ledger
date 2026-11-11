@@ -3,16 +3,16 @@ import { civilianArt } from "./civilian-art.js";
 import { HERO_RASTER } from "./hero-raster.js";
 import { idleRows, idlePose, civilianIdleRows } from "./hero-idle.js";
 import { SHADE_ART } from "./shade-art.js";
-import * as shadowFlames from "../../pixelfx-main/src/fx/shadow/shadow-flames.js";
+import * as shadowFlames from "../vendor/pixelfx/src/fx/shadow/shadow-flames.js";
 import { WEATHER, drawWeather } from "./weather-art.js";
 import { makeHeroArt, heightAt } from "./hero-art.js";
 import { placeLayers, LW } from "./place-art.js";
 import { monsterRaster } from "./monster-art.js";
 // Pixel stage: own backdrop and sprites, pixelfx for all effects. Acting follows pixelfx: wind-up, freeze on contact, target rocks back.
-import { createFrame, clearFrame, createFx, composite } from "../../pixelfx-main/src/core/index.js";
+import { createFrame, clearFrame, createFx, composite } from "../vendor/pixelfx/src/core/index.js";
 import { REG } from "./fxreg.gen.js";
 import { PRESET, AMBIENT, STYLE, LOOK } from "./presets.js";
-import { ELEMENTS } from "./data.js";
+import { ELEMENTS } from "./data/elements.js";
 
 const W = 256, H = 144, GY = 128, PX = 78, EX = 178;
 const rgb = (h) => { const n = parseInt(h.slice(1), 16); return (255 << 24 | (n & 255) << 16 | (n >> 8 & 255) << 8 | n >> 16) >>> 0; };
@@ -169,7 +169,9 @@ export function trigger(ev) {
   if (n === "fight") return playFight(ev.a);
   if (n === "minor") { if (performance.now() - lastMinor < 650 || (foe && !foe.m)) return; lastMinor = performance.now(); return playMinor(ev.a); }
   const L = PRESET[n]; if (!L) return;
-  L.forEach((name, i) => spawn(name, PX + i * 40, n === "event" ? GY - 34 : GY)); if (n === "surge" || n === "break") jolt(0.7);
+  // Rift gates stand where the foe would, in front of the hero; everything else plays on the hero.
+  L.forEach((name, i) => spawn(name, name.startsWith("rift/") ? EX : PX + i * 40, n === "event" ? GY - 34 : GY));
+  if (n === "surge" || n === "break" || n === "gateBreak") jolt(0.7);
 }
 export const skip = () => { if (seq) { seq.i = seq.R.length; seq.wait = 0; } };
 // The next frame is booked first, so one bad frame can never leave the stage black for the rest of the session.

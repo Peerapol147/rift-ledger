@@ -1,0 +1,32 @@
+// Skills. trigger.when: start | every | lowAlly | vsEl. eff: dmg (×atk), heal (×atk), def (+%), mul (vsEl multiplier).
+const sk = (n, kind, trigger, eff, d) => ({ n, kind, trigger, eff, d });
+
+export const SKILLS = {
+  guard: sk("Guard", "passive", { when: "start" }, { def: 0.15 }, "ยกโล่หรืออาวุธกันไว้ก่อนเสมอ"),
+  taunt: sk("Taunt", "active", { when: "every", every: 3 }, { def: 0.1 }, "ดึงความสนใจของศัตรูมาที่ตัวเอง"),
+  ironWall: sk("Iron Wall", "active", { when: "lowAlly" }, { def: 0.35 }, "เป็นกำแพงเมื่อเพื่อนใกล้ล้ม"),
+  reflect: sk("Reflect", "active", { when: "lowAlly" }, { def: 0.2, dmg: 0.5 }, "สะท้อนแรงกระแทกกลับ"),
+  slash: sk("Slash", "active", { when: "every", every: 2 }, { dmg: 1.4 }, "ฟันตรงเข้าจุดเดิมซ้ำ"),
+  bloodlust: sk("Bloodlust", "passive", { when: "start" }, { dmg: 0.2 }, "ยิ่งเจ็บยิ่งแรง"),
+  fireball: sk("Fireball", "active", { when: "every", every: 2 }, { dmg: 1.5 }, "ลูกไฟพื้นฐานที่ทุกคนรู้จัก"),
+  flameStorm: sk("Flame Storm", "active", { when: "vsEl", el: "ice" }, { dmg: 1.2, mul: 2 }, "พายุไฟที่ละลายน้ำแข็ง"),
+  aimedShot: sk("Aimed Shot", "active", { when: "every", every: 2 }, { dmg: 1.5 }, "เล็งนานกว่าปกติหนึ่งลมหายใจ"),
+  volley: sk("Volley", "active", { when: "every", every: 3 }, { dmg: 2 }, "ยิงชุดใส่ฝูง"),
+  heal: sk("Heal", "active", { when: "lowAlly" }, { heal: 1.2 }, "ปิดแผลด้วยมานา"),
+  purify: sk("Purify", "active", { when: "vsEl", el: "void" }, { dmg: 1, mul: 2 }, "แสงชำระสิ่งที่มาจากความว่างเปล่า"),
+  detect: sk("Detect", "passive", { when: "start" }, { def: 0.05 }, "รู้ทางก่อนเดิน"),
+  snare: sk("Snare", "active", { when: "every", every: 3 }, { def: 0.15 }, "กับดักที่ทำให้ศัตรูช้าลง"),
+  weakPoint: sk("Weak Point", "passive", { when: "start" }, { dmg: 0.3 }, "มองเห็นรอยร้าวของเกราะ"),
+  forge: sk("Forge", "passive", { when: "start" }, {}, "ตีอาวุธจากวัตถุดิบเกต"),
+  manaTemper: sk("Mana Temper", "passive", { when: "start" }, {}, "อัดมานาลงเนื้อเหล็ก"),
+  appraise: sk("Appraise", "passive", { when: "start" }, {}, "รู้มูลค่าของสิ่งที่ดรอป"),
+  barrier: sk("Barrier", "active", { when: "lowAlly" }, { def: 0.3 }, "กำแพงมานาโปร่งแสง"),
+  sealGate: sk("Seal Gate", "passive", { when: "start" }, {}, "เย็บปากเกตให้แคบลง"),
+  spellBlade: sk("Spell Blade", "active", { when: "every", every: 2 }, { dmg: 2.2 }, "ดาบที่เคลือบด้วยเวท"),
+  raiseDead: sk("Raise Dead", "active", { when: "every", every: 3 }, { dmg: 1.8 }, "ซากมอนสเตอร์ลุกขึ้นสู้ให้คุณ"),
+  deathPact: sk("Death Pact", "passive", { when: "start" }, { dmg: 0.4 }, "แลกบางอย่างที่ไม่ควรแลก"),
+  resurrect: sk("Resurrection", "active", { when: "lowAlly" }, { heal: 3 }, "ดึงคนกลับมาจากขอบ"),
+  abyssCall: sk("Abyss Call", "active", { when: "every", every: 2 }, { dmg: 3 }, "เรียกบางอย่างจากก้นเหว"),
+  worldEater: sk("World Eater", "active", { when: "every", every: 4 }, { dmg: 6 }, "ชื่อที่ไม่มีใครอยากรู้ที่มา"),
+  telekinesis: sk("Telekinesis", "active", { when: "every", every: 3 }, { dmg: 1.2 }, "ยกของหนักด้วยใจ"),
+};
