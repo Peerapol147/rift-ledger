@@ -42,3 +42,10 @@ test("every arc event has an option with no need", () => {
     assert.ok(a[side].o.some((o) => !o.need && !o.risk), `${k}.${side}`);
   }
 });
+
+test("the association's committee seat goes only to rank C and up", () => {
+  const s = adult("fa4", true); s.hunter.rank = 1; s.fac.assoc = 50;
+  assert.ok(!tickUntil(s, "fachi:assoc"));
+  s.hunter.rank = 3;
+  assert.ok(tickUntil(s, "fachi:assoc"));
+});

@@ -82,7 +82,7 @@ monthly.push((s) => {
     const v = s.fac?.[k] ?? 0;
     for (const [side, ok] of [["hi", v >= FAC_HI], ["bad", v <= arc.lo]]) {
       const e = arc[side], key = `fac${side}:${k}`;
-      if (!ok || s.c[key] || (e.hunter && !s.hunter)) continue;
+      if (!ok || s.c[key] || (e.hunter && !s.hunter) || (s.hunter?.rank ?? -1) < (e.minRank ?? -1)) continue;
       s.c[key] = 1;
       openEvent(s, { id: key, tag: "ฝ่ายต่างๆ", important: true, t: e.t, o: e.o });
       return;
