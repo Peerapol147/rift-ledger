@@ -1,5 +1,5 @@
 import * as C from "../../core/index.js";
-import { CAREERS, COUNTRIES, cityOf, STATS } from "../../data/index.js";
+import { CAREERS, COUNTRIES, cityOf, STATS, BUSINESSES } from "../../data/index.js";
 import { esc, btn, money } from "../dom.js";
 
 const ledgerRow = (e) => `<tr><td>${esc(e.label)}</td><td class="n ${e.amt < 0 ? "bad" : "good"}">${money(e.amt)}</td></tr>`;
@@ -17,7 +17,17 @@ export function workTab(s) {
   const m = C.monthSummary(s);
   const cities = Object.values(COUNTRIES).flatMap((c) => c.cities).filter((c) => c.id !== s.city)
     .map((c) => btn("move:" + c.id, `${esc(c.n)} (${money(c.cost * 3)})`, 'class="sm"')).join("");
-  return `<h3>งาน</h3>${job}
+  const owned = C.businesses(s);
+  let biz = "";
+  if (owned.length) {
+    const staff = (s.staff ?? []).map((w) => `<div class="item"><span><b>${esc(w.n)}</b> · ฝีมือ ${"★".repeat(w.skill)}
+      <small class="dim">อารมณ์: ${C.moodWord(w.loyalty)}</small></span>${btn("fireStaff:" + w.id, "ให้ออก", 'class="sm"')}</div>`).join("");
+    const offers = C.staffOffers(s).map((w) => `<div class="item"><span><b>${esc(w.n)}</b> · ฝีมือ ${"★".repeat(w.skill)}</span>
+      ${btn("hireStaff:" + w.id, "จ้าง", 'class="sm"')}</div>`).join("");
+    biz = `<h3>กิจการของคุณ</h3>${owned.map((f) => `<div>${esc(BUSINESSES[f].n)}</div>`).join("")}
+      <h4>ลูกน้อง ${(s.staff ?? []).length}/4</h4>${staff || `<div class="dim">ยังไม่มี</div>`}<h4>คนที่มาสมัครปีนี้</h4>${offers || `<div class="dim">ไม่มี</div>`}`;
+  }
+  return `<h3>งาน</h3>${job}${biz}
     <h3>เดือนนี้</h3><table>${[...m.in, ...m.out].map(ledgerRow).join("") || `<tr><td class="dim">ยังไม่มีรายการ</td></tr>`}
       <tr><td><b>สุทธิ</b></td><td class="n"><b>${money(m.net)}</b></td></tr></table>
     <h3>หนี้</h3><div class="kv"><span>ยอดหนี้ (ดอกเบี้ย 1%/เดือน)</span><b>${money(s.debt)}</b></div>

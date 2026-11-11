@@ -213,6 +213,8 @@ function act(a, el) {
     hire: () => { const m = C.recruitOffers(s).find((x) => x.id === v); if (m) banner(C.hire(s, m) ? `${m.n} เข้าทีมแล้ว` : "จ้างไม่ได้"); },
     dismiss: () => { if (confirm("ให้ลูกทีมคนนี้ออกจริงไหม?")) C.dismiss(s, v); },
     party: () => { if (confirm("แน่ใจไหม? ทางนี้ย้อนกลับไม่ได้")) C.leaveParty(s, v); },
+    hireStaff: () => { const w = C.staffOffers(s).find((x) => x.id === v); if (w) banner(C.hireStaff(s, w) ? `${w.n} เริ่มงานแล้ว` : "จ้างไม่ได้"); },
+    fireStaff: () => { if (confirm("ให้ลูกน้องคนนี้ออกจริงไหม?")) C.fireStaff(s, v); },
     quitJob: () => { if (confirm("ลาออกจากงานจริงไหม?")) C.quitJob(s); },
     jobHunt: () => { if (!s.ev && !s.op) C.openJobChoice(s); },
     move: () => { if (confirm("ย้ายที่อยู่จริงไหม? ค่าย้ายจ่ายทันที")) banner(C.moveCity(s, v) ? "ย้ายแล้ว" : "ย้ายไม่ได้"); },

@@ -198,7 +198,7 @@ export const HUNTER_STORIES = {
     ]),
     ch("ชื่อของคุณถูกสลักอยู่ในอาวุธของฮันเตอร์หลายร้อยคน", [
       { l: "เปิดโรงตีอาวุธของตัวเอง", need: { arOwn: 1 }, y: { m: "โรงตีเล็กๆ ที่ฮันเตอร์แรงก์ S ยังต้องต่อคิว",
-        gold: 20000, goldLabel: "รายได้โรงตี", fame: 12, flags: { ownForge: true } } },
+        gold: 20000, goldLabel: "รายได้โรงตี", fame: 12, act: "open:ownForge" } },
       { l: "สร้างอุปกรณ์ในตำนาน", need: { arMaster: 1 }, s: "int", diff: 22,
         y: { m: "ชิ้นงานที่ไม่มีใครเลียนแบบได้ ถูกตั้งชื่อตามคุณ", fame: 25, flags: { legendCraft: true } },
         n: { m: "คุณใช้เวลาสามปี และยังไม่พอใจมัน", mind: -6 } },
