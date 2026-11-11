@@ -61,7 +61,7 @@ export function skillDamage(sk, atk, target) {
 export function startOp(s, def, prep) {
   const hero = heroPower(s);
   s.op = {
-    def, prep, round: 0, d: 0, loot: 0, score: 0, lostAlly: 0, maxHp: hero.hp, done: null,
+    def, prep, round: 0, d: 0, loot: 0, score: 0, lostAlly: 0, maxHp: hero.hp, done: null, beats: [],
     hp: (hero.hp * Math.max(20, s.hp)) / 100, foes: def.foes.map((f) => ({ ...f, cur: f.hp })),
   };
   log(s, def.kind === "job" ? "งานใหญ่" : "เกต", `เริ่ม: ${def.t}`, "imp");
@@ -79,18 +79,20 @@ function heroTurn(s, o, R) {
   const hero = heroPower(s), plan = PLAN[o.prep.plan] ?? PLAN.careful;
   const target = o.foes.find((f) => f.cur > 0);
   if (!target) return;
-  let dmg = Math.max(1, hero.atk * plan.atk - target.def * 0.5);
+  let dmg = Math.max(1, hero.atk * plan.atk - target.def * 0.5), used = null;
   for (const id of o.prep.skills) {
     const sk = SKILLS[id];
     if (!sk || sk.kind !== "active") continue;
     const t = sk.trigger;
-    if (t.when === "every" && o.round % t.every === 0) dmg = Math.max(dmg, skillDamage(sk, hero.atk, target));
-    if (t.when === "vsEl" && t.el === target.el) dmg = Math.max(dmg, skillDamage(sk, hero.atk, target));
+    const fires = (t.when === "every" && o.round % t.every === 0) || (t.when === "vsEl" && t.el === target.el);
+    if (fires && skillDamage(sk, hero.atk, target) > dmg) { dmg = skillDamage(sk, hero.atk, target); used = sk.n; }
     if (t.when === "lowAlly" && o.hp < o.maxHp * 0.4 && sk.eff.heal) {
       o.hp = Math.min(o.maxHp, o.hp + hero.atk * sk.eff.heal);
     }
   }
-  target.cur -= dmg * (0.85 + rnd(R) * 0.3);
+  const hit = Math.round(dmg * (0.85 + rnd(R) * 0.3));
+  target.cur -= hit;
+  o.beats?.push({ who: "p", dmg: hit, ...(used ? { sk: used } : {}) });
 }
 
 function foeTurn(s, o, R) {
@@ -98,7 +100,12 @@ function foeTurn(s, o, R) {
   let defBonus = 0;
   for (const id of o.prep.skills) defBonus += SKILLS[id]?.eff.def ?? 0;
   const def = hero.def * plan.def * (1 + defBonus);
-  for (const f of o.foes) if (f.cur > 0) o.hp -= Math.max(1, f.atk - def * 0.5) * (0.85 + rnd(R) * 0.3);
+  for (const f of o.foes) {
+    if (f.cur <= 0) continue;
+    const hit = Math.round(Math.max(1, f.atk - def * 0.5) * (0.85 + rnd(R) * 0.3));
+    o.hp -= hit;
+    o.beats?.push({ who: "e", dmg: hit });
+  }
 }
 
 export function stepOp(s) {
@@ -149,6 +156,11 @@ export function decide(s, i) {
 function endOp(s) {
   const o = s.op, def = o.def, r = o.done;
   s.op = null;
+  const main = def.foes.find((f) => f.boss) ?? def.foes[0];
+  if (main) {
+    const foe = { n: main.n, hp: main.hp, el: main.el, boss: main.boss, lv: main.lv };
+    s.lastFight = { foe, rounds: o.beats, win: r === "won" };
+  }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
   if (r === "lost") {
     if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH)) {

@@ -58,7 +58,7 @@ export function yearSummary(s, year) {
 
 export function deathSummary(s) {
   const h = s.hunter;
-  const role = h ? `ฮันเตอร์แรงก์ ${rankName(h.rank)} · ${CLASSES[h.cls].n}` : jobTitle(s) ?? "คนธรรมดา";
+  const role = h ? `ฮันเตอร์แรงก์ ${rankName(h.rank)} · ${CLASSES[h.cls].n}` : jobTitle(s) ?? s.lastTitle ?? "คนธรรมดา";
   return {
     name: s.name, ageY: ageY(s), cause: s.dead?.cause ?? "", role, gold: Math.round(s.gold), fame: s.fame,
     floor: s.c.floor ?? 0, unseen: s.c.unseen ?? 0,

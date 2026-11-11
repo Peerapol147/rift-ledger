@@ -25,6 +25,7 @@ export function takeJob(s, id) {
 
 export function quitJob(s) {
   if (!s.job) return;
+  s.lastTitle = `${CAREERS[s.job.id].tiers[s.job.tier]} (${CAREERS[s.job.id].n})`;
   log(s, "งาน", `คุณลาออกจากงาน${CAREERS[s.job.id].n}`, "");
   s.job = null;
 }

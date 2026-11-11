@@ -13,6 +13,7 @@ for (const m of MILESTONES) EVENT_INDEX.set(m.id, m);
 // Other modules add monthly systems here, in import order (fixed by core/index.js).
 export const monthly = [];
 const EVENT_CHANCE = 0.22;
+const COOLDOWN = 36; // months before the same random event can come back
 
 export function focusList(s) {
   const table = FOCUS[stageOf(s)];
@@ -47,7 +48,8 @@ function dueEvent(s) {
 function randomEvent(s) {
   const R = stream(s, "pick");
   if (!ch(R, EVENT_CHANCE)) return null;
-  const pool = ALL_EVENTS.filter((e) => !e.k && eligible(s, e));
+  const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN;
+  const pool = ALL_EVENTS.filter((e) => !e.k && fresh(e) && eligible(s, e));
   if (!pool.length) return null;
   return wp(R, pool, (e) => (e.w ?? 1) / (1 + (s.c["ev:" + e.id] ?? 0) * 2));
 }
@@ -62,5 +64,7 @@ export function tick(s) {
   for (const sys of monthly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
   if (ageY(s) > yearBefore) { yearEnd(s); if (s.dead) return; }
   const ev = dueEvent(s) ?? randomEvent(s);
-  if (ev) openEvent(s, ev);
+  if (!ev) return;
+  s.c["last:" + ev.id] = s.ageM;
+  openEvent(s, ev);
 }

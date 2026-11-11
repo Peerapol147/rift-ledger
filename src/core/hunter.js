@@ -61,7 +61,12 @@ function hunterMonth(s) {
   if (hint && !s.c.ceilHinted) { s.c.ceilHinted = 1; log(s, "ฮันเตอร์", hint, ""); }
   if (s.mind < 20 && ch(stream(s, "burn"), 0.03)) return openEvent(s, EVENT_INDEX.get("burnout"));
   if (s.focus !== "hunt" || !canHunt(s)) return;
-  if (s.hp < 50) return void log(s, "ร่างกาย", "ร่างกายยังไม่พร้อมลงเกต คุณพักฟื้นเดือนนี้", "");
+  if (s.hp < 50) {
+    if (!s.c.restNoted) log(s, "ร่างกาย", "ร่างกายยังไม่พร้อมลงเกต คุณพักฟื้นจนกว่าจะหายดี", "");
+    s.c.restNoted = 1;
+    return;
+  }
+  s.c.restNoted = 0;
   openGateChoice(s);
 }
 
@@ -71,13 +76,17 @@ export function openGateChoice(s) {
   const next = (s.c.floor ?? 0) + 1;
   if (s.hunter.rank >= 1 && next <= 50) defs.push(towerOp(s, tower, next));
   s.offers = defs;
+  const info = (d) => {
+    const lv = Math.max(...d.foes.map((f) => f.lv));
+    return `ศัตรู Lv.${lv} · ค่าตอบแทน ₿${d.rewards.gold.toLocaleString("en-US")}`;
+  };
   const label = (d) => (d.kind === "tower" ? d.t.split(" · ")[0] : d.t) + (d.boss ? " · มีบอส" : "");
   openEvent(s, {
     id: "gateChoice",
     tag: "เกต",
     t: "สมาคมส่งรายการเกตที่เปิดรับฮันเตอร์เดือนนี้",
     o: [
-      ...defs.map((d, i) => ({ l: label(d), risk: estimateRisk(s, d), y: { act: "gate" + i } })),
+      ...defs.map((d, i) => ({ l: label(d), d: info(d), risk: estimateRisk(s, d), y: { act: "gate" + i } })),
       { l: "พักเดือนนี้", y: { mind: 2 } },
     ],
   });
