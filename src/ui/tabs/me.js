@@ -23,6 +23,9 @@ export function meTab(s) {
       ${hint ? `<p class="dim" style="margin-top:6px">${esc(hint)}</p>` : ""}
       <h4>สกิล (ช่อง ${h.slots.length}/${C.slotsFor(h.rank)})</h4>${skills}`;
   }
-  return `<h3>ค่าสถานะ</h3><table>${stats}</table>
+  const fam = s.heir ? `<h3>ครอบครัว</h3><div class="kv"><span>รุ่นที่</span><b>${Number(s.gen) || 2}</b></div>
+    <div class="kv"><span>${s.heir.rel === "หลาน" ? "หลานของ" : "ลูกของ"}</span><b>${esc(s.heir.of)}</b></div>
+    ${s.heir.paid ? "" : `<p class="dim">มรดกของครอบครัวรอคุณอยู่จนอายุ 18 ของบางส่วนเก็บไว้ในบ้าน</p>`}` : "";
+  return `${fam}<h3>ค่าสถานะ</h3><table>${stats}</table>
     <h3>ร่างกาย</h3><div class="kv"><span>อายุขัยโดยประมาณ</span><b>${C.lifespan(s)} ปี</b></div><h4>บาดแผล</h4>${inj}${power}`;
 }

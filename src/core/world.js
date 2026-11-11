@@ -1,6 +1,6 @@
 // The world around the player: notable NPCs per seed, the fixed calendar, tower records, moving. Spec §3 and §4.1.
 import { pk, ri, wp, ch } from "./rng.js";
-import { stream, log, onNewLife, yearsAfterRift, monthOfYear } from "./state.js";
+import { stream, log, onNewLife, yearsAfterRift, monthOfYear, ageY } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { SHIP_FEE } from "./storage.js";
@@ -63,6 +63,8 @@ function runEntry(s, e) {
     return news(s, text(e.news));
   }
   if (e.kind === "news") return news(s, e.news);
+  // entries were written for a life born in year 21; a young heir born later only hears about them
+  if (s.heir && ageY(s) < 12 && !e.views?.kid) return news(s, e.news ?? e.views?.default?.t ?? "");
   if (e.country && e.country !== s.country) return news(s, e.news);
   // same country, other city: the nearby view (watching it on the news, family calling) or just the news line
   if (e.city && e.city !== s.city) {

@@ -18,6 +18,7 @@ export function lifeRecord(s) {
   if (businesses(s).length) out.push(["flag", "business"]);
   for (const f of ["gotToken", "legendCraft", "ownForge"]) if (s.flags[f]) out.push(["flag", f]);
   if (s.guild?.role === "master") out.push(["flag", "guildMaster"]);
+  if ((s.gen ?? 1) >= 2) out.push(["flag", "heir"]);
   return out;
 }
 
@@ -45,7 +46,7 @@ export function applyUnlocks(s, b) {
   const st = bookStatus(b);
   const pool = [...FAMILIES, ...st.families.filter((f) => f.open)].filter((f) => f.country === s.country);
   const pick = wp(stream(s, "unlock"), pool);
-  if (st.families.some((f) => f.open && f.id === pick.id)) {
+  if (!s.heir && st.families.some((f) => f.open && f.id === pick.id)) { // an heir keeps the parent's family
     const old = FAMILIES.find((f) => f.id === s.family);
     for (const [k, v] of Object.entries(old?.st ?? {})) s.st[k] -= v;
     s.family = pick.id;

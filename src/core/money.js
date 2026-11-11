@@ -6,7 +6,7 @@ import { ITEMS } from "../data/items.js";
 import { hooks } from "./registry.js";
 // Every change to s.gold goes through addLedger, so the money tab can always say why.
 const LEDGER_MONTHS = 24;
-const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว"]);
+const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว", "มรดกจากครอบครัว"]);
 
 export function addLedger(s, label, amt) {
   if (!amt) return;
