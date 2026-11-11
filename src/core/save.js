@@ -26,11 +26,22 @@ export function deserialize(str) {
     const okItem = (i) => i && typeof i === "object" && /^i\d+$/.test(String(i.uid)) && typeof i.id === "string";
     const clean = (list) => (Array.isArray(list) ? list.filter(okItem) : []);
     s.items = clean(s.items);
-    if (s.store) s.store = { home: clean(s.store.home), vault: clean(s.store.vault),
-      vaultCountry: typeof s.store.vaultCountry === "string" ? s.store.vaultCountry : null };
-    for (const i of [...s.items, ...(s.store?.home ?? []), ...(s.store?.vault ?? [])]) {
+    if (s.store) {
+      const vc = s.store.vaultCountry;
+      s.store = { home: clean(s.store.home), vault: clean(s.store.vault),
+        vaultCountry: typeof vc === "string" ? vc : null, guild: clean(s.store.guild) };
+    }
+    const st = s.store ?? {};
+    for (const i of [...s.items, ...st.home ?? [], ...st.vault ?? [], ...st.guild ?? []]) {
       if ("plus" in i) i.plus = Math.max(0, Math.min(5, Math.floor(num(i.plus))));
     }
+    if (s.guild) {
+      const g = s.guild, roles = ["member", "officer", "master"];
+      s.guild = typeof g === "object" && typeof g.n === "string" && roles.includes(g.role)
+        ? { id: String(g.id), n: g.n, role: g.role, standing: num(g.standing), since: num(g.since) } : null;
+    }
+    // a locker without a guild would be unreachable: its items go home
+    if (!s.guild && s.store?.guild?.length) { s.store.home.push(...s.store.guild); s.store.guild = []; }
     if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
     return s;
   } catch {

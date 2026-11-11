@@ -52,6 +52,8 @@ function storeHtml(s) {
   };
   const vaultPick = s.items.filter((i) => !Object.values(s.equip).includes(i.uid))
     .map((i) => `<option value="${esc(i.uid)}">${esc(ITEMS[i.id].n)}${i.plus ? " +" + i.plus : ""}</option>`).join("");
-  return `<h3>ที่เก็บของ</h3>${part("home", "takeHome")}${part("vault", "takeVault")}
-    ${vaultPick && C.storeOpen(s, "vault") ? `<div class="row"><select data-c="vaultPick">${vaultPick}</select>${btn("stashVault", "ฝากตู้นิรภัย", 'class="sm"')}</div>` : ""}`;
+  const to = [C.storeOpen(s, "vault") && btn("stashVault", "ฝากตู้นิรภัย", 'class="sm"'),
+    s.guild && btn("stashGuild", "เก็บตู้กิลด์", 'class="sm"')].filter(Boolean).join("");
+  return `<h3>ที่เก็บของ</h3>${part("home", "takeHome")}${part("vault", "takeVault")}${s.guild ? part("guild", "takeGuild") : ""}
+    ${vaultPick && to ? `<div class="row"><select data-c="vaultPick">${vaultPick}</select>${to}</div>` : ""}`;
 }

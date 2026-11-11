@@ -84,13 +84,20 @@ export function openGateChoice(s) {
   const next = (s.c.floor ?? 0) + 1;
   if (s.hunter.rank >= 1 && next <= 50) defs.push(towerOp(s, tower, next));
   // with friends underground, an unregistered gate one rank up: double pay, more bosses, no association watching
-  if ((s.fac?.under ?? 0) >= 20) {
+  if ((s.fac?.under ?? 0) >= (hooks.guildPerk?.(s) === "shady" ? 10 : 20)) {
     const g = { ...gateOffers(s)[0] };
     g.rank = Math.min(6, g.rank + 1);
     g.lv = GATE_LV[g.rank];
     g.boss = ch(stream(s, "gate"), 0.25);
     const d = gateOp(s, g);
     defs.push({ ...d, illegal: true, t: "เกตเถื่อน · " + d.t, rewards: { ...d.rewards, gold: d.rewards.gold * 2 } });
+  }
+  // a guild member gets the guild's own contract: your rank, better pay, standing on a win
+  if (s.guild && s.guild.role !== "master") {
+    const rank = s.hunter.rank;
+    const d = gateOp(s, { ...gateOffers(s)[0], rank, lv: GATE_LV[Math.min(6, rank)], boss: false });
+    const gold = Math.round(d.rewards.gold * 1.3);
+    defs.push({ ...d, guildJob: true, t: "งานกิลด์ · " + d.t, rewards: { ...d.rewards, gold } });
   }
   s.offers = defs;
   const info = (d) => {

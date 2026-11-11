@@ -10,10 +10,11 @@ export function addEnemy(s, name, why) {
 const worth = (list) => (list ?? []).reduce((a, i) => a + (ITEMS[i.id]?.price ?? 0) * 0.5, 0);
 
 export function legacyOf(s) {
-  const items = worth(s.items) + worth(s.store?.home) + worth(s.store?.vault);
+  const items = worth(s.items) + worth(s.store?.home) + worth(s.store?.vault) + worth(s.store?.guild);
   return {
     kids: s.c.kids ?? 0,
     assets: Math.round(Math.max(0, s.gold) + items),
     enemies: (s.enemies ?? []).map((e) => e.n),
+    guild: s.guild?.role === "master" ? s.guild.n : null,
   };
 }
