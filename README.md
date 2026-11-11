@@ -54,6 +54,13 @@ cd rift-ledger && npm install
 | มอนสเตอร์ | `src/data/monsters.js` (ภาพอยู่ที่ `art/monsters`) |
 | ไอเทม และของดรอป | `src/data/items.js` |
 | ครอบครัวเริ่มต้น ชื่อ | `src/data/families.js` |
+| สายเรื่องอาชีพและบทบาทฮันเตอร์ | `src/data/stories/careers.js`, `src/data/stories/hunters.js` |
+| ลูกทีม ค่าจ้าง และบทของลูกทีม | `src/data/team.js`, `src/data/team-stories.js` |
+| กิจการของคนธรรมดา | `src/data/business.js` |
+| เควสลับ (สุ่ม 3 สายต่อชีวิต) | `src/data/secrets.js` |
+| ของที่ปลดจากสมุดสะสม | `src/data/unlocks.js` |
+| เหตุการณ์สุ่มตามเมือง อาชีพ วัย | `src/data/events/more.js` |
+| ชื่อบาดแผล | `src/data/injuries.js` |
 | เมือง ประเทศ อัตราตื่นพลัง สัดส่วนแรงก์ | `src/data/world.js` |
 
 ### รูปแบบเหตุการณ์
