@@ -98,6 +98,8 @@ monthly.push((s) => {
 });
 
 hooks.act.guildJoin = (s) => joinGuild(s, s.guildOffer);
+hooks.act.guildUp = (s) => { if (s.guild) s.guild.standing = clampG(s.guild.standing + 8); };
+hooks.act.guildDown = (s) => { if (s.guild) s.guild.standing = clampG(s.guild.standing - 8); };
 
 // Moving country leaves a guild of the old country; your own guild moves with you.
 hooks.moveCountry = (s) => { if (s.guild && s.guild.role !== "master") leaveGuild(s); };
