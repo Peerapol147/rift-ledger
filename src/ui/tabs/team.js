@@ -4,7 +4,7 @@ import { GUILD_PERK, FOUND } from "../../data/guilds.js";
 import { esc, btn, money } from "../dom.js";
 
 const row = (m, s, acts) => `<div class="item"><span><b>${esc(m.n)}</b> · ${esc(CLASSES[m.cls]?.n)} · ${ROLES[m.role]}
-  · แรงก์ ${RANKS[m.rank]} Lv.${Number(m.lv)}<small class="dim">${acts.mood ?? ""}</small></span><span>${acts.btns}</span></div>`;
+  · แรงก์ ${RANKS[m.rank]} Lv.${Number(m.lv)}${acts.mood ? ` <small class="dim">· ${acts.mood}</small>` : ""}</span><span>${acts.btns}</span></div>`;
 
 export function teamTab(s) {
   let out = "";
