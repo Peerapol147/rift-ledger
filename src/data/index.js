@@ -11,3 +11,4 @@ export * from "./gates.js";
 export * from "./towers.js";
 export * from "./calendar.js";
 export * from "./items.js";
+export * from "./stories/index.js";

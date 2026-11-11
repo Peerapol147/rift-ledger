@@ -13,3 +13,4 @@ export * from "./items.js";
 export * from "./goals.js";
 export * from "./auto.js";
 export * from "./save.js";
+export * from "./stories.js";
