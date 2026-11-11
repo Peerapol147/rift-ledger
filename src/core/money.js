@@ -103,7 +103,7 @@ function debtMonth(s) {
 function familyGift(s) {
   if (s.c.famGift || ageY(s) < 18) return;
   s.c.famGift = 1;
-  const f = FAMILIES.find((x) => x.id === s.family);
+  const f = s.unlockFamily ?? FAMILIES.find((x) => x.id === s.family);
   addLedger(s, "เงินตั้งตัวจากครอบครัว", f.gold);
 }
 

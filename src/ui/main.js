@@ -66,7 +66,7 @@ function showEnd(record) {
   if (record) {
     book.addLife();
     book.addTitle(d.role);
-    for (const id of Object.keys(s.world.done)) if (id.startsWith("cal")) book.addSeen("cal", id);
+    for (const [kind, id] of C.lifeRecord(s)) book.addSeen(kind, id);
     if (ui.slot >= 0) slots.save(ui.slot, s);
   }
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
@@ -174,7 +174,9 @@ function act(a, el) {
     new: () => {
       const seed = $("[data-c=seed]")?.value.trim() || Math.random().toString(36).slice(2, 8);
       ui.slot = freeSlot();
-      begin(C.newLife(seed));
+      const life = C.newLife(seed);
+      C.applyUnlocks(life, book.get());
+      begin(life);
       if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
     },
     load: () => {
