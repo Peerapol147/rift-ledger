@@ -34,7 +34,7 @@ export function recruitOffers(s) {
 }
 
 export function hire(s, m) {
-  if (s.team.filter((x) => x.alive).length >= TEAM_MAX || s.gold < feeOf(m)) return false;
+  if (s.party || s.team.filter((x) => x.alive).length >= TEAM_MAX || s.gold < feeOf(m)) return false;
   addLedger(s, "ค่าจ้างลูกทีมแรกเข้า", -feeOf(m));
   s.team.push(m);
   if (s.recruits) s.recruits.list = s.recruits.list.filter((x) => x !== m);

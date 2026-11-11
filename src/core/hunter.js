@@ -13,7 +13,7 @@ import { SKILLS } from "../data/skills.js";
 // Hunting is possible for awakened people who have not retired from it and are not on a break.
 export const canHunt = (s) => !!s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0);
 
-const CLIMB_SLOW = 0.4;
+const CLIMB_SLOW = 0.3;
 
 export const xpNeed = (lv) => Math.round(40 * Math.pow(lv, 1.5));
 
@@ -74,6 +74,7 @@ function hunterMonth(s) {
 const dangerOf = (s, d) => (d.boss ? Math.max(0.05, estimateRisk(s, d)) : 0);
 
 export function openGateChoice(s) {
+  if (s.party) return hooks.partyGate?.(s);
   const defs = gateOffers(s).map((g) => gateOp(s, g));
   const tower = COUNTRIES[s.country].tower;
   const next = (s.c.floor ?? 0) + 1;

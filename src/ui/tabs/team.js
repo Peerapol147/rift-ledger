@@ -7,7 +7,13 @@ const row = (m, s, acts) => `<div class="item"><span><b>${esc(m.n)}</b> · ${esc
 
 export function teamTab(s) {
   let out = "";
-  if (s.hunter) {
+  if (s.party) {
+    const p = s.party;
+    out += `<h3>ทีมของ ${esc(p.leader.n)}</h3><div class="kv"><span>ตำแหน่งของคุณ</span><b>${p.role === "vice" ? "รองหัวหน้า" : "ลูกทีม"}</b></div>
+      <div class="kv"><span>หัวหน้ามองคุณ</span><b>${C.moodWord(p.trust)}</b></div>
+      <p class="dim">หัวหน้าเลือกเกตและแผนการสู้ คุณได้ส่วนแบ่ง ${p.role === "vice" ? 60 : 40}% แต่ได้ประสบการณ์มากขึ้น</p>
+      <div class="row">${btn("party:leave", "แยกทางด้วยดี", 'class="sm"')}${btn("party:split", "แยกไปตั้งทีมเอง", 'class="sm"')}${btn("party:betray", "หอบเงินทีมหนี", 'class="sm"')}</div>`;
+  } else if (s.hunter) {
     const mine = s.team.filter((m) => m.alive).map((m) => row(m, s, {
       mood: `อารมณ์: ${C.moodWord(m.loyalty)}${m.hurtUntilM > s.ageM ? " · กำลังพักรักษาตัว" : ""}`,
       btns: btn("dismiss:" + m.id, "ให้ออก", 'class="sm"'),
