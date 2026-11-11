@@ -11,18 +11,26 @@ function score(s, opt, v) {
   return sc;
 }
 
+// An option is dangerous if it can kill, can take all remaining health, or can leave a permanent injury.
+function dangerous(s, opt, v) {
+  if (v.risk > 0) return true;
+  return [opt.y, opt.n].some((o) => (o?.hp ?? 0) <= -s.hp || (o?.injury && o.injury[1] == null));
+}
+
 export function autoDecide(s, policy) {
   const ev = s.ev;
   if (!ev || policy === "stop" || ev.noAuto) return -1;
+  if (ev.op && s.op?.def.boss) return -1; // the player always fights bosses by hand
   if (policy === "important" && ev.important) return -1;
   if (ev.milestone) return -1;
   const open = ev.opts
     .map((opt, i) => ({ opt, i, v: optionView(s, opt) }))
     .filter((x) => x.v.visible && !x.v.locked);
-  if (!open.length || open.every((x) => x.v.risk > 0)) return -1;
+  for (const x of open) x.bad = dangerous(s, x.opt, x.v);
+  if (!open.length || open.every((x) => x.bad)) return -1;
   let best = -1, bv = -Infinity;
   for (const x of open) {
-    if (x.v.risk > 0) continue;
+    if (x.bad) continue;
     const sc = score(s, x.opt, x.v);
     if (sc > bv) { bv = sc; best = x.i; }
   }

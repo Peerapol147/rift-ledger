@@ -2,7 +2,7 @@
 import { pk, ri, ch } from "./rng.js";
 import { stream, ageY } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { cityOf } from "../data/world.js";
 import { GATES } from "../data/gates.js";
 import { TOWERS, TOWER_DECISIONS } from "../data/towers.js";

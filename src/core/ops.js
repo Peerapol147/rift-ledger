@@ -6,7 +6,8 @@ import { addLedger } from "./money.js";
 import { die, injure } from "./body.js";
 import { gainXp } from "./hunter.js";
 import { recordFloor } from "./world.js";
-import { tick, monthly } from "./clock.js";
+import { tick } from "./clock.js";
+import { monthly } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { SKILLS } from "../data/skills.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
@@ -15,8 +16,8 @@ const MAX_ROUNDS = 12;
 const OP_XP = 25; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
 const BOSS_DEATH = 0.5; // chance that losing to a boss is fatal; otherwise a permanent wound
 const PLAN = { push: { atk: 1.15, def: 0.9 }, careful: { atk: 0.95, def: 1.1 }, retreat: { atk: 0.9, def: 1.15 } };
-export const gearHooks = []; // fn(s) -> { atk, def, hp } added to hero power (items)
-export const afterOpHooks = []; // fn(s, op, result) after rewards are paid
+import { gearHooks, afterOpHooks } from "./registry.js";
+export { gearHooks, afterOpHooks };
 
 export function heroPower(s) {
   const h = s.hunter;
@@ -215,7 +216,7 @@ hooks.decide = decide;
 monthly.push((s) => {
   if (!s.job || s.hunter) return;
   const jobs = BIG_JOBS.filter((j) => j.who.includes(s.job.id));
-  if (!jobs.length || !ch(stream(s, "bigjob"), 0.02)) return;
+  if (!jobs.length || !ch(stream(s, "bigjob"), 0.01)) return;
   const job = wp(stream(s, "bigjob"), jobs);
   s.ev = {
     id: "bigJobOffer", tag: "งานใหญ่", important: true, t: job.t,

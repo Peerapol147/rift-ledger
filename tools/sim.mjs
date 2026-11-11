@@ -46,7 +46,8 @@ function staticChecks() {
 // ---- Player policy
 function pick(s) {
   const open = s.ev.opts.map((o, i) => ({ o, i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
-  const odds = (x) => x.v.odds ?? 90;
+  // The badge shows danger on gate offers; a player reads it as lower odds of coming home.
+  const odds = (x) => x.v.odds ?? (x.v.risk ? (1 - x.v.risk) * 100 : 90);
   const reward = (x) => (x.o.y?.loot ?? 0) * 30 + (x.o.y?.gold ?? 0) / 50 + (x.o.y?.fame ?? 0) * 3 + odds(x) / 10;
   const by = {
     careful: (a, b) => a.v.risk - b.v.risk || odds(b) - odds(a),

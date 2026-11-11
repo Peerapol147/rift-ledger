@@ -3,7 +3,7 @@ import { pk, ri, wp, ch } from "./rng.js";
 import { stream, log, onNewLife, yearsAfterRift, monthOfYear } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { COUNTRIES, cityOf } from "../data/world.js";
 import { NAMES } from "../data/families.js";
 import { CLASSES } from "../data/classes.js";

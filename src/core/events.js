@@ -4,6 +4,9 @@ import { stream, ageY, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { STATS } from "../data/stats.js";
 import { ALL_EVENTS } from "../data/events/index.js";
+import { hooks, resolvers } from "./registry.js";
+
+export { hooks, resolvers };
 
 export const EVENT_INDEX = new Map(ALL_EVENTS.map((e) => [e.id, e]));
 
@@ -11,8 +14,6 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const KNOWN_PREFIX = ["skill:", "job:", "cls:", "role:"];
 const KNOWN_PLAIN = new Set([...Object.keys(STATS), "gold", "hp", "mind"]);
 
-// Lookups other modules register (class roles, skill names) so events.js has no import cycle.
-export const resolvers = { role: () => null, skillName: (id) => id, jobName: (id) => id, clsName: (id) => id };
 
 export const isKnown = (key) => KNOWN_PLAIN.has(key) || KNOWN_PREFIX.some((p) => key.startsWith(p));
 
@@ -54,7 +55,8 @@ export function optionView(s, opt) {
   }
   if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0)) * 4), 5, 95);
   else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
-  view.risk = opt.risk ?? 0;
+  // risk is rolled by choose(); danger is information only (the risk lives inside the fight it starts).
+  view.risk = opt.risk ?? opt.danger ?? 0;
   return view;
 }
 
@@ -94,7 +96,7 @@ export function choose(s, i) {
   s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
   log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
-  applyOutcome(s, out, opt.l);
+  applyOutcome(s, out, opt.l, !!opt.risk);
 }
 
 // Options the player could not see or could not pick, counted for the death summary (never named).
@@ -103,9 +105,9 @@ export function countUnseen(s, opts) {
   s.c.unseen = (s.c.unseen ?? 0) + n;
 }
 
-export const hooks = { die: null, injure: null, changeMind: null, decide: null, act: {} };
 
-export function applyOutcome(s, out, label = "เหตุการณ์") {
+// lethal: only options the player saw marked with risk can kill; anything else leaves at least 1 health.
+export function applyOutcome(s, out, label = "เหตุการณ์", lethal = false) {
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
@@ -117,6 +119,7 @@ export function applyOutcome(s, out, label = "เหตุการณ์") {
   if (out.next) s.sched.push({ id: out.next[0], atM: s.ageM + out.next[1] });
   if (out.hp) {
     s.hp = Math.min(100, s.hp + out.hp);
-    if (s.hp <= 0) hooks.die?.(s, out.cause ?? "บาดเจ็บสาหัส");
+    if (s.hp <= 0 && lethal) hooks.die?.(s, out.cause ?? "บาดเจ็บสาหัส");
+    else if (s.hp <= 0) s.hp = 1;
   }
 }

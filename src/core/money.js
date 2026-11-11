@@ -1,7 +1,9 @@
 import { ageY, log } from "./state.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { cityOf } from "../data/world.js";
 import { FAMILIES } from "../data/families.js";
+import { ITEMS } from "../data/items.js";
+import { hooks } from "./registry.js";
 // Every change to s.gold goes through addLedger, so the money tab can always say why.
 const LEDGER_MONTHS = 24;
 const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว"]);
@@ -25,7 +27,14 @@ export function monthlyIncome(s) {
   return inc.reduce((a, e) => a + e.amt, 0);
 }
 
-export const debtCap = (s) => Math.max(5000, Math.round(monthlyIncome(s) * 24));
+// Average earned income over the 12 full months before this one (loans and family money excluded).
+export function trailingIncome(s) {
+  const inWindow = (e) => e.m >= s.ageM - 12 && e.m < s.ageM;
+  const inc = s.ledger.filter((e) => inWindow(e) && e.amt > 0 && !NOT_EARNED.has(e.label));
+  return inc.reduce((a, e) => a + e.amt, 0) / 12;
+}
+
+export const debtCap = (s) => Math.max(5000, Math.round(trailingIncome(s) * 24));
 
 export function living(s) {
   if (ageY(s) < 18) return;
@@ -55,15 +64,36 @@ export function monthSummary(s) {
   return { in: inn, out, net: now.reduce((a, e) => a + e.amt, 0) };
 }
 
-function debtMonth(s) {
-  if (s.debt > 0) {
-    const interest = Math.ceil(s.debt * INTEREST);
-    s.debt += interest;
+const INSTALMENT = 0.05; // share of the debt repaid each month, at least 100
+
+function payInstalment(s) {
+  if (s.debt <= 0 || s.gold <= 0) return;
+  const pay = Math.min(s.debt, Math.max(100, Math.ceil(s.debt * INSTALMENT)), s.gold);
+  s.debt -= pay;
+  addLedger(s, "ผ่อนหนี้", -pay);
+}
+
+// Default: the collector takes the most valuable item that is not locked or worn, and it weighs on the mind.
+function seize(s) {
+  const worn = new Set(Object.values(s.equip));
+  const loose = s.items.filter((i) => !i.lock && !worn.has(i.uid));
+  const take = loose.sort((a, b) => ITEMS[b.id].price - ITEMS[a.id].price)[0];
+  if (take) {
+    s.items = s.items.filter((i) => i !== take);
+    log(s, "เงิน", `เจ้าหนี้ยึด ${ITEMS[take.id].n} ไป`, "bad");
   }
+  s.c.seized = (s.c.seized ?? 0) + 1;
+  hooks.changeMind?.(s, -8);
+}
+
+function debtMonth(s) {
+  if (s.debt > 0) s.debt += Math.ceil(s.debt * INTEREST);
+  payInstalment(s);
   if (s.gold >= 0) return;
   const need = -s.gold;
   if (borrow(s, need)) return;
   s.c.default = (s.c.default ?? 0) + 1;
+  seize(s);
   if (s.c.default % 6 === 1) {
     log(s, "เงิน", "คุณจ่ายบิลไม่ไหว เจ้าหนี้เริ่มโทรมาทุกวัน", "bad");
     s.sched.push({ id: "debtCollector", atM: s.ageM });

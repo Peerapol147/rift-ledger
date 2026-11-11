@@ -18,7 +18,7 @@ test("tick does nothing after death and never throws", () => {
 
 test("death inside an outcome closes the event", () => {
   const s = newLife("o");
-  openEvent(s, { id: "t", t: "x", o: [{ l: "a", y: { hp: -999 } }] });
+  openEvent(s, { id: "t", t: "x", o: [{ l: "a", risk: 1, y: {}, n: { hp: -999 } }] });
   choose(s, 0);
   assert.ok(s.dead);
   assert.equal(s.ev, null);

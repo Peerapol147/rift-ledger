@@ -1,11 +1,12 @@
 // Health, mental health, injuries, lifespan and death.
 import { log, ageY } from "./state.js";
-import { hooks } from "./events.js";
+import { hooks } from "./registry.js";
 
 const RANK_LIFE = [0, 1, 2, 4, 6, 10, 15, 25];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-export const deathHooks = []; // fn(s, cause) -> true to cancel death (revival item)
+import { deathHooks } from "./registry.js";
+export { deathHooks };
 
 export function die(s, cause) {
   if (s.dead) return;

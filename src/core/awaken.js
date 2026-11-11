@@ -2,7 +2,7 @@
 import { ch, wp, mk, shuf } from "./rng.js";
 import { stream, ageY, log } from "./state.js";
 import { hooks, resolvers } from "./events.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { RANKS, RANK_W, EX_P, AWAKEN_RATE, CEIL_W } from "../data/world.js";
 import { CLASSES, RARITY } from "../data/classes.js";
 import { SKILLS as SK } from "../data/skills.js";

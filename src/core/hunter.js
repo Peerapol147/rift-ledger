@@ -2,7 +2,7 @@
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX, hooks } from "./events.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { LV_CAP, canRankUp, rankUp, ceilingHint } from "./awaken.js";
 import { gateOffers, gateOp, towerOp } from "./hunt.js";
 import { estimateRisk } from "./ops.js";
@@ -70,6 +70,9 @@ function hunterMonth(s) {
   openGateChoice(s);
 }
 
+// Boss offers always carry some danger so autopilot leaves them to the player.
+const dangerOf = (s, d) => (d.boss ? Math.max(0.05, estimateRisk(s, d)) : 0);
+
 export function openGateChoice(s) {
   const defs = gateOffers(s).map((g) => gateOp(s, g));
   const tower = COUNTRIES[s.country].tower;
@@ -86,7 +89,7 @@ export function openGateChoice(s) {
     tag: "เกต",
     t: "สมาคมส่งรายการเกตที่เปิดรับฮันเตอร์เดือนนี้",
     o: [
-      ...defs.map((d, i) => ({ l: label(d), d: info(d), risk: estimateRisk(s, d), y: { act: "gate" + i } })),
+      ...defs.map((d, i) => ({ l: label(d), d: info(d), danger: dangerOf(s, d), y: { act: "gate" + i } })),
       { l: "พักเดือนนี้", y: { mind: 2 } },
     ],
   });

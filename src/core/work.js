@@ -3,7 +3,7 @@ import { stream, ageY, log } from "./state.js";
 import { ch } from "./rng.js";
 import { val, hooks, resolvers, openEvent } from "./events.js";
 import { addLedger } from "./money.js";
-import { monthly } from "./clock.js";
+import { monthly } from "./registry.js";
 import { CAREERS } from "../data/careers.js";
 
 const meets = (s, need) => Object.entries(need ?? {}).every(([k, min]) => val(s, k) >= min);

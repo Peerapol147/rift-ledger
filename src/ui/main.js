@@ -31,6 +31,13 @@ const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: u
 let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0;
 
 // ---- Start, load, death
+// A new life takes the first empty slot, else the first finished one; -1 when every slot holds a life in progress.
+function freeSlot() {
+  const list = slots.list();
+  const empty = list.findIndex((x) => !x);
+  return empty >= 0 ? empty : list.findIndex((x) => x.dead);
+}
+
 function begin(life) {
   s = life;
   for (const id of book.get().seen.cal ?? []) s.flags["knowCal:" + id] = true;
@@ -56,7 +63,7 @@ function endScreen() {
   book.addLife();
   book.addTitle(d.role);
   for (const id of Object.keys(s.world.done)) if (id.startsWith("cal")) book.addSeen("cal", id);
-  slots.save(ui.slot, s);
+  if (ui.slot >= 0) slots.save(ui.slot, s);
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
     <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
@@ -75,7 +82,7 @@ function fx() {
   else if (now.lv > prev.lv) trigger({ n: "levelup" });
   if (s.lastFight) { trigger({ n: "fight", a: { ...s.lastFight, wfx: "melee/claw-swipe" } }); delete s.lastFight; }
   else if (now.gold - prev.gold > 500) trigger({ n: "coin" });
-  if (now.year > prev.year) slots.save(ui.slot, s);
+  if (now.year > prev.year && ui.slot >= 0) slots.save(ui.slot, s);
   prev = now;
 }
 
@@ -106,6 +113,7 @@ function put(sel, html) {
 function render() {
   dirty = false;
   document.documentElement.style.setProperty("--fs", FONT[ui.fs]);
+  $("#modal").hidden = !ui.settings || !s;
   if (!s || s.dead) return;
   reveal();
   if (!TABS.some(([k, , ok]) => k === ui.tab && ok(s))) ui.tab = "log";
@@ -151,13 +159,18 @@ function loop(t) {
 function act(a, el) {
   const [k, v] = a.split(/:(.*)/s);
   const A = {
-    new: () => { const seed = $("[data-c=seed]")?.value.trim() || Math.random().toString(36).slice(2, 8); ui.slot = 0; begin(C.newLife(seed)); },
+    new: () => {
+      const seed = $("[data-c=seed]")?.value.trim() || Math.random().toString(36).slice(2, 8);
+      ui.slot = freeSlot();
+      begin(C.newLife(seed));
+      if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
+    },
     load: () => { const life = slots.load(+v); if (life) { ui.slot = +v; ui.settings = false; begin(life); } else banner("โหลดเซฟไม่สำเร็จ"); },
     save: () => { slots.save(+v, s); ui.slot = +v; banner("บันทึกแล้ว"); },
     del: () => { slots.del(+v); if (!s || s.dead) startScreen(); },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
-    quit: () => { if (s && !s.dead) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
+    quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
     choose: () => { C.choose(s, +v); fx(); },
     pin: () => { C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
@@ -179,22 +192,28 @@ function act(a, el) {
     loadUse: () => C.useLoadout(s, v),
     borrow: () => banner(C.borrow(s, 1000) ? "กู้แล้ว ₿1,000" : "วงเงินกู้ไม่พอ"),
     repay: () => banner(C.repay(s, 1000) ? "ชำระแล้ว" : "ไม่มีเงินพอชำระ"),
-    quitJob: () => C.quitJob(s),
+    quitJob: () => { if (confirm("ลาออกจากงานจริงไหม?")) C.quitJob(s); },
     jobHunt: () => { if (!s.ev && !s.op) C.openJobChoice(s); },
-    move: () => banner(C.moveCity(s, v) ? "ย้ายแล้ว" : "ย้ายไม่ได้"),
+    move: () => { if (confirm("ย้ายที่อยู่จริงไหม? ค่าย้ายจ่ายทันที")) banner(C.moveCity(s, v) ? "ย้ายแล้ว" : "ย้ายไม่ได้"); },
   };
   A[k]?.();
   dirty = true;
 }
 
-// Act on pointerdown so a re-render between press and release cannot swallow the click;
-// keyboard activation (Enter/Space on a focused button) arrives as a click with detail 0.
-const onPress = (e) => {
-  const el = e.target.closest("[data-a]");
-  if (el && !el.disabled) act(el.dataset.a, el);
-};
-document.addEventListener("pointerdown", (e) => { if (e.button === 0) onPress(e); });
-document.addEventListener("click", (e) => { if (e.detail === 0) onPress(e); });
+// Event options act on pointerdown, so the event panel re-rendering mid-press cannot swallow the choice.
+// Everything else acts on click, so starting a scroll on a phone never fires a button.
+const target = (e) => { const el = e.target.closest("[data-a]"); return el && !el.disabled ? el : null; };
+const FAST = /^choose:/;
+document.addEventListener("pointerdown", (e) => {
+  const el = target(e);
+  if (e.button === 0 && el && FAST.test(el.dataset.a)) { el.dataset.done = "1"; act(el.dataset.a, el); }
+});
+document.addEventListener("click", (e) => {
+  const el = target(e);
+  if (!el) return;
+  if (el.dataset.done) { delete el.dataset.done; return; }
+  act(el.dataset.a, el);
+});
 document.addEventListener("change", (e) => {
   const c = e.target.dataset?.c;
   if (c === "policy") { ui.policy = e.target.value; saveCfg(); }

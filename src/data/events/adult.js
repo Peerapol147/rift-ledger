@@ -37,7 +37,9 @@ export const ADULT_EVENTS = [
   },
   {
     id: "adultBreakNear",
+    k: "x", // opened by the monthly gate-break check in core/hunt.js, never at random
     tag: "เกตแตก",
+    important: true,
     age: [18, 70],
     hunter: false,
     t: "ไซเรนดังกลางวันแสกๆ เกตใกล้ที่ทำงานแตก มอนสเตอร์ตัวเล็กหลุดเข้ามาในถนน",
