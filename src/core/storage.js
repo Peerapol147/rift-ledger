@@ -13,7 +13,8 @@ export const storeOpen = (s, where) => where === "home" || (storeOf(s).vaultCoun
 
 export function stash(s, uid, where) {
   const st = storeOf(s), list = st[where], it = s.items.find((i) => i.uid === uid);
-  if (!list || !it || Object.values(s.equip).includes(uid)) return false;
+  // the Phoenix Token only works on you, so it never leaves the bag
+  if (!list || !it || it.id === "phoenixToken" || Object.values(s.equip).includes(uid)) return false;
   if (list.length >= STORES[where].cap || !storeOpen(s, where)) return false;
   s.items = s.items.filter((i) => i !== it);
   list.push(it);
@@ -30,6 +31,6 @@ export function take(s, uid, where) {
   return true;
 }
 
-books.push((s) => {
-  if (s.store?.vault?.length) addLedger(s, "ค่าเช่าตู้นิรภัย", -STORES.vault.rent);
+books.push((s, step = 1) => {
+  if (s.store?.vault?.length) addLedger(s, "ค่าเช่าตู้นิรภัย", -STORES.vault.rent * step);
 });

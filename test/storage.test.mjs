@@ -62,3 +62,15 @@ test("a gate break reveals a hidden rank and costs association standing", () => 
   assert.equal(s.flags.hiddenRank, false);
   assert.equal(s.fac.assoc, a0 - 5);
 });
+
+test("imported saves: bad uids are dropped, plus is a whole number 0..5, the token stays in the bag", () => {
+  const s = adult("imp");
+  C.giveItem(s, "ironSword", "t");
+  s.items.push({ uid: 'x"><img>', id: "ironSword", from: "t" });
+  s.items[0].plus = -10;
+  const t = C.deserialize(C.serialize(s));
+  assert.equal(t.items.length, 1);
+  assert.equal(t.items[0].plus, 0);
+  const tok = C.giveItem(t, "phoenixToken", "t");
+  assert.equal(C.stash(t, tok, "home"), false);
+});

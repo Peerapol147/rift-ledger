@@ -3,6 +3,7 @@ import { pk, ri, wp, ch } from "./rng.js";
 import { stream, log, onNewLife, yearsAfterRift, monthOfYear } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
+import { SHIP_FEE } from "./storage.js";
 import { monthly } from "./registry.js";
 import { COUNTRIES, cityOf } from "../data/world.js";
 import { NAMES } from "../data/families.js";
@@ -90,7 +91,7 @@ export function moveCity(s, cityId) {
   if (country !== s.country) {
     s.flags.relicense = true;
     const n = s.store?.home?.length ?? 0;
-    if (n) addLedger(s, "ค่าขนของย้ายประเทศ", -40 * n);
+    if (n) addLedger(s, "ค่าขนของย้ายประเทศ", -SHIP_FEE * n);
     if (s.job) s.job.tier = Math.floor(s.job.tier / 2);
     s.country = country;
   }

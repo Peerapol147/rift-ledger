@@ -22,9 +22,16 @@ export function deserialize(str) {
     for (const k of Object.keys(s.c ?? {})) s.c[k] = num(s.c[k]);
     for (const g of s.goals ?? []) g.target = num(g.target);
     for (const l of s.log ?? []) if (!TONES.has(l.tone)) l.tone = "";
-    for (const i of [...(s.items ?? []), ...(s.store?.home ?? []), ...(s.store?.vault ?? [])]) {
-      if ("plus" in i) i.plus = Math.min(5, num(i.plus));
+    // item lists: only real records with a plain uid; plus is a whole number 0..5
+    const okItem = (i) => i && typeof i === "object" && /^i\d+$/.test(String(i.uid)) && typeof i.id === "string";
+    const clean = (list) => (Array.isArray(list) ? list.filter(okItem) : []);
+    s.items = clean(s.items);
+    if (s.store) s.store = { home: clean(s.store.home), vault: clean(s.store.vault),
+      vaultCountry: typeof s.store.vaultCountry === "string" ? s.store.vaultCountry : null };
+    for (const i of [...s.items, ...(s.store?.home ?? []), ...(s.store?.vault ?? [])]) {
+      if ("plus" in i) i.plus = Math.max(0, Math.min(5, Math.floor(num(i.plus))));
     }
+    if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
     return s;
   } catch {
     return null;

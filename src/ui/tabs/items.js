@@ -51,7 +51,7 @@ function storeHtml(s) {
     return `<h4>${meta.n} ${list.length}/${meta.cap}<small class="dim">${note}</small></h4>${rows || `<div class="dim">ว่าง</div>`}`;
   };
   const vaultPick = s.items.filter((i) => !Object.values(s.equip).includes(i.uid))
-    .map((i) => `<option value="${i.uid}">${esc(ITEMS[i.id].n)}${i.plus ? " +" + i.plus : ""}</option>`).join("");
+    .map((i) => `<option value="${esc(i.uid)}">${esc(ITEMS[i.id].n)}${i.plus ? " +" + i.plus : ""}</option>`).join("");
   return `<h3>ที่เก็บของ</h3>${part("home", "takeHome")}${part("vault", "takeVault")}
     ${vaultPick && C.storeOpen(s, "vault") ? `<div class="row"><select data-c="vaultPick">${vaultPick}</select>${btn("stashVault", "ฝากตู้นิรภัย", 'class="sm"')}</div>` : ""}`;
 }
