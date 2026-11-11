@@ -1,0 +1,301 @@
+[
+ {
+  "id": "mon-5",
+  "type": "monster",
+  "name": "เถาวัลย์กินเรือ",
+  "folder": "beast",
+  "size": [
+   56,
+   56
+  ],
+  "fly": false,
+  "now": "beast/glass-frog",
+  "status": "open"
+ },
+ {
+  "id": "mon-6",
+  "type": "monster",
+  "name": "ปูเกราะตู้สินค้า",
+  "folder": "beast",
+  "size": [
+   56,
+   56
+  ],
+  "fly": false,
+  "now": "construct/streetlight-spider",
+  "status": "open"
+ },
+ {
+  "id": "mon-7",
+  "type": "monster",
+  "name": "นกล่อฟ้า",
+  "folder": "beast",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "beast/signal-bat",
+  "status": "open"
+ },
+ {
+  "id": "mon-8",
+  "type": "monster",
+  "name": "แพะหินปูน",
+  "folder": "beast",
+  "size": [
+   56,
+   56
+  ],
+  "fly": false,
+  "now": "beast/sewer-hound",
+  "status": "open"
+ },
+ {
+  "id": "mon-9",
+  "type": "monster",
+  "name": "ปลาไร้น้ำ",
+  "folder": "beast",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "beast/flying-fish",
+  "status": "open"
+ },
+ {
+  "id": "mon-15",
+  "type": "monster",
+  "name": "หมุดย้ำเดินได้",
+  "folder": "construct",
+  "size": [
+   56,
+   56
+  ],
+  "fly": false,
+  "now": "construct/wire-eater",
+  "status": "open"
+ },
+ {
+  "id": "mon-16",
+  "type": "monster",
+  "name": "ตะกรันมีชีวิต",
+  "folder": "construct",
+  "size": [
+   56,
+   56
+  ],
+  "fly": false,
+  "now": "construct/concrete-humanoid",
+  "status": "open"
+ },
+ {
+  "id": "mon-17",
+  "type": "monster",
+  "name": "ห้องสมุดหิว",
+  "folder": "construct",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/floating-eyes",
+  "status": "open"
+ },
+ {
+  "id": "mon-20",
+  "type": "monster",
+  "name": "เงาใต้ท่าเทียบ",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/floating-eyes",
+  "status": "open"
+ },
+ {
+  "id": "mon-21",
+  "type": "monster",
+  "name": "ผู้โดยสารคนสุดท้าย",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/old-house-owner",
+  "status": "open"
+ },
+ {
+  "id": "mon-22",
+  "type": "monster",
+  "name": "ผู้เฝ้าท่าข้ามฟาก",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/old-house-owner",
+  "status": "open"
+ },
+ {
+  "id": "mon-23",
+  "type": "monster",
+  "name": "เงาสะท้อนผิดจังหวะ",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/floating-eyes",
+  "status": "open"
+ },
+ {
+  "id": "mon-24",
+  "type": "monster",
+  "name": "อาจารย์ที่ยังสอนอยู่",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/old-house-owner",
+  "status": "open"
+ },
+ {
+  "id": "mon-25",
+  "type": "monster",
+  "name": "ของในตู้ที่สอง",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/floating-eyes",
+  "status": "open"
+ },
+ {
+  "id": "mon-26",
+  "type": "monster",
+  "name": "ตัวคุณจากอีกฝั่ง",
+  "folder": "spirit",
+  "size": [
+   56,
+   56
+  ],
+  "fly": true,
+  "now": "spirit/old-house-owner",
+  "status": "open"
+ },
+ {
+  "id": "mon-38",
+  "type": "monster",
+  "name": "เสียงตามสาย",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/voiceless-choir",
+  "status": "open"
+ },
+ {
+  "id": "mon-39",
+  "type": "monster",
+  "name": "องครักษ์เจ็ดตระกูล",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/parking-king",
+  "status": "open"
+ },
+ {
+  "id": "mon-40",
+  "type": "monster",
+  "name": "ผู้สอบบัญชีชั้นล่าง",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/death-manager",
+  "status": "open"
+ },
+ {
+  "id": "mon-41",
+  "type": "monster",
+  "name": "เจ้าหนี้แห่งวันฟ้าแตก",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/time-eater",
+  "status": "open"
+ },
+ {
+  "id": "mon-42",
+  "type": "monster",
+  "name": "ผู้จัดการคลินิก",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/death-manager",
+  "status": "open"
+ },
+ {
+  "id": "mon-43",
+  "type": "monster",
+  "name": "ผู้ลงนามคนแรก",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/thing-on-top-floor",
+  "status": "open"
+ },
+ {
+  "id": "mon-44",
+  "type": "monster",
+  "name": "ผู้ตรวจหน้ากากขาว",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/death-manager",
+  "status": "open"
+ },
+ {
+  "id": "mon-45",
+  "type": "monster",
+  "name": "ผู้เผยแผ่วิถีมาร",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/voiceless-choir",
+  "status": "open"
+ }
+]
