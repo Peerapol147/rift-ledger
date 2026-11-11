@@ -13,6 +13,7 @@ for (const m of MILESTONES) EVENT_INDEX.set(m.id, m);
 import { monthly, books, lastly } from "./registry.js";
 export { monthly, books, lastly };
 const EVENT_CHANCE = 0.22;
+const REPEAT_CAP = 4;
 const COOLDOWN = 36; // months before the same random event can come back
 
 export function focusList(s) {
@@ -48,7 +49,9 @@ function dueEvent(s) {
 function randomEvent(s) {
   const R = stream(s, "pick");
   if (!ch(R, EVENT_CHANCE)) return null;
-  const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN;
+  // a random event happens at most REPEAT_CAP times in a life (cap: n on the event overrides): variety over habit
+  const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN
+    && (s.c["ev:" + e.id] ?? 0) < (e.cap ?? REPEAT_CAP);
   const pool = ALL_EVENTS.filter((e) => !e.k && fresh(e) && eligible(s, e));
   if (!pool.length) return null;
   return wp(R, pool, (e) => (e.w ?? 1) / (1 + (s.c["ev:" + e.id] ?? 0) * 2));
