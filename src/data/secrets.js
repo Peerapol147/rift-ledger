@@ -1,5 +1,7 @@
 // Secret quests: never labelled as secret. Each life draws 3 by seed. A step opens only after the previous step's
 // outcome advanced it (c: { "sq:<id>": 1 }). start: age range and optional hunter / if (all) / any (one of).
+import { TRUTHS } from "./truths.js";
+
 const step = (t, o) => ({ tag: "ชีวิต", t, o });
 const go = (id, extra = {}) => ({ ...extra, c: { ...(extra.c ?? {}), ["sq:" + id]: 1 } });
 
@@ -77,3 +79,6 @@ export const SECRETS = {
         wil: 3 }, fame: 10 }) }]),
   ] },
 };
+
+// the world-secret lines run on the same engine; they are not part of the 3-per-life draw
+Object.assign(SECRETS, TRUTHS);
