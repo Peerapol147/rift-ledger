@@ -53,7 +53,10 @@ export function workMonth(s) {
   const c = CAREERS[j.id];
   const main = Math.max(...Object.keys(c.need[1]).map((k) => s.st[k] ?? 0));
   j.xp += s.focus === "work" ? 1 + main / 40 : 0.3;
-  addLedger(s, "เงินเดือน", c.pay[j.tier]);
+  // a hunter who spends the month in gates only works part-time
+  const partTime = s.hunter && s.focus === "hunt";
+  const pay = partTime ? Math.round(c.pay[j.tier] / 2) : c.pay[j.tier];
+  addLedger(s, partTime ? "เงินเดือน (พาร์ทไทม์)" : "เงินเดือน", pay);
   if (c.risk && ch(stream(s, "work"), c.risk)) {
     s.hp -= 25;
     log(s, "งาน", "อุบัติเหตุระหว่างทำงาน คุณต้องพักรักษาตัว", "bad");

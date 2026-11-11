@@ -31,7 +31,9 @@ export function lifespan(s) {
 
 export function bodyMonth(s, step) {
   s.injuries = s.injuries.filter((i) => i.untilM == null || i.untilM > s.ageM);
-  const healing = s.injuries.some((i) => i.untilM != null) ? 1 : 3;
+  // awakened bodies mend far faster; an open wound halves it
+  const base = s.hunter ? 10 : 3;
+  const healing = s.injuries.some((i) => i.untilM != null) ? base / 2 : base;
   s.hp = clamp(s.hp + healing * step, 0, 100);
   if (s.mind < 70) changeMind(s, 0.5 * step);
 }

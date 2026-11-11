@@ -13,8 +13,8 @@ import { SKILLS } from "../data/skills.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
-const OP_XP = 25; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
-const BOSS_DEATH = 0.5; // chance that losing to a boss is fatal; otherwise a permanent wound
+const OP_XP = 15; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
+const BOSS_DEATH = 0.4; // chance that losing to a boss is fatal; otherwise a permanent wound
 const PLAN = { push: { atk: 1.15, def: 0.9 }, careful: { atk: 0.95, def: 1.1 }, retreat: { atk: 0.9, def: 1.15 } };
 import { gearHooks, afterOpHooks } from "./registry.js";
 export { gearHooks, afterOpHooks };

@@ -118,7 +118,8 @@ const perYear = (s) => (s.c.earned ?? 0) / Math.max(1, ageY(s) - 18);
 const hi = med(hunters.filter((s) => s.hunter.rank >= 3).map(perYear));
 const cv = med(civs.map(perYear));
 const lo = med(hunters.filter((s) => s.hunter.rank <= 1).map(perYear));
-row("income/yr C+ > civ > F–E", `${hi.toFixed(0)} > ${cv.toFixed(0)} > ${lo.toFixed(0)}`, hi > cv && cv > lo);
+// spec §6.1: C+ hunters out-earn most civilians; F–E hunters earn about the same as a good job or less (≤ +5%)
+row("income/yr C+ > civ ≳ F–E", `${hi.toFixed(0)} > ${cv.toFixed(0)} ≳ ${lo.toFixed(0)}`, hi > cv && lo <= cv * 1.05);
 // Among hunters who had room to grow (ceiling above start rank), how many got all the way up.
 const room = hunters.filter((s) => s.hunter.ceil > s.hunter.rank0);
 const ceil = pct(room.filter((s) => s.hunter.rank === s.hunter.ceil).length, room.length);

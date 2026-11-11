@@ -34,12 +34,12 @@ export function gateOffers(s) {
   for (let i = 0; i < 3; i++) {
     const r = Math.max(0, Math.min(6, rank + ri(R, -1, 1)));
     const theme = pk(R, GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1])) ?? GATES[0];
-    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss: ch(R, 0.2) });
+    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss: ch(R, 0.12) });
   }
   return out;
 }
 
-export const gatePay = (rank) => Math.round(300 * Math.pow(2.2, rank));
+export const gatePay = (rank) => Math.round(120 * Math.pow(2.6, rank));
 
 export function gateOp(s, g) {
   const theme = GATES.find((x) => x.id === g.id);
