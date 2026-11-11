@@ -4,7 +4,7 @@ import { stream, log } from "./state.js";
 import { openEvent, EVENT_INDEX, hooks } from "./events.js";
 import { monthly, lastly } from "./registry.js";
 import { LV_CAP, canRankUp, rankUp, ceilingHint } from "./awaken.js";
-import { gateOffers, gateOp, towerOp } from "./hunt.js";
+import { gateOffers, gateOp, towerOp, GATE_LV } from "./hunt.js";
 import { estimateRisk } from "./ops.js";
 import { COUNTRIES } from "../data/world.js";
 import { CLASSES } from "../data/classes.js";
@@ -87,6 +87,7 @@ export function openGateChoice(s) {
   if ((s.fac?.under ?? 0) >= 20) {
     const g = { ...gateOffers(s)[0] };
     g.rank = Math.min(6, g.rank + 1);
+    g.lv = GATE_LV[g.rank];
     g.boss = ch(stream(s, "gate"), 0.25);
     const d = gateOp(s, g);
     defs.push({ ...d, illegal: true, t: "เกตเถื่อน · " + d.t, rewards: { ...d.rewards, gold: d.rewards.gold * 2 } });

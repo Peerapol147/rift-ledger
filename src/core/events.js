@@ -4,6 +4,7 @@ import { stream, ageY, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { STATS } from "../data/stats.js";
 import { ROLES } from "../data/classes.js";
+import { FACTIONS } from "../data/factions.js";
 import { ALL_EVENTS } from "../data/events/index.js";
 import { hooks, resolvers } from "./registry.js";
 
@@ -42,6 +43,7 @@ export function needLabel(key, min) {
   if (kind === "skill") return `สกิล [${resolvers.skillName(id)}]`;
   if (kind === "job") return `อาชีพ [${resolvers.jobName(id)}]`;
   if (kind === "cls") return `คลาส [${resolvers.clsName(id)}]`;
+  if (kind === "fac") return `ความไว้ใจจาก${FACTIONS[id] ?? id}`;
   return `บทบาท [${ROLES[id] ?? id}]`;
 }
 
