@@ -86,7 +86,7 @@ function showEnd(record) {
     <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
     <div class="kv"><span>ชื่อเสียง</span><b>${d.fame}</b></div>${legacyRows()}${d.floor ? `<div class="kv"><span>ชั้นหอคอยสูงสุด</span><b>${d.floor}</b></div>` : ""}
     <p class="dim" style="margin-top:10px">ชีวิตนี้มีทางที่คุณไม่ได้เห็น ${d.unseen} ทาง</p>
-    <div class="row">${btn("new", "เริ่มชีวิตใหม่", 'class="pri"')}${btn("quit", "หน้าแรก")}</div></div>`;
+    <div class="row">${C.canHeir(s) ? btn("heir", `เล่นต่อเป็น${C.heirWord(s)}`, 'class="pri"') : ""}${btn("new", "เริ่มชีวิตใหม่", C.canHeir(s) ? "" : 'class="pri"')}${btn("quit", "หน้าแรก")}</div></div>`;
   $("#end").hidden = false;
 }
 
@@ -195,6 +195,13 @@ function act(a, el) {
       C.applyUnlocks(life, book.get());
       begin(life);
       if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
+    },
+    heir: () => {
+      if (!s?.dead || !C.canHeir(s)) return;
+      const life = C.newHeir(s, s.seed + "-g" + ((s.gen ?? 1) + 1));
+      C.applyUnlocks(life, book.get());
+      ui.slot = freeSlot();
+      begin(life);
     },
     load: () => {
       const life = slots.load(+v);

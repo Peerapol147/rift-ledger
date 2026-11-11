@@ -60,6 +60,7 @@ afterOpHooks.push((s, o, r, gold) => {
 });
 
 hooks.guildPerk = guildPerk;
+hooks.leaveGuild = leaveGuild;
 // a lost run (no payout, so no after-op hooks) still costs standing
 hooks.guildLoss = (s) => { if (s.guild && s.guild.role !== "master") s.guild.standing = clampG(s.guild.standing - 5); };
 hooks.bossDeathMul = (s) => (guildPerk(s) === "safe" ? 0.5 : 1);

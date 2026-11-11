@@ -42,6 +42,13 @@ export function deserialize(str) {
     }
     // a locker without a guild would be unreachable: its items go home
     if (!s.guild && s.store?.guild?.length) { s.store.home.push(...s.store.guild); s.store.guild = []; }
+    if (s.heir) {
+      const h = s.heir, str = (x) => (typeof x === "string" ? x : "");
+      s.heir = { of: str(h.of), rel: h.rel === "หลาน" ? "หลาน" : "ลูก", gold: num(h.gold), guild: str(h.guild) || null,
+        enemies: Array.isArray(h.enemies) ? h.enemies.filter((e) => typeof e === "string").slice(0, 3) : [],
+        paid: num(h.paid), guildDone: num(h.guildDone), grudgeDone: num(h.grudgeDone) };
+    }
+    if ("gen" in s) s.gen = Math.max(1, num(s.gen));
     if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
     return s;
   } catch {

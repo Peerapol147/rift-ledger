@@ -24,3 +24,4 @@ export * from "./storage.js";
 export * from "./forge.js";
 export * from "./legacy.js";
 export * from "./guild.js";
+export * from "./heir.js";
