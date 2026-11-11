@@ -4,7 +4,7 @@ import { stream, log, onNewLife, yearsAfterRift, monthOfYear } from "./state.js"
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { SHIP_FEE } from "./storage.js";
-import { monthly } from "./registry.js";
+import { monthly, hooks } from "./registry.js";
 import { COUNTRIES, cityOf } from "../data/world.js";
 import { NAMES } from "../data/families.js";
 import { CLASSES } from "../data/classes.js";
@@ -90,6 +90,7 @@ export function moveCity(s, cityId) {
   addLedger(s, "ค่าย้ายบ้าน", -to.cost * 3);
   if (country !== s.country) {
     s.flags.relicense = true;
+    hooks.moveCountry?.(s);
     const n = s.store?.home?.length ?? 0;
     if (n) addLedger(s, "ค่าขนของย้ายประเทศ", -SHIP_FEE * n);
     if (s.job) s.job.tier = Math.floor(s.job.tier / 2);

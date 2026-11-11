@@ -52,7 +52,7 @@ export function estimateRisk(s, def) {
       if (o.hp <= o.maxHp * 0.15) { lost++; break; } // margin for hp lost in decisions
     }
   }
-  return (lost / 16) * BOSS_DEATH;
+  return (lost / 16) * BOSS_DEATH * (hooks.bossDeathMul?.(s) ?? 1);
 }
 
 export function skillDamage(sk, atk, target) {
@@ -172,13 +172,13 @@ function endOp(s) {
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
   if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") {
-    if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH)) {
+    if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH * (hooks.bossDeathMul?.(s) ?? 1))) {
       die(s, `พ่ายแก่ ${def.foes.find((f) => f.boss)?.n ?? def.t}`);
       return r;
     }
     if (def.boss) injure(s, "bossScar", null);
     injure(s, "beaten", 3);
-    if (s.hunter && def.kind !== "job") gainXp(s, def.foes.reduce((a, f) => a + f.lv, 0) * 0.2 * OP_XP);
+    if (s.hunter && def.kind !== "job") gainXp(s, def.foes.reduce((a, f) => a + f.lv, 0) * 0.2 * OP_XP * xpMul(s));
     if (def.kind === "job") log(s, "งานใหญ่", "งานพังกลางทาง คุณบาดเจ็บและต้องพักรักษาตัว", "bad");
     else log(s, "เกต", "คุณถูกลากออกมาโดยทีมกู้ภัยของสมาคม", "bad");
     return r;
@@ -189,18 +189,20 @@ function endOp(s) {
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
   const xpShare = (r === "won" ? 1 : 0.3) * (o.prep.share ? 0.7 : 1); // in a party the leader does most of the killing
-  if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP);
+  if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP * xpMul(s));
   if (def.kind === "job" && s.job) s.job.xp += 4 * share;
   if (r === "won" && def.kind === "tower") {
     s.c.floor = Math.max(s.c.floor ?? 0, def.floor);
     recordFloor(s, def.tower, def.floor, true);
   }
-  for (const f of afterOpHooks) f(s, o, r);
+  for (const f of afterOpHooks) f(s, o, r, gold);
   log(s, "เกต", r === "won" ? `สำเร็จ ได้ ₿${gold}` : `ถอยออกมา ได้ ₿${gold}`, r === "won" ? "imp" : "");
   return r;
 }
 
 // Up to 2 unlocked healing potions from the bag go in the quick slots.
+const xpMul = (s) => hooks.xpMul?.(s) ?? 1;
+
 export function defaultPrep(s) {
   const quick = (s.items ?? []).filter((i) => !i.lock && ITEMS[i.id]?.use === "heal").slice(0, 2).map((i) => i.uid);
   return { plan: s.prefs?.plan ?? "careful", skills: s.hunter?.slots ?? [], quick, team: [] };

@@ -9,6 +9,7 @@ import { CLASSES } from "../data/classes.js";
 import { NAMES } from "../data/families.js";
 import { HIRE_FEE, WAGE_SHARE, MOODS, TEAM_MAX } from "../data/team.js";
 import { TEAM_STORIES } from "../data/team-stories.js";
+import { FOUND } from "../data/guilds.js";
 
 const COMMON = Object.keys(CLASSES).filter((c) => CLASSES[c].rarity <= 2);
 
@@ -22,6 +23,8 @@ function member(s, R, rank) {
 }
 
 export const feeOf = (m) => HIRE_FEE[m.rank];
+// founding a guild makes room for a bigger team
+export const teamMax = (s) => (s.guild?.role === "master" ? FOUND.teamMax : TEAM_MAX);
 export const moodWord = (v) => (MOODS.find(([min]) => (Number(v) || 0) >= min) ?? MOODS.at(-1))[1];
 const present = (s) => s.team.filter((m) => m.alive && m.hurtUntilM <= s.ageM);
 
@@ -36,7 +39,7 @@ export function recruitOffers(s) {
 }
 
 export function hire(s, m) {
-  if (s.party || s.team.filter((x) => x.alive).length >= TEAM_MAX || s.gold < feeOf(m)) return false;
+  if (s.party || s.team.filter((x) => x.alive).length >= teamMax(s) || s.gold < feeOf(m)) return false;
   addLedger(s, "ค่าจ้างลูกทีมแรกเข้า", -feeOf(m));
   s.team.push(m);
   if (s.recruits) s.recruits.list = s.recruits.list.filter((x) => x !== m);
@@ -119,7 +122,7 @@ const evMember = (s) => s.team.find((x) => x.id === s.evMember);
 hooks.ally = (s, n) => { const m = evMember(s); if (m) m.loyalty = Math.max(0, Math.min(100, m.loyalty + n)); };
 // A teammate who will never betray: joins at full loyalty (hunters), or a lifelong friend (civilians).
 hooks.act.loyalAlly = (s) => {
-  if (!s.hunter || s.party || s.team.filter((x) => x.alive).length >= TEAM_MAX) return;
+  if (!s.hunter || s.party || s.team.filter((x) => x.alive).length >= teamMax(s)) return;
   const m = member(s, stream(s, "recruit"), Math.max(0, s.hunter.rank - 1));
   m.loyalty = 100;
   m.sworn = true;

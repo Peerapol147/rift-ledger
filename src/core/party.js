@@ -16,6 +16,7 @@ const SHARE = { member: 0.4, vice: 0.6 };
 const clampT = (v) => Math.max(0, Math.min(100, v));
 
 export function joinParty(s, leader) {
+  if (s.guild) return;
   s.party = { leader, trust: 50, role: "member", sinceM: s.ageM };
   log(s, "ทีม", `คุณเข้าร่วมทีมของ ${leader.n}`, "imp");
 }
@@ -101,7 +102,7 @@ hooks.act.partyLeave = (s) => leaveParty(s, "leave");
 monthly.push((s) => {
   partyMonth(s);
   const free = canHunt(s) && stageOf(s) !== "old" && !s.team.some((m) => m.alive);
-  if (s.ev || s.party || !free || s.ageM % 12 !== 6) return;
+  if (s.ev || s.party || s.guild || !free || s.ageM % 12 !== 6) return;
   const R = stream(s, "party");
   if (!ch(R, 0.35)) return;
   const rank = Math.min(6, s.hunter.rank + ri(R, 1, 2));

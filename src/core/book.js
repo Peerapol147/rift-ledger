@@ -17,6 +17,7 @@ export function lifeRecord(s) {
   if (s.dead?.cause === "อายุขัย" && ageY(s) >= 80) out.push(["death", "old80"]);
   if (businesses(s).length) out.push(["flag", "business"]);
   for (const f of ["gotToken", "legendCraft", "ownForge"]) if (s.flags[f]) out.push(["flag", f]);
+  if (s.guild?.role === "master") out.push(["flag", "guildMaster"]);
   return out;
 }
 

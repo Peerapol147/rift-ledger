@@ -3,13 +3,19 @@ import { addLedger } from "./money.js";
 import { books, onNewLife } from "./registry.js";
 import { bagCap } from "./items.js";
 
-export const STORES = { home: { n: "บ้าน", cap: 30 }, vault: { n: "ตู้นิรภัยธนาคาร", cap: 40, rent: 150 } };
+export const STORES = { home: { n: "บ้าน", cap: 30 }, vault: { n: "ตู้นิรภัยธนาคาร", cap: 40, rent: 150 },
+  guild: { n: "ตู้กิลด์", cap: 20 } };
 export const SHIP_FEE = 40;
 
-onNewLife.push((s) => { s.store = { home: [], vault: [], vaultCountry: null }; });
+onNewLife.push((s) => { s.store = { home: [], vault: [], vaultCountry: null, guild: [] }; });
 // old saves have no store yet
-export const storeOf = (s) => (s.store ??= { home: [], vault: [], vaultCountry: null });
-export const storeOpen = (s, where) => where === "home" || (storeOf(s).vaultCountry ?? s.country) === s.country;
+export function storeOf(s) {
+  const st = (s.store ??= { home: [], vault: [], vaultCountry: null });
+  st.guild ??= []; // stores from before guilds
+  return st;
+}
+export const storeOpen = (s, where) => where === "home" || (where === "guild" ? !!s.guild
+  : (storeOf(s).vaultCountry ?? s.country) === s.country);
 
 export function stash(s, uid, where) {
   const st = storeOf(s), list = st[where], it = s.items.find((i) => i.uid === uid);

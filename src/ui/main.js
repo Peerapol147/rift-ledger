@@ -64,6 +64,7 @@ function legacyRows() {
   const L = C.legacyOf(s);
   return `<div class="kv"><span>มรดกทั้งหมด</span><b>₿${L.assets.toLocaleString("en-US")}</b></div>
     ${L.kids ? `<div class="kv"><span>ลูก</span><b>${L.kids} คน</b></div>` : ""}
+    ${L.guild ? `<div class="kv"><span>กิลด์ที่ก่อตั้ง</span><b>${esc(L.guild)}</b></div>` : ""}
     ${L.enemies.length ? `<div class="kv"><span>ศัตรูที่ทิ้งไว้</span><b>${esc(L.enemies.join(", "))}</b></div>` : ""}`;
 }
 
@@ -223,6 +224,10 @@ function act(a, el) {
     slot: () => toggleSlot(s, v),
     equip: () => C.equip(s, v), lock: () => { const it = s.items.find((i) => i.uid === v); C.lockItem(s, v, !it.lock); },
     sell: () => C.sellItem(s, v), use: () => C.useItem(s, v),
+    guildLeave: () => { if (busy()) return; if (confirm("ออกจากกิลด์จริงไหม? ของในตู้กิลด์จะถูกขนกลับบ้าน")) C.leaveGuild(s); },
+    guildFound: () => { if (busy()) return; if (confirm("ตั้งกิลด์ของตัวเองจริงไหม?")) banner(C.foundGuild(s) ? "ตั้งกิลด์แล้ว" : "ยังตั้งกิลด์ไม่ได้"); },
+    stashGuild: () => busy() || C.stash(s, $("[data-c=vaultPick]")?.value, "guild") || banner("เก็บไม่ได้"),
+    takeGuild: () => busy() || C.take(s, v, "guild") || banner("กระเป๋าเต็ม"),
     forge: () => { if (busy()) return; const r = C.forge(s, v); banner(r === "ok" ? "ตีบวกสำเร็จ" : r === "fail" ? "ตีบวกไม่สำเร็จ" : "ตีบวกไม่ได้"); },
     stashHome: () => busy() || C.stash(s, v, "home") || banner("เก็บไม่ได้"), stashVault: () => busy() || C.stash(s, $("[data-c=vaultPick]")?.value, "vault") || banner("เก็บไม่ได้"),
     takeHome: () => busy() || C.take(s, v, "home") || banner("กระเป๋าเต็ม"), takeVault: () => busy() || C.take(s, v, "vault") || banner("หยิบไม่ได้"),
