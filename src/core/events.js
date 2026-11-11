@@ -24,6 +24,7 @@ export function val(s, key) {
   if (key === "age") return ageY(s);
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
+  if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   const [kind, id] = key.split(":");
   if (kind === "skill") return s.hunter?.skills.includes(id) ? 1 : 0;
   if (kind === "job") return s.job?.id === id ? 1 : 0;
@@ -122,6 +123,7 @@ export function applyOutcome(s, out, label = "เหตุการณ์", leth
   if (out.fame) s.fame = Math.max(0, s.fame + out.fame);
   if (out.jobXp && s.job) s.job.xp += out.jobXp;
   if (out.ally) hooks.ally?.(s, out.ally);
+  hooks.facOutcome?.(s, out);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
   for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;
