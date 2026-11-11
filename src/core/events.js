@@ -1,0 +1,105 @@
+// Events: who sees them, how options look (known locks vs hidden), and what choosing does.
+import { ch } from "./rng.js";
+import { stream, ageY, log } from "./state.js";
+import { addLedger } from "./money.js";
+import { STATS } from "../data/stats.js";
+import { ALL_EVENTS } from "../data/events/index.js";
+
+export const EVENT_INDEX = new Map(ALL_EVENTS.map((e) => [e.id, e]));
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const KNOWN_PREFIX = ["skill:", "job:", "cls:", "role:"];
+const KNOWN_PLAIN = new Set([...Object.keys(STATS), "gold", "hp", "mind"]);
+
+// Lookups other modules register (class roles, skill names) so events.js has no import cycle.
+export const resolvers = { role: () => null, skillName: (id) => id, jobName: (id) => id, clsName: (id) => id };
+
+export const isKnown = (key) => KNOWN_PLAIN.has(key) || KNOWN_PREFIX.some((p) => key.startsWith(p));
+
+export function val(s, key) {
+  if (key in STATS) return s.st[key];
+  if (key === "gold" || key === "hp" || key === "mind") return s[key];
+  if (key === "age") return ageY(s);
+  const [kind, id] = key.split(":");
+  if (kind === "skill") return s.hunter?.skills.includes(id) ? 1 : 0;
+  if (kind === "job") return s.job?.id === id ? 1 : 0;
+  if (kind === "cls") return s.hunter?.cls === id ? 1 : 0;
+  if (kind === "role") return resolvers.role(s) === id ? 1 : 0;
+  return s.c[key] ?? (s.flags[key] ? 1 : 0);
+}
+
+function needLabel(key, min) {
+  if (key in STATS) return `${STATS[key]} ${min}`;
+  if (key === "gold") return `เงิน ₿${min}`;
+  if (key === "hp") return `สุขภาพ ${min}`;
+  if (key === "mind") return `สุขภาพจิต ${min}`;
+  const [kind, id] = key.split(":");
+  if (kind === "skill") return `สกิล [${resolvers.skillName(id)}]`;
+  if (kind === "job") return `อาชีพ [${resolvers.jobName(id)}]`;
+  if (kind === "cls") return `คลาส [${resolvers.clsName(id)}]`;
+  return `บทบาท [${id}]`;
+}
+
+export function optionView(s, opt) {
+  const need = Object.entries(opt.need ?? {});
+  const unmet = need.filter(([k, min]) => val(s, k) < min);
+  const view = { label: opt.l, desc: opt.d ?? "", odds: null, locked: false, lockText: null, visible: true };
+  if (unmet.some(([k]) => !isKnown(k))) return { ...view, visible: false };
+  if (unmet.length) {
+    const [k, min] = unmet[0];
+    view.locked = true;
+    view.lockText = `ต้องการ ${needLabel(k, min)}` + (k in STATS ? ` · คุณมี ${Math.floor(val(s, k))}` : "");
+  }
+  if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0)) * 4), 5, 95);
+  return view;
+}
+
+export function eligible(s, ev) {
+  const a = ageY(s);
+  if (ev.age && (a < ev.age[0] || a > ev.age[1])) return false;
+  if (ev.country && ev.country !== s.country) return false;
+  if (ev.who && !ev.who.some((id) => s.job?.id === id || s.hunter?.cls === id)) return false;
+  if (ev.hunter === true && !s.hunter) return false;
+  if (ev.hunter === false && s.hunter) return false;
+  if (ev.once && s.c["ev:" + ev.id]) return false;
+  for (const [k, min] of Object.entries(ev.if ?? {})) if (val(s, k) < min) return false;
+  for (const [k, max] of Object.entries(ev.max ?? {})) if (val(s, k) > max) return false;
+  return true;
+}
+
+export const fill = (s, text) => (text ?? "").replaceAll("{name}", s.name);
+
+export function openEvent(s, ev) {
+  s.ev = { id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), important: !!ev.important, opts: ev.o };
+}
+
+export function choose(s, i) {
+  const ev = s.ev;
+  const opt = ev?.opts[i];
+  if (!opt) return;
+  const view = optionView(s, opt);
+  if (!view.visible || view.locked) return;
+  const ok = view.odds == null || ch(stream(s, "ev"), view.odds / 100);
+  const out = ok ? opt.y : opt.n ?? {};
+  s.ev = null;
+  s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
+  const tail = out.m ? ` ${fill(s, out.m)}` : "";
+  log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
+  applyOutcome(s, out, opt.l);
+}
+
+export const hooks = { die: null, injure: null, changeMind: null };
+
+export function applyOutcome(s, out, label = "เหตุการณ์") {
+  if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
+  for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
+  for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;
+  Object.assign(s.flags, out.flags ?? {});
+  if (out.mind) hooks.changeMind ? hooks.changeMind(s, out.mind) : (s.mind = clamp(s.mind + out.mind, 0, 100));
+  if (out.injury) hooks.injure?.(s, out.injury[0], out.injury[1] ?? null);
+  if (out.next) s.sched.push({ id: out.next[0], atM: s.ageM + out.next[1] });
+  if (out.hp) {
+    s.hp = Math.min(100, s.hp + out.hp);
+    if (s.hp <= 0) hooks.die?.(s, out.cause ?? "บาดเจ็บสาหัส");
+  }
+}
