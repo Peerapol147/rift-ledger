@@ -1,0 +1,73 @@
+// Gates and towers turned into operations (OpDef) for core/ops.js. Spec §3.4–3.5.
+import { pk, ri, ch } from "./rng.js";
+import { stream, ageY } from "./state.js";
+import { openEvent, EVENT_INDEX } from "./events.js";
+import { monthly } from "./clock.js";
+import { cityOf } from "../data/world.js";
+import { GATES } from "../data/gates.js";
+import { TOWERS, TOWER_DECISIONS } from "../data/towers.js";
+import { KIND_POWER, MONSTERS } from "../data/monsters.js";
+
+const GATE_LV = [6, 14, 24, 34, 46, 60, 78, 100];
+
+export function foe(name, lv, el, boss = false) {
+  const p = KIND_POWER[boss ? "boss" : MONSTERS[name]?.kind ?? "beast"];
+  const r = (x) => Math.round(x * p);
+  return { n: name, lv, el, boss, hp: r(30 + lv * 12), atk: r(4 + lv * 1.6), def: r(lv * 0.6) };
+}
+
+export function genFloor(tower, floor) {
+  const b = tower.bands.find((x) => floor >= x.from && floor <= x.to);
+  const src = b ?? tower.chapters.find((x) => floor >= x.from && floor <= x.to);
+  const lv = Math.round(4 + floor * 1.5);
+  return { floor, lv, t: src.t, mon: src.mon, bossName: src.boss, boss: floor % 5 === 0, filler: !b };
+}
+
+export function gateOffers(s) {
+  const R = stream(s, "gate");
+  const rank = s.hunter?.rank ?? 0;
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    const r = Math.max(0, Math.min(6, rank + ri(R, -1, 1)));
+    const theme = pk(R, GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1])) ?? GATES[0];
+    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el });
+  }
+  return out;
+}
+
+export const gatePay = (rank) => Math.round(150 * Math.pow(rank + 1, 1.7));
+
+export function gateOp(s, g) {
+  const theme = GATES.find((x) => x.id === g.id);
+  const R = stream(s, "gate");
+  const foes = [0, 1].map(() => foe(pk(R, theme.mon), g.lv, g.el));
+  const isBoss = ch(R, 0.25);
+  if (isBoss) foes.push(foe(theme.boss, g.lv + 3, g.el, true));
+  return {
+    id: "gate:" + g.id, kind: "gate", t: `${theme.n} (เกตแรงก์ ${"FEDCBAS"[g.rank]})`, rank: g.rank,
+    foes, decisions: theme.decisions, boss: isBoss, rewards: { gold: gatePay(g.rank), items: [] },
+  };
+}
+
+export function towerOp(s, towerId, floor) {
+  const T = TOWERS[towerId];
+  const f = genFloor(T, floor);
+  const R = stream(s, "tower");
+  const foes = [foe(pk(R, f.mon), f.lv, T.el), foe(pk(R, f.mon), f.lv, T.el)];
+  if (f.boss) foes.push(foe(f.bossName, f.lv + 4, T.el, true));
+  return {
+    id: `tower:${towerId}:${floor}`, kind: "tower", t: `${T.n} ชั้น ${floor} · ${f.t}`, tower: towerId, floor,
+    foes, decisions: TOWER_DECISIONS, boss: f.boss, rewards: { gold: 40 * floor, items: [] },
+  };
+}
+
+// Monthly: a nearby gate may break. Civilians face the street event, hunters get the call.
+export function breakCheck(s) {
+  if (ageY(s) < 18) return;
+  const R = stream(s, "break");
+  if (!ch(R, cityOf(s.city).gateRate * 0.08)) return;
+  const ev = EVENT_INDEX.get(s.hunter ? "hunterBreakCall" : "adultBreakNear");
+  if (ev) openEvent(s, ev);
+}
+
+monthly.push(breakCheck);

@@ -6,6 +6,13 @@ export const stream = (s, name) => (s.r[name] ??= mk(s.seed, name));
 
 export const ageY = (s) => Math.floor(s.ageM / 12);
 
+// Calendar position: years since Rift Day and month of year (1–12).
+export const yearsAfterRift = (s) => WORLD.BIRTH_YEAR - WORLD.RIFT_YEAR + Math.floor(((s.mon0 ?? 0) + s.ageM) / 12);
+export const monthOfYear = (s) => (((s.mon0 ?? 0) + s.ageM) % 12) + 1;
+
+// Other modules add setup steps for a new life here (world roster, etc.).
+export const onNewLife = [];
+
 export function stageOf(s) {
   const a = ageY(s);
   if (a < 13) return "kid";
@@ -67,5 +74,6 @@ export function newLife(seed) {
     dead: null,
   });
   log(s, "ชะตา", `${s.name} ลืมตาดูโลกที่${COUNTRIES[country].n} · ${family.n}: ${family.d}`, "imp");
+  for (const f of onNewLife) f(s);
   return s;
 }

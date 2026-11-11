@@ -12,7 +12,7 @@ import { monsterRaster } from "./monster-art.js";
 import { createFrame, clearFrame, createFx, composite } from "../../pixelfx-main/src/core/index.js";
 import { REG } from "./fxreg.gen.js";
 import { PRESET, AMBIENT, STYLE, LOOK } from "./presets.js";
-import { ELEMENTS } from "./data.js";
+import { ELEMENTS } from "./data/elements.js";
 
 const W = 256, H = 144, GY = 128, PX = 78, EX = 178;
 const rgb = (h) => { const n = parseInt(h.slice(1), 16); return (255 << 24 | (n & 255) << 16 | (n >> 8 & 255) << 8 | n >> 16) >>> 0; };
