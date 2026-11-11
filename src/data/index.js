@@ -4,3 +4,4 @@ export * from "./families.js";
 export * from "./classes.js";
 export * from "./skills.js";
 export * from "./milestones.js";
+export * from "./careers.js";
