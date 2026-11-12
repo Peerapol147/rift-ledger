@@ -127,7 +127,7 @@
   ],
   "fly": true,
   "now": "boss/voiceless-choir",
-  "status": "open",
+  "status": "done",
   "file": "boss/evening-anchor"
  },
  {
@@ -141,7 +141,7 @@
   ],
   "fly": false,
   "now": "boss/death-manager",
-  "status": "open",
+  "status": "done",
   "file": "boss/last-mayor"
  },
  {
@@ -155,7 +155,7 @@
   ],
   "fly": true,
   "now": "boss/stalled-elevator-god",
-  "status": "open",
+  "status": "done",
   "file": "boss/dry-lighthouse-keeper"
  },
  {
@@ -169,7 +169,7 @@
   ],
   "fly": false,
   "now": "boss/water-shadow-lord",
-  "status": "open",
+  "status": "done",
   "file": "boss/last-tide-queen"
  },
  {
@@ -183,7 +183,7 @@
   ],
   "fly": false,
   "now": "boss/scaffold-giant",
-  "status": "open",
+  "status": "done",
   "file": "boss/salt-general"
  }
 ]
