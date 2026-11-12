@@ -83,6 +83,7 @@ function randomEvent(s, step) {
 }
 
 // How hard the life's plans pull an event: the main plan's kinds ×2.5, the secondary's ×1.5 (the main wins).
+const GRAB_PLAN = { 1: "sport", 2: "study", 3: "chores" };
 const MAIN_PULL = 2.5, SECOND_PULL = 1.5;
 const planOf = (s, id) => (id ? FOCUS[stageOf(s)][id] : null);
 export function planWeight(s, ev) {
@@ -106,6 +107,8 @@ export function tick(s) {
   const step = stageOf(s) === "kid" ? 3 : 1;
   const yearBefore = ageY(s);
   s.ageM += step;
+  // at four, the toy grabbed in infancy (quiet.js infToy) sets the first plan; the player can change it any time
+  if (yearBefore < 4 && ageY(s) >= 4 && GRAB_PLAN[s.c.grab]) s.focus = GRAB_PLAN[s.c.grab];
   applyFocus(s, step);
   bodyMonth(s, step);
   // The year rolls over first: a system that opens an event this month must not skip the old-age check.

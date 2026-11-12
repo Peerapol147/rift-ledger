@@ -80,3 +80,27 @@ test("a milestone or calendar event is not credited to a plan", () => {
   C.openEvent(s, { id: "y", tag: "ชีวิต", t: "t", o: [{ l: "a", y: { st: { int: 0.1 } } }] });
   assert.equal(s.ev.fromPlan, undefined);
 });
+
+// Task 4: the first-birthday grab sets the plan at four.
+const toFour = (s) => { s.ageM = 45; s.ev = null; for (let i = 0; i < 6 && C.ageY(s) < 4; i++) { s.ev = null; C.advance(s); } return s; };
+
+test("the baby who grabbed the book starts school age set to study", () => {
+  const s = C.newLife("grab2"); s.c.grab = 2;
+  assert.equal(toFour(s).focus, "study");
+});
+
+test("with no grab the child starts on the first plan", () => {
+  assert.equal(toFour(C.newLife("grab0")).focus, "play");
+});
+
+test("a plan the player picks later is kept", () => {
+  const s = C.newLife("grab3"); s.c.grab = 3; toFour(s);
+  assert.equal(s.focus, "chores");
+  C.setFocus(s, "sport"); s.ageM = 5 * 12; s.ev = null; C.advance(s);
+  assert.equal(s.focus, "sport");
+});
+
+test("each toy in the grab sets its own number", () => {
+  const toy = (i) => C.EVENT_INDEX.get("infToy").o[i].y.c.grab;
+  assert.deepEqual([toy(0), toy(1), toy(2)], [1, 2, 3]);
+});
