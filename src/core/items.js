@@ -131,16 +131,36 @@ gearHooks.push((s) => {
   return out;
 });
 
+// Loot into a full bag: the cheapest loose thing is sold to make room, or the new find is sold on the spot.
+function take(s, id, from) {
+  if (s.items.length < bagCap()) return giveItem(s, id, from);
+  const worn = new Set(Object.values(s.equip));
+  // only plain loot is ever sold for room: never a relic (the Phoenix Token), a skill book, or anything locked or worn
+  const sellable = (i) => !i.lock && !worn.has(i.uid) && !["relic", "book"].includes(ITEMS[i.id].kind);
+  const cheap = s.items.filter(sellable).sort((a, b) => ITEMS[a.id].price - ITEMS[b.id].price)[0];
+  if (cheap && ITEMS[cheap.id].price < ITEMS[id].price) {
+    log(s, "ของ", `กระเป๋าเต็ม ขาย ${ITEMS[cheap.id].n} เพื่อเก็บ ${ITEMS[id].n}`);
+    sellItem(s, cheap.uid);
+    return giveItem(s, id, from);
+  }
+  if (["relic", "book"].includes(ITEMS[id].kind)) { // too precious to sell: it goes home
+    s.c.uid = (s.c.uid ?? 0) + 1;
+    const home = (s.store ??= { home: [], vault: [], vaultCountry: null, guild: [] }).home;
+    home.push({ uid: "i" + s.c.uid, id, from, lock: false, m: s.ageM });
+    return log(s, "ของ", `กระเป๋าเต็ม ส่ง ${ITEMS[id].n} ไปเก็บที่บ้าน`);
+  }
+  log(s, "ของ", `กระเป๋าเต็ม ขาย ${ITEMS[id].n} ที่เพิ่งได้ทิ้งในราคาถูก`);
+  addLedger(s, "ขายของที่ถือไม่ไหว", Math.round(ITEMS[id].price * 0.3)); // sold on the spot, at a dealer's price
+}
+
 afterOpHooks.push((s, o, r) => {
   if (r !== "won" || o.def.kind === "job") return;
   const R = stream(s, "loot");
   const table = lootTable(o.def), gear = table.filter((x) => ITEMS[x.id].slot);
   const rolls = 1 + o.loot;
-  for (let i = 0; i < rolls && s.items.length < bagCap(); i++) {
-    if (ri(R, 0, 1)) giveItem(s, wp(R, table).id, o.def.t);
-  }
+  for (let i = 0; i < rolls; i++) if (ri(R, 0, 1)) take(s, wp(R, table).id, o.def.t);
   // a boss always leaves one piece of gear
-  if (o.def.boss && gear.length && s.items.length < bagCap()) giveItem(s, wp(R, gear).id, o.def.t);
+  if (o.def.boss && gear.length) take(s, wp(R, gear).id, o.def.t);
 });
 
 deathHooks.push((s, cause) => {

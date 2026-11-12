@@ -101,7 +101,10 @@ books.push((s, step = 1) => {
 // Once a year the underground's back door has one good thing at a friend's price.
 monthly.push((s) => {
   if (s.ev || !s.flags.patronUnder || (s.fac?.under ?? 0) < 20 || s.ageM % 12 !== 9) return;
-  const id = pk(stream(s, "under"), RARITY_ITEMS(2)), d = ITEMS[id], price = Math.round(d.price * 0.6);
+  // a civilian is offered what a civilian can use: charms, books and the like, never weapons or armour
+  const pool = RARITY_ITEMS(2).filter((k) => s.hunter || !["weapon", "armor"].includes(ITEMS[k].kind));
+  if (!pool.length) return;
+  const id = pk(stream(s, "under"), pool), d = ITEMS[id], price = Math.round(d.price * 0.6);
   s.underOffer = id;
   openEvent(s, { id: "underShop", tag: "ฝ่ายต่างๆ", t: `ข้อความจากเบอร์แปลก: ปีนี้มี ${d.n} ราคา ₿${price} สนใจไหม`,
     o: [{ l: "ซื้อ", need: { gold: price }, y: { m: "ของถูกส่งมาในกล่องไม่มีชื่อผู้ส่ง", gold: -price,

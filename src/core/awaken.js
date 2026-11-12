@@ -54,9 +54,11 @@ function awaken(s, cause) {
   const cls = rollClass(s, rank);
   const skills = startSkills(cls);
   s.hunter = {
-    rank, rank0: rank, ceil: rollCeil(r, rank), cls, lv: 1, xp: 0,
+    // power comes with the rank: a C awakens as strong as a D at its peak (balance pass: high ranks never caught up)
+    rank, rank0: rank, ceil: rollCeil(r, rank), cls, lv: rank > 0 ? LV_CAP[Math.min(6, rank - 1)] : 1, xp: 0,
     skills, slots: skills.slice(0, slotsFor(rank)), ex: rank === 7, broke: 0,
   };
+  hooks.learn?.(s);
   const rare = CLASSES[cls].rarity >= 2 || rank >= 5;
   const how = {
     screen: "แท่นวัดมานาสว่างขึ้นใต้ฝ่ามือ",

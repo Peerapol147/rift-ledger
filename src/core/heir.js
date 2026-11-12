@@ -13,6 +13,8 @@ import { COUNTRIES } from "../data/world.js";
 import { CALENDAR } from "../data/calendar.js";
 
 export const HEIR_TAX = 0.2;
+// 20% on the first ₿50,000, 60% on the rest: a family keeps a start, not a fortune that compounds every generation
+export const estateAfterTax = (g) => Math.round(Math.min(g, 50000) * (1 - HEIR_TAX) + Math.max(0, g - 50000) * 0.4);
 export const canHeir = (s) => !!s.dead && (s.c.kids ?? 0) > 0;
 // a parent who died old leaves a grandchild
 export const heirWord = (s) => (ageY(s) >= 55 ? "หลาน" : "ลูก");
@@ -39,7 +41,7 @@ export function newHeir(P, seed) {
   s.gen = (P.gen ?? 1) + 1;
   const L = legacyOf(P), rel = heirWord(P);
   s.heir = {
-    of: P.name, rel, gold: Math.round(Math.max(0, P.gold - (P.debt ?? 0)) * (1 - HEIR_TAX)),
+    of: P.name, rel, gold: estateAfterTax(Math.max(0, P.gold - (P.debt ?? 0))),
     guild: L.guild, enemies: L.enemies.slice(0, 3), paid: 0, guildDone: 0, grudgeDone: 0,
   };
   // the parent's things wait in the family home, best first, as many as it holds

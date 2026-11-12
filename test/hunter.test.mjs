@@ -15,7 +15,7 @@ test("xp curve", () => {
 
 test("level caps at rank cap and learns class skills", () => {
   const s = hunter();
-  s.hunter.rank = 0;
+  s.hunter.rank = 0; s.hunter.lv = 1; // rank F starts at level 1
   gainXp(s, 1e7);
   assert.equal(s.hunter.lv, LV_CAP[0]);
   const want = CLASSES[s.hunter.cls].skills.filter(([lv]) => lv <= LV_CAP[0]).map(([, id]) => id);

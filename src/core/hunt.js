@@ -31,15 +31,18 @@ export function gateOffers(s) {
   // Gates the hunter can survive: their rank, but no higher than their level supports yet.
   const byLevel = GATE_LV.findLastIndex((g, r) => r < 7 && g <= lv * 1.3 + 6);
   const rank = Math.min(s.hunter?.rank ?? 0, Math.max(0, byLevel));
+  // a rookie's first three gates never hold a boss (playtest: too many hunters died in their first week)
   for (let i = 0; i < 3; i++) {
     const r = Math.max(0, Math.min(6, rank + ri(R, -1, 1)));
     const theme = pk(R, GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1])) ?? GATES[0];
-    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss: ch(R, 0.12) });
+    const boss = ch(R, 0.12) && (s.c.gateRuns ?? 0) >= 3;
+    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss });
   }
   return out;
 }
 
-export const gatePay = (rank) => Math.round(108 * Math.pow(2.6, rank));
+// rank F and E gates are small jobs (balance: F–E hunters out-earned an ordinary job)
+export const gatePay = (rank) => Math.round(108 * Math.pow(2.6, rank) * (rank <= 1 ? 0.75 : 1));
 
 export function gateOp(s, g) {
   const theme = GATES.find((x) => x.id === g.id);
@@ -53,6 +56,15 @@ export function gateOp(s, g) {
   };
 }
 
+// A floor pays like a gate of the rank its monsters match, plus a fifth for the climb.
+// (a smooth curve: the floor's level placed between gate ranks, so no flat steps or drops)
+export function towerPay(lv) {
+  const i = Math.max(0, Math.min(GATE_LV.length - 2, GATE_LV.findLastIndex((g) => g <= lv)));
+  const rf = i + Math.max(0, Math.min(1, (lv - GATE_LV[i]) / (GATE_LV[i + 1] - GATE_LV[i])));
+  // low floors are small jobs, like F–E gates
+  return Math.round(108 * Math.pow(2.6, rf) * 1.2 * (rf <= 1 ? 0.75 : 1));
+}
+
 export function towerOp(s, towerId, floor) {
   const T = TOWERS[towerId];
   const f = genFloor(T, floor);
@@ -61,7 +73,7 @@ export function towerOp(s, towerId, floor) {
   if (f.boss) foes.push(foe(f.bossName, f.lv + 4, T.el, true));
   return {
     id: `tower:${towerId}:${floor}`, kind: "tower", t: `${T.n} ชั้น ${floor} · ${f.t}`, tower: towerId, floor,
-    foes, decisions: f.decisions ?? TOWER_DECISIONS, boss: f.boss, rewards: { gold: 40 * floor, items: [] },
+    foes, decisions: f.decisions ?? TOWER_DECISIONS, boss: f.boss, rewards: { gold: towerPay(f.lv), items: [] },
   };
 }
 

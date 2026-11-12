@@ -60,10 +60,10 @@ export const teamRoles = (s) => new Set(present(s).map((m) => m.role));
 export function teamPower(s) {
   const p = { atk: 0, def: 0, hp: 0 };
   for (const m of present(s)) {
-    const k = 0.35 * (1 + m.rank * 0.15);
+    const k = 0.5 * (1 + m.rank * 0.15);
     p.atk += (5 + 12 + m.lv * 2.2) * k;
     p.def += (2 + 6 + m.lv * 0.8) * k;
-    p.hp += (80 + 30 + m.lv * 10) * 0.35;
+    p.hp += (80 + 30 + m.lv * 10) * 0.5;
   }
   return p;
 }

@@ -5,7 +5,7 @@ import { esc } from "../dom.js";
 import { INJURY } from "../../data/injuries.js";
 
 export function meTab(s) {
-  const stats = Object.entries(STATS).map(([k, n]) => `<tr><td>${n}</td><td class="n">${s.st[k].toFixed(1)}</td></tr>`).join("");
+  const stats = Object.entries(STATS).map(([k, n]) => `<tr><td>${n}</td><td class="n">${Math.floor(s.st[k])}</td></tr>`).join("");
   const inj = s.injuries.length
     ? s.injuries.map((i) => `<div>${esc(INJURY[i.id] ?? i.id)} <span class="dim">${i.untilM == null ? "ถาวร" : `อีก ${i.untilM - s.ageM} เดือน`}</span></div>`).join("")
     : `<div class="dim">ไม่มี</div>`;
@@ -27,5 +27,5 @@ export function meTab(s) {
     <div class="kv"><span>${s.heir.rel === "หลาน" ? "หลานของ" : "ลูกของ"}</span><b>${esc(s.heir.of)}</b></div>
     ${s.heir.paid ? "" : `<p class="dim">มรดกของครอบครัวรอคุณอยู่จนอายุ 18 ของบางส่วนเก็บไว้ในบ้าน</p>`}` : "";
   return `${fam}<h3>ค่าสถานะ</h3><table>${stats}</table>
-    <h3>ร่างกาย</h3><div class="kv"><span>อายุขัยโดยประมาณ</span><b>${C.lifespan(s)} ปี</b></div><h4>บาดแผล</h4>${inj}${power}`;
+    <h3>ร่างกาย</h3>${C.ageY(s) >= 18 ? `<div class="kv"><span>อายุขัยโดยประมาณ</span><b>${C.lifespan(s)} ปี</b></div>` : ""}<h4>บาดแผล</h4>${inj}${power}`;
 }
