@@ -14,7 +14,8 @@ test("every gold change has a ledger line", () => {
 test("no living cost before 18, cost after", () => {
   const s = newLife("l");
   s.ageM = 10 * 12; living(s); assert.equal(s.gold, 0);
-  s.ageM = 20 * 12; living(s); assert.ok(s.ledger.some((e) => e.label === "ค่าครองชีพ"));
+  s.ageM = 20 * 12; living(s); assert.ok(s.ledger.some((e) => e.label === "ค่าครองชีพ (อยู่บ้านพ่อแม่)"), "at home");
+  s.job = { id: "office", tier: 0, xp: 0 }; living(s); assert.ok(s.ledger.some((e) => e.label === "ค่าครองชีพ"), "own way");
 });
 
 test("family support arrives once at 18", () => {

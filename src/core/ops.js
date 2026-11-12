@@ -170,6 +170,7 @@ function endOp(s) {
     s.lastFight = { foe, rounds: o.beats, win: r === "won" };
   }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
+  if (def.kind === "gate") s.c.gateRuns = (s.c.gateRuns ?? 0) + 1;
   if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") hooks.guildLoss?.(s, def);
   if (r === "lost") {

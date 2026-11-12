@@ -31,10 +31,12 @@ export function gateOffers(s) {
   // Gates the hunter can survive: their rank, but no higher than their level supports yet.
   const byLevel = GATE_LV.findLastIndex((g, r) => r < 7 && g <= lv * 1.3 + 6);
   const rank = Math.min(s.hunter?.rank ?? 0, Math.max(0, byLevel));
+  // a rookie's first three gates never hold a boss (playtest: too many hunters died in their first week)
   for (let i = 0; i < 3; i++) {
     const r = Math.max(0, Math.min(6, rank + ri(R, -1, 1)));
     const theme = pk(R, GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1])) ?? GATES[0];
-    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss: ch(R, 0.12) });
+    const boss = ch(R, 0.12) && (s.c.gateRuns ?? 0) >= 3;
+    out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss });
   }
   return out;
 }

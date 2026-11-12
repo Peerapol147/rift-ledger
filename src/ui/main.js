@@ -307,10 +307,11 @@ document.addEventListener("input", (e) => {
   if (c === "importText") ui.importText = e.target.value;
 });
 document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("#modal").hidden) return act("close");
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
-  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8].find((n) => n > ui.speed) ?? 8;
-  else if (e.key === "-") ui.speed = [8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
+  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8, 16].find((n) => n > ui.speed) ?? 16;
+  else if (e.key === "-") ui.speed = [16, 8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
   else if (e.key === "a" || e.key === "A") ui.policy = POLICY_ORDER[(POLICY_ORDER.indexOf(ui.policy) + 1) % 3];
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);

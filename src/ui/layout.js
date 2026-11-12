@@ -68,7 +68,7 @@ function eventCard(s, waitingAuto) {
       <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}</span><span>${badge(v)}</span></button>${lock}</div>`;
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";
-  const wait = waitingAuto ? `<div class="dim" style="margin-top:6px">ออโต้รอให้คุณเลือกเรื่องนี้เอง</div>` : "";
+  const wait = waitingAuto ? `<div class="waitchip">⏸ เกมหยุดรอคุณเลือก</div>` : "";
   const k = C.eventKind(s);
   const tier = TIER[k.tier] && TIER[k.tier] !== ev.tag ? `<span class="tier ${k.tier}">${TIER[k.tier]}</span>` : "";
   const head = `<div class="evhead">${tier}${tag(ev.tag)}${k.part ? `<small class="dim">${k.part}</small>` : ""}</div>`;
@@ -88,7 +88,7 @@ function opStatus(s) {
 }
 
 export function controls(ui) {
-  const sp = [1, 2, 4, 8].map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
+  const sp = [1, 2, 4, 8, 16].map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
   const pol = Object.entries(POLICIES).map(([k, n]) => `<option value="${k}" ${ui.policy === k ? "selected" : ""}>${n}</option>`).join("");
   return `${btn("pause", ui.paused ? "เล่นต่อ" : "หยุด")}${sp}
     <select data-c="policy" aria-label="โหมดออโต้">${pol}</select><span class="sp"></span>${btn("settings", "ตั้งค่า")}`;

@@ -5,7 +5,7 @@
 <title>บันทึกหลังรอยแยก</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0d13;--pan:#121823;--pan2:#1a2230;--line:#2a3548;--ink:#e3e9f2;--dim:#8d9bb0;--rift:#c86bff;--amb:#ffb648;
+:root{--bg:#0a0d13;--pan:#121823;--pan2:#1a2230;--line:#2a3548;--ink:#e3e9f2;--dim:#a3afc2;--rift:#c86bff;--amb:#ffb648;
 --good:#62e0a1;--bad:#ff6f6f;--leg:#ffd76a;--r0:#b9c6d6;--r1:#62e0a1;--r2:#7fb8ff;--r3:#ffd76a;--r4:#c86bff;--fs:15px;
 --t-life:#7fb8ff;--t-work:#ffb648;--t-gate:#c86bff;--t-world:#ff8a8a;--t-team:#62e0a1}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%}
@@ -47,6 +47,9 @@ input,select{background:#0c1018;border:1px solid var(--line);padding:6px 8px;bor
 .tier{font-size:.78em;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
 .tier.uncommon{color:#62e0a1}.tier.story{color:var(--amb)}.tier.rare{color:#c3a6ff}.tier.world{color:var(--bad)}
 .evstats{font-size:.8em;color:var(--dim);margin-top:6px}.evstats b{color:#fff}
+.waitchip{display:inline-block;margin-top:8px;padding:2px 10px;border:1px solid var(--amb);color:var(--amb);font-size:.85em;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}@media (prefers-reduced-motion:reduce){.waitchip{animation:none}}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--amb);outline-offset:2px}
 .opt.fate{opacity:.8;font-size:.9em}
 .fblink{color:var(--rift);text-decoration:none;font-size:.92em}.fblink:hover{text-decoration:underline}
 .howto{margin-top:12px;font-size:.92em}.howto summary{cursor:pointer;color:var(--amb)}.howto p{margin-top:6px;color:var(--dim)}.howto b{color:#fff}
@@ -75,7 +78,7 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
 #start,#end{position:fixed;inset:0;display:grid;place-items:center;padding:16px;overflow:auto;background:radial-gradient(ellipse at 50% 0,#2b1245 0,#0a0d13 62%);z-index:5}
 #end{background:#0a0d13f0}.st-card{width:min(560px,100%);background:var(--pan);border:1px solid var(--line);border-top:3px solid var(--rift);padding:24px}
 .st-card h1{font-size:2em;line-height:1.2;margin:4px 0 8px}.lede{color:var(--dim)}.st-card .row{margin-top:12px}
-#modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:6;padding:16px}#modal>div{width:min(520px,100%);max-height:90vh;overflow:auto}
+#modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:20;padding:16px}#modal>div{width:min(520px,100%);max-height:90vh;overflow:auto}
 #banner{position:fixed;left:50%;top:12px;transform:translateX(-50%);background:var(--pan2);border:1px solid var(--rift);padding:8px 14px;z-index:7;max-width:calc(100% - 32px)}
 .float{position:absolute;transform:translateX(-50%);font-weight:700;font-size:20px;text-shadow:0 2px 0 #000;animation:up .95s ease-out forwards}
 .float.crit{color:var(--leg)}.float.bad{color:var(--bad)}.float.good{color:var(--good)}.float.sk{font-size:14px;color:#fff;top:12%!important}
@@ -83,9 +86,9 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
 .foeplate{position:absolute;right:6px;top:6px;background:#000a;padding:3px 8px;font-size:12px;min-width:120px}.foeplate.boss{border:1px solid var(--bad)}
 .foeplate .fbar{height:4px;background:#333}.foeplate .fbar i{display:block;height:100%;background:var(--bad)}
 @media (max-width:1000px){#top{grid-template-columns:1fr}}
-@media (max-width:820px){#game{grid-template-columns:1fr;padding:8px 16px 70px}#card{position:static;max-height:none;order:2}
+@media (max-width:820px){#game{grid-template-columns:1fr;padding:8px 16px 70px}#card{position:static;max-height:none;order:0}
 #center{order:1}#tabs{position:fixed;left:0;right:0;bottom:0;background:var(--bg);padding:6px;z-index:4;border-top:1px solid var(--line)}
-#tabs button{min-width:64px;font-size:.8em;padding:4px}#view{max-height:none}#bgm{bottom:64px!important}}
+#tabs button{min-width:64px;font-size:.8em;padding:4px}#view{max-height:none}}
 </style>
 </head>
 <body>
@@ -106,7 +109,7 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
   var a=new Audio("audio/shadows-resolve.mp3");a.loop=true;a.volume=0.4;
   var on=true;try{on=localStorage.getItem("bgm")!=="off"}catch(e){}
   var b=document.createElement("button");b.id="bgm";
-  b.style.cssText="position:fixed;right:8px;top:8px;z-index:9999;padding:3px 8px;font-size:13px;border-radius:14px;border:1px solid #555;background:#000a;color:#fff;cursor:pointer;opacity:.75";b.title="เพลง";
+  b.style.cssText="position:fixed;left:8px;top:8px;z-index:9999;padding:3px 8px;font-size:13px;border-radius:14px;border:1px solid #555;background:#000a;color:#fff;cursor:pointer;opacity:.75";b.title="เพลง";
   function ui(){b.textContent=on&&!a.paused?"🔊":"🔇"}
   function play(){if(on)a.play().then(ui).catch(function(){})}
   b.onclick=function(e){e.stopPropagation();on=!on;try{localStorage.setItem("bgm",on?"on":"off")}catch(x){}
