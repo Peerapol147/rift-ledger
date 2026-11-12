@@ -34,7 +34,7 @@ export function log(s, tag, text, tone = "") {
 
 export function newLife(seed) {
   seed = String(seed);
-  const s = { v: 2, sv: 2, seed, r: {} }; // sv: schema version, see SAVE_SV in save.js
+  const s = { v: 2, sv: 3, seed, r: {} }; // sv: schema version, see SAVE_SV in save.js
   const R = stream(s, "birth");
   const country = wp(R, Object.entries(COUNTRIES).map(([id, c]) => ({ id, w: c.w }))).id;
   const family = wp(R, FAMILIES.filter((f) => f.country === country));

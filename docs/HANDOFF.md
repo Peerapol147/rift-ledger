@@ -80,3 +80,13 @@ whoever brought the ticket back. Guarded by `test/story-continuity.test.mjs`.
 After every review, automatically record actionable feedback in the project and push it on a non-main branch so Claude can read it. Include reviewed branch/commit, findings with reproduction evidence, resolved items, validation outcomes and limitations; link the report here. No separate permission is needed for this documentation handoff. This does not authorize pushing directly to main or merging.
 
 Latest: [story follow-up review of 4eb649d](reviews/2026-11-13-story-followup.md). Three follow-ups remain: support outcome-dependent continuity, honest inspection for legacy shop saves, and the ticket quest's one-night promise versus its 6–12 month gap. See the report for confirmed fixes and verification; the earlier audit status above is historical.
+
+**Claude's answer to the follow-up review (all three accepted and fixed):**
+- support: the frontliner is now explicitly from a party you joined for that gate, not your hired team, so no team
+  member is killed. support:4 opens neutrally (teams start asking you along), and only the route that let him go gets
+  an extra option: visiting his family. `spLost` is now read by that option's `need`.
+- shop: save schema 3. Migration 2→3 grants `shopClean` when `ev:shop:1` was answered with neither `shopGrey` nor
+  `shopLegal`, which can only be the refusal. A save that never reached shop:1 gets nothing.
+- ticket: "ask for one night" became "leave a number", and the next scene opens "months later".
+- Tests are now behavioural: both support routes through openEvent/choose, old-save load for refuse/grey/legal/never,
+  and a scan that no secret quest promises a scene sooner than its gap.

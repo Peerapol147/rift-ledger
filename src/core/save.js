@@ -66,8 +66,9 @@ export function deserialize(str) {
 }
 
 // ---- Schema versions (save-systems skill: stamp a version, migrate step by step on load).
-// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: today.
-export const SAVE_SV = 2;
+// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list).
+// sv 2: before shopClean (a shop that refused the uncertified stones). sv 3: today.
+export const SAVE_SV = 3;
 const FAC_IDS = ["assoc", "state", "church", "research", "under"];
 const MIGRATIONS = {
   1: (s) => {
@@ -76,6 +77,11 @@ const MIGRATIONS = {
     s.store.guild ??= [];
     s.enemies ??= [];
     s.secrets ??= [];
+  },
+  // shop:1 was answered (ev:shop:1) with neither the grey nor the legal purchase: that is the refusal
+  2: (s) => {
+    const c = s.c ?? {};
+    if (c["ev:shop:1"] && !c.shopGrey && !c.shopLegal) c.shopClean ??= 1;
   },
 };
 export function migrate(s) {
