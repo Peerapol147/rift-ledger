@@ -13,7 +13,7 @@ for (const m of MILESTONES) EVENT_INDEX.set(m.id, m);
 import { monthly, books, lastly } from "./registry.js";
 export { monthly, books, lastly };
 const EVENT_CHANCE = 0.22;
-const REPEAT_CAP = 4;
+const REPEAT_CAP = 1;
 const COOLDOWN = 60; // months before the same random event can come back (playtest: 3 years felt repetitive)
 
 export function focusList(s) {
@@ -46,14 +46,19 @@ function dueEvent(s) {
   return MILESTONES.find((m) => ageY(s) >= m.age[0] && !s.c["ev:" + m.id]);
 }
 
+// The random events this life could draw now. Each comes at most REPEAT_CAP times in a life (cap: n on the event
+// overrides) and waits COOLDOWN months before coming back: variety over habit.
+export function randomPool(s) {
+  const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN
+    && (s.c["ev:" + e.id] ?? 0) < (e.cap ?? REPEAT_CAP);
+  return ALL_EVENTS.filter((e) => !e.k && fresh(e) && eligible(s, e));
+}
+
 function randomEvent(s, step) {
   const R = stream(s, "pick");
   // the chance is per month: a 3-month childhood tick rolls for all three (playtest: childhood had 1/3 the events)
   if (!ch(R, 1 - (1 - EVENT_CHANCE) ** step)) return null;
-  // a random event happens at most REPEAT_CAP times in a life (cap: n on the event overrides): variety over habit
-  const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN
-    && (s.c["ev:" + e.id] ?? 0) < (e.cap ?? REPEAT_CAP);
-  const pool = ALL_EVENTS.filter((e) => !e.k && fresh(e) && eligible(s, e));
+  const pool = randomPool(s);
   if (!pool.length) return null;
   return wp(R, pool, (e) => (e.w ?? 1) / (1 + (s.c["ev:" + e.id] ?? 0) * 2));
 }
