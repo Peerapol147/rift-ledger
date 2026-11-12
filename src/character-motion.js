@@ -1,5 +1,4 @@
 import {lifeStage} from './hero-art.js';
-import {youngMotion} from './young-motion.js';
 // Public identity only. Each tuple is a readable gesture, timing and small pixel amplitude.
 const p=(label,kind,period,amount=1)=>Object.freeze({label,kind,period,amount});
 export const CLASS_MOTION={
@@ -30,27 +29,4 @@ export function motionProfile(ageM=0,classId=null,career=null){
  const life=lifeStage(Math.max(0,Number(ageM)||0)/12);
  if(ageM<36)return AGES[life];
  return CLASS_MOTION[classId]||CAREER_MOTION[career]||AGES[life];
-}
-const neutral=()=>({x:0,lift:0,body:0,head:0,left:0,right:0,crouch:0});
-export function motionPose(profile,time,calm=false,busy=false){
- const out=neutral();if(calm||busy)return out;
- const {kind,period,amount:a}=profile, phase=time*2*Math.PI/period;
- const wave=Math.sin(phase), beat=Math.max(0,Math.sin(phase)), q=x=>Math.round(x);
- if(kind==='infant'||kind==='toddler')return {...out,...youngMotion(kind,time)};
- out.body=q(wave*.65);out.head=q(Math.sin(phase*.5)*.7);
- switch(kind){
- case 'guard':out.left=q(beat*a);out.right=-q(beat);break;
- case 'brace':out.body=q(beat*a);out.crouch=q(beat);out.left=-q(beat*a);break;
- case 'blade':out.right=q(wave*a);out.body=-q(wave);break;
- case 'aim':out.right=-q(beat*a);out.left=q(beat*a);out.head=q(beat);break;
- case 'cast':case 'bless':out.left=-q(beat*a);out.right=-q(beat*a);break;
- case 'inspect':out.head=q(beat*a);out.crouch=q(beat);out.right=-q(beat);break;
- case 'tap':out.right=q(Math.sin(phase*2)*a);break;
- case 'trace':out.right=q(wave*a);out.left=q(Math.cos(phase)*a);break;
- case 'beckon':out.left=q(Math.sin(phase*2)*a);out.head=-q(beat);break;
- case 'command':out.right=-q(beat*a);out.body=q(beat);break;
- case 'curious':out.head=q(wave*a);out.left=q(Math.sin(phase*2));break;
- case 'lean':out.body=q(beat);out.head=q(beat);break;
- }
- return out;
 }

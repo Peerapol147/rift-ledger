@@ -1,8 +1,9 @@
-import { motionProfile, motionPose } from "./character-motion.js";
+import {characterKey} from './character-identity.js';
+import {characterFrame,loadCharacter} from './character-frames.js';
+import { motionProfile } from "./character-motion.js";
 import { professionArt } from "./profession-art.js";
 import { civilianArt } from "./civilian-art.js";
 import { HERO_RASTER } from "./hero-raster.js";
-import { idleRows, idlePose, civilianIdleRows } from "./hero-idle.js";
 import { SHADE_ART } from "./shade-art.js";
 import * as shadowFlames from "../vendor/pixelfx/src/fx/shadow/shadow-flames.js";
 import { WEATHER, drawWeather } from "./weather-art.js";
@@ -100,12 +101,12 @@ const foeMap = (c) => { if (!FOE_MAP.has(c)) FOE_MAP.set(c, { m: rgb(c), e: rgb(
 let shadowAura = null;
 let heroClass = null, heroH = 56, heroLook = null, pend = [];
 let heroMotion = motionProfile(0);
-const CANE = rgb("#7a5a3a");
 let civilianRaster = civilianArt();
-let professionRaster = null;
-export const setHero = (c, isKid, ageM = 0, career = null, classId = null) => {
+let professionRaster = null, heroIdentity='age-infant-m';
+export const setHero = (c, isKid, ageM = 0, career = null, classId = null, sex = 'm') => {
   hero = c; small = isKid;
   heroMotion = motionProfile(ageM, classId, career);
+  heroIdentity=characterKey(ageM,classId,career,sex);loadCharacter(heroIdentity);
   heroClass = classId; heroH = heightAt(ageM); heroLook = isKid ? null : STYLE[LOOK[classId] || LOOK[career]] || null;
   civilianRaster = civilianArt(ageM, career, classId);
   const art = classId === "shade" && !isKid ? HERO_RASTER.shade : professionArt(career, classId);
@@ -200,31 +201,29 @@ function drawFrame(now) {
   if (dt > 0) { if (seq) stepSeq(dt); for (const a of amb) { a.fx.update(dt); if (!a.mod.meta?.loop && a.fx.t > (a.mod.meta?.duration ?? 2)) a.fx = createFx(a.mod, a.fx.options); else if (a.mod.meta?.loop && a.fx.t > 600) a.fx = createFx(a.mod, a.fx.options); } for (const f of fxs) { f.fx.update(dt); if (f.vx) f.fx.options.x += f.vx * dt; } for (const p of pend) if ((p.t -= dt) <= 0) spawn(p.name, p.x, p.y); pend = pend.filter((p) => p.t > 0); fxs = fxs.filter((f) => f.fx.t < f.dur); heroX *= 0.82; if (foe) { foe.x += (EX - foe.x) * 0.18; foe.kick *= 0.82; foe.flash -= dt; if (foe.die) { foe.die += dt * 2.4; if (foe.die >= 1) foe.a = 0; } if (foe.m) stepMinor(dt); } heroFlash -= dt; }
   // Clouds drift 1-2 px a second, so the outdoor backdrop is repainted twice a second, not every frame.
   if (outdoor) { const step = Math.floor(t * 2); if (step !== drawFrame.sky || sceneKey !== drawFrame.key) { drawFrame.sky = step; drawFrame.key = sceneKey; drawWeather(weatherPixel, W, H, GY, weather, t); } }
-  const idle = motionPose(heroMotion, t, stage.calm, !!seq || !!trip || !!(foe && foe.a > 0));
+  const animated=characterFrame(heroIdentity,t,heroMotion.period,stage.calm,!!seq||!!trip||!!(foe&&foe.a>0));
   const raster = professionRaster || civilianRaster, step = trip && Math.sin(t * 20) > 0 ? 1 : 0;
   backdrop(); shadow(PX + Math.round(heroX), Math.max(5, Math.min(16, Math.round((raster ? raster.width * (raster.drawH || raster.height) / raster.height : heroH * 0.4) * 0.38)))); if (foe && foe.a > 0) shadow(Math.round(foe.x + foe.kick), foe.boss ? 24 : 16);
   if (shadowAura) { shadowAura.update(dt); shadowAura.options.x = PX + Math.round(heroX); }
   clearFrame(frame);
   for (const a of amb) a.fx.draw(frame, "back"); for (const f of fxs) f.fx.draw(frame, "back");
   if (shadowAura) { shadowAura.draw(frame, "back"); }
-  if (raster) {
-    // drawH sets the body to the height of a real person that age; width follows so a toddler is small, not squashed.
-    const full = raster.drawH || raster.height, sx = full / raster.height;
-    const height = full - idle.crouch, width = Math.max(1, Math.round(raster.width * sx));
-    const left = Math.round(PX + heroX - width / 2);
-    for (let y=0;y<height;y++) for(let x=0;x<width;x++) {
-      const color=raster.pixels[Math.min(raster.height-1,Math.floor(y*raster.height/height))*raster.width+Math.min(raster.width-1,Math.floor(x/sx))];
-      if(color) {
-        // Shift small upper-body regions while keeping the lower legs anchored.
-        const upper=y<height*.68, head=y<height*.28;
-        const dx=head?idle.head:upper?idle.body:0;
-        const arm=upper&&!head?(x<width*.32?idle.left:x>width*.65?idle.right:0):0;
-        pix(left+x+dx+idle.x,GY-height+y-step+arm-idle.lift,heroFlash>0?0xffffffff:color);
-      }
+  if (animated) {
+    const scale=heroH/56, size=Math.round(64*scale);
+    const left=Math.round(PX+heroX-32*scale), top=Math.round(GY-60*scale)-step;
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+      const color=animated.pixels[Math.min(63,Math.floor(y/scale))*64+Math.min(63,Math.floor(x/scale))];
+      if(color)pix(left+x,top+y,heroFlash>0?0xffffffff:color);
     }
-    if (raster.cane) for (let y = Math.round(height * 0.45); y < height; y++) pix(left + width + 1, GY - height + y, heroFlash > 0 ? 0xffffffff : CANE);
-  } else if (heroArt.preclass) sprite(heroArt.rows, PX + Math.round(heroX), GY - step, heroArt.colors, 1, heroFlash);
-  else scaledSprite(heroArt.rows, PX + Math.round(heroX) + idle.x, GY - step - idle.lift, heroArt.colors, heroH, heroFlash);
+  } else if (raster) {
+    // Neutral original fallback while the requested PNG decodes. Never distort body regions.
+    const height=raster.drawH||raster.height, scale=height/raster.height;
+    const width=Math.round(raster.width*scale), left=Math.round(PX+heroX-width/2);
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const color=raster.pixels[Math.floor(y/scale)*raster.width+Math.floor(x/scale)];
+      if(color)pix(left+x,GY-height+y-step,heroFlash>0?0xffffffff:color);
+    }
+  } else scaledSprite(heroArt.rows,PX+Math.round(heroX),GY-step,heroArt.colors,heroH,heroFlash);
   if (trip) for (let i = 0; i < 5; i++) { const a = (t * 3 + i * 0.2) % 1; pix(Math.round(PX - 6 - a * 16), GY - 1 - Math.round(a * 4) - (i & 1), a < 0.5 ? 0xffd8d8d8 : 0xff9a9a9a); }
   if (foe && foe.a > 0) {
     const art = monsterRaster(foe.name, foe.boss);

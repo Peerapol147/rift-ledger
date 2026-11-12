@@ -15,7 +15,7 @@ try{
  const time=await p.evaluate(async()=>{
   const {replaceView}=await import('/src/ui/interaction.js');
   const root=document.createElement('div');document.body.append(root);
-  const markup='<div class="profile-art"><img class="profile-sprite" style="animation:character-rest 5s infinite"></div>';
+  const markup='<div class="profile-art"><img class="profile-sprite" style="animation:character-frames 5s steps(4,end) infinite"></div>';
   replaceView(root,markup);await new Promise(r=>setTimeout(r,200));
   const before=root.querySelector('img').getAnimations()[0].currentTime;
   replaceView(root,markup);await new Promise(requestAnimationFrame);

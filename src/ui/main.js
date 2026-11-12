@@ -186,7 +186,7 @@ function render() {
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
-  setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
+  setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null, s.sex);
   if (ui.settings) put("#modal", `<div>${settingsView(ui, slots.list())}</div>`);
   dialog.sync(ui.settings);
 }

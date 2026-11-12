@@ -14,13 +14,15 @@ The owner could not download the raw HTML link. HTTP verification showed GitHub 
 After every new build run `python tools/package-download.py` before distributing the ZIP;
 the packager verifies ZIP integrity and byte equality with the built HTML.
 
-## Owner follow-up: animated characters and audible music — 13 November 2026
+## Character redraw — latest owner direction
 
-Follow [the motion plan](superpowers/plans/2026-11-13-character-motion.md) and latest section in
-[Claude's brief](CLAUDE-NEXT-BRIEF.md). Sparse-haired young art replaces the adult-like infant head.
-Motion motifs cover all ages, 15 classes and 12 careers, using procedural pixel-region movement
-in the stage and gentler whole-image portrait motion. Stage idle yields to combat/travel;
-reduced motion freezes added gestures. Portrait phase survives monthly DOM refreshes.
+The owner rejected the previous procedural region motion and rotating portrait art.
+Those render paths are replaced by 68 generated four-frame strips (272 frames): both sexes,
+eight ages, 15 classes and 11 shared career art identities. Read `art/animation/README.md`
+and the latest Claude brief. Original reference PNGs are preserved. The stage and portrait
+select the same identity from public age/class/career/sex. Stage idle freezes during actions.
+Do not restore the rejected procedural animation from the historical motion plan.
+
 Music button is reachable over the start screen, retries blocked autoplay on one tap and reports
 actual playback state. Stale play rejection cannot overwrite successful playback feedback.
 Validation commands include `tools/young-audio-regression.mjs` and

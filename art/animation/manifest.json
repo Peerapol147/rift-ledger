@@ -1,0 +1,682 @@
+{
+  "age-infant-m": {
+    "file": "art/animation/age-infant-m.png",
+    "source": "art/animation/sources/ages-young-m.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.318182
+  },
+  "age-toddler-m": {
+    "file": "art/animation/age-toddler-m.png",
+    "source": "art/animation/sources/ages-young-m.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.267943
+  },
+  "age-child-m": {
+    "file": "art/animation/age-child-m.png",
+    "source": "art/animation/sources/ages-young-m.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.222222
+  },
+  "age-teen-m": {
+    "file": "art/animation/age-teen-m.png",
+    "source": "art/animation/sources/ages-young-m.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.2
+  },
+  "class-knight-m": {
+    "file": "art/animation/class-knight-m.png",
+    "source": "art/animation/sources/roles-0.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.21374
+  },
+  "class-knight-f": {
+    "file": "art/animation/class-knight-f.png",
+    "source": "art/animation/sources/roles-0.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.208178
+  },
+  "class-shieldm-m": {
+    "file": "art/animation/class-shieldm-m.png",
+    "source": "art/animation/sources/roles-0.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.210526
+  },
+  "class-shieldm-f": {
+    "file": "art/animation/class-shieldm-f.png",
+    "source": "art/animation/sources/roles-0.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.2
+  },
+  "class-duel-m": {
+    "file": "art/animation/class-duel-m.png",
+    "source": "art/animation/sources/roles-1.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.199288
+  },
+  "class-duel-f": {
+    "file": "art/animation/class-duel-f.png",
+    "source": "art/animation/sources/roles-1.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.19788
+  },
+  "class-fmage-m": {
+    "file": "art/animation/class-fmage-m.png",
+    "source": "art/animation/sources/roles-1.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.20438
+  },
+  "class-fmage-f": {
+    "file": "art/animation/class-fmage-f.png",
+    "source": "art/animation/sources/roles-1.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.200717
+  },
+  "class-bowst-m": {
+    "file": "art/animation/class-bowst-m.png",
+    "source": "art/animation/sources/roles-2.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.208955
+  },
+  "class-bowst-f": {
+    "file": "art/animation/class-bowst-f.png",
+    "source": "art/animation/sources/roles-2.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.200717
+  },
+  "class-priest-m": {
+    "file": "art/animation/class-priest-m.png",
+    "source": "art/animation/sources/roles-2.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.199288
+  },
+  "class-priest-f": {
+    "file": "art/animation/class-priest-f.png",
+    "source": "art/animation/sources/roles-2.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.205128
+  },
+  "class-trap-m": {
+    "file": "art/animation/class-trap-m.png",
+    "source": "art/animation/sources/roles-3.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202166
+  },
+  "class-trap-f": {
+    "file": "art/animation/class-trap-f.png",
+    "source": "art/animation/sources/roles-3.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.200717
+  },
+  "class-sharp-m": {
+    "file": "art/animation/class-sharp-m.png",
+    "source": "art/animation/sources/roles-3.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202166
+  },
+  "class-sharp-f": {
+    "file": "art/animation/class-sharp-f.png",
+    "source": "art/animation/sources/roles-3.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.196491
+  },
+  "class-bsmith-m": {
+    "file": "art/animation/class-bsmith-m.png",
+    "source": "art/animation/sources/roles-4.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.19788
+  },
+  "class-bsmith-f": {
+    "file": "art/animation/class-bsmith-f.png",
+    "source": "art/animation/sources/roles-4.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.194444
+  },
+  "class-audit-m": {
+    "file": "art/animation/class-audit-m.png",
+    "source": "art/animation/sources/roles-4.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.197183
+  },
+  "class-audit-f": {
+    "file": "art/animation/class-audit-f.png",
+    "source": "art/animation/sources/roles-4.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.196491
+  },
+  "class-seal-m": {
+    "file": "art/animation/class-seal-m.png",
+    "source": "art/animation/sources/roles-5.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.217054
+  },
+  "class-seal-f": {
+    "file": "art/animation/class-seal-f.png",
+    "source": "art/animation/sources/roles-5.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.207407
+  },
+  "class-mblade-m": {
+    "file": "art/animation/class-mblade-m.png",
+    "source": "art/animation/sources/roles-5.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.206642
+  },
+  "class-mblade-f": {
+    "file": "art/animation/class-mblade-f.png",
+    "source": "art/animation/sources/roles-5.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.205882
+  },
+  "class-necro-m": {
+    "file": "art/animation/class-necro-m.png",
+    "source": "art/animation/sources/roles-6.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.189831
+  },
+  "class-necro-f": {
+    "file": "art/animation/class-necro-f.png",
+    "source": "art/animation/sources/roles-6.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.193772
+  },
+  "class-saint-m": {
+    "file": "art/animation/class-saint-m.png",
+    "source": "art/animation/sources/roles-6.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.193772
+  },
+  "class-saint-f": {
+    "file": "art/animation/class-saint-f.png",
+    "source": "art/animation/sources/roles-6.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.193103
+  },
+  "class-demon-m": {
+    "file": "art/animation/class-demon-m.png",
+    "source": "art/animation/sources/roles-7.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.201439
+  },
+  "class-demon-f": {
+    "file": "art/animation/class-demon-f.png",
+    "source": "art/animation/sources/roles-7.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.199288
+  },
+  "career-clerk-m": {
+    "file": "art/animation/career-clerk-m.png",
+    "source": "art/animation/sources/roles-7.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.197183
+  },
+  "career-clerk-f": {
+    "file": "art/animation/career-clerk-f.png",
+    "source": "art/animation/sources/roles-7.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.2
+  },
+  "career-trader-m": {
+    "file": "art/animation/career-trader-m.png",
+    "source": "art/animation/sources/roles-8.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.196491
+  },
+  "career-trader-f": {
+    "file": "art/animation/career-trader-f.png",
+    "source": "art/animation/sources/roles-8.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.194444
+  },
+  "career-doc-m": {
+    "file": "art/animation/career-doc-m.png",
+    "source": "art/animation/sources/roles-8.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.193103
+  },
+  "career-doc-f": {
+    "file": "art/animation/career-doc-f.png",
+    "source": "art/animation/sources/roles-8.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.19244
+  },
+  "age-infant-f": {
+    "file": "art/animation/age-infant-f.png",
+    "source": "art/animation/sources/ages-13.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.299465
+  },
+  "age-toddler-f": {
+    "file": "art/animation/age-toddler-f.png",
+    "source": "art/animation/sources/ages-13.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.264151
+  },
+  "age-child-f": {
+    "file": "art/animation/age-child-f.png",
+    "source": "art/animation/sources/ages-13.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.226721
+  },
+  "age-teen-f": {
+    "file": "art/animation/age-teen-f.png",
+    "source": "art/animation/sources/ages-13.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202899
+  },
+  "age-adult-m": {
+    "file": "art/animation/age-adult-m.png",
+    "source": "art/animation/sources/ages-14.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202166
+  },
+  "age-middle-m": {
+    "file": "art/animation/age-middle-m.png",
+    "source": "art/animation/sources/ages-14.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202899
+  },
+  "age-elder-m": {
+    "file": "art/animation/age-elder-m.png",
+    "source": "art/animation/sources/ages-14.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.200717
+  },
+  "age-old-m": {
+    "file": "art/animation/age-old-m.png",
+    "source": "art/animation/sources/ages-14.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.206642
+  },
+  "age-adult-f": {
+    "file": "art/animation/age-adult-f.png",
+    "source": "art/animation/sources/ages-15.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.207407
+  },
+  "age-middle-f": {
+    "file": "art/animation/age-middle-f.png",
+    "source": "art/animation/sources/ages-15.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.208955
+  },
+  "age-elder-f": {
+    "file": "art/animation/age-elder-f.png",
+    "source": "art/animation/sources/ages-15.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.21374
+  },
+  "age-old-f": {
+    "file": "art/animation/age-old-f.png",
+    "source": "art/animation/sources/ages-15.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.21875
+  },
+  "career-porter-m": {
+    "file": "art/animation/career-porter-m.png",
+    "source": "art/animation/sources/roles-9.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.207407
+  },
+  "career-porter-f": {
+    "file": "art/animation/career-porter-f.png",
+    "source": "art/animation/sources/roles-9.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.205882
+  },
+  "career-press-m": {
+    "file": "art/animation/career-press-m.png",
+    "source": "art/animation/sources/roles-9.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.208178
+  },
+  "career-press-f": {
+    "file": "art/animation/career-press-f.png",
+    "source": "art/animation/sources/roles-9.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.200717
+  },
+  "career-cop-m": {
+    "file": "art/animation/career-cop-m.png",
+    "source": "art/animation/sources/roles-10.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.19788
+  },
+  "career-cop-f": {
+    "file": "art/animation/career-cop-f.png",
+    "source": "art/animation/sources/roles-10.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.197183
+  },
+  "career-teach-m": {
+    "file": "art/animation/career-teach-m.png",
+    "source": "art/animation/sources/roles-10.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.196491
+  },
+  "career-teach-f": {
+    "file": "art/animation/career-teach-f.png",
+    "source": "art/animation/sources/roles-10.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.194444
+  },
+  "career-lawyer-m": {
+    "file": "art/animation/career-lawyer-m.png",
+    "source": "art/animation/sources/roles-11.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.191126
+  },
+  "career-lawyer-f": {
+    "file": "art/animation/career-lawyer-f.png",
+    "source": "art/animation/sources/roles-11.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.195804
+  },
+  "career-adjuster-m": {
+    "file": "art/animation/career-adjuster-m.png",
+    "source": "art/animation/sources/roles-11.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.193103
+  },
+  "career-adjuster-f": {
+    "file": "art/animation/career-adjuster-f.png",
+    "source": "art/animation/sources/roles-11.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.198582
+  },
+  "career-rescue-m": {
+    "file": "art/animation/career-rescue-m.png",
+    "source": "art/animation/sources/roles-12.png",
+    "row": 0,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.21374
+  },
+  "career-rescue-f": {
+    "file": "art/animation/career-rescue-f.png",
+    "source": "art/animation/sources/roles-12.png",
+    "row": 1,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.216216
+  },
+  "career-cook-m": {
+    "file": "art/animation/career-cook-m.png",
+    "source": "art/animation/sources/roles-12.png",
+    "row": 2,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.202166
+  },
+  "career-cook-f": {
+    "file": "art/animation/career-cook-f.png",
+    "source": "art/animation/sources/roles-12.png",
+    "row": 3,
+    "frames": 4,
+    "width": 64,
+    "height": 64,
+    "baseline": 60,
+    "scale": 0.210526
+  }
+}
