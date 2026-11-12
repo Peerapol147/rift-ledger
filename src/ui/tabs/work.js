@@ -2,7 +2,13 @@ import * as C from "../../core/index.js";
 import { CAREERS, COUNTRIES, cityOf, STATS, BUSINESSES } from "../../data/index.js";
 import { esc, btn, money } from "../dom.js";
 
-const ledgerRow = (e) => `<tr><td>${esc(e.label)}</td><td class="n ${e.amt < 0 ? "bad" : "good"}">${money(e.amt)}</td></tr>`;
+// same label twice in one month reads as one line with a count
+const grouped = (list) => {
+  const m = new Map();
+  for (const e of list) { const g = m.get(e.label) ?? { label: e.label, amt: 0, n: 0 }; g.amt += e.amt; g.n++; m.set(e.label, g); }
+  return [...m.values()];
+};
+const ledgerRow = (e) => `<tr><td>${esc(e.label)}${e.n > 1 ? ` <span class="dim">×${e.n}</span>` : ""}</td><td class="n ${e.amt < 0 ? "bad" : "good"}">${money(e.amt)}</td></tr>`;
 
 export function workTab(s) {
   let job = `<p class="dim">ยังไม่มีงานประจำ</p>`;
@@ -28,7 +34,7 @@ export function workTab(s) {
       <h4>ลูกน้อง ${(s.staff ?? []).length}/4</h4>${staff || `<div class="dim">ยังไม่มี</div>`}<h4>คนที่มาสมัครปีนี้</h4>${offers || `<div class="dim">ไม่มี</div>`}`;
   }
   return `<h3>งาน</h3>${job}${biz}
-    <h3>เดือนนี้</h3><table>${[...m.in, ...m.out].map(ledgerRow).join("") || `<tr><td class="dim">ยังไม่มีรายการ</td></tr>`}
+    <h3>เดือนนี้</h3><table>${grouped([...m.in, ...m.out]).map(ledgerRow).join("") || `<tr><td class="dim">ยังไม่มีรายการ</td></tr>`}
       <tr><td><b>สุทธิ</b></td><td class="n"><b>${money(m.net)}</b></td></tr></table>
     <h3>หนี้</h3><div class="kv"><span>ยอดหนี้ (ดอกเบี้ย 1%/เดือน)</span><b>${money(s.debt)}</b></div>
       <div class="kv"><span>วงเงินกู้</span><b>${money(C.debtCap(s))}</b></div>

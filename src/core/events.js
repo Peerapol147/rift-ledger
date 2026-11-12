@@ -161,8 +161,9 @@ export function eventKind(s) {
   const id = String(s.ev?.id ?? "");
   const [head, a, b] = id.split(":");
   const part = (n, len) => (len ? `ตอนที่ ${n + 1} จาก ${len}` : `ตอนที่ ${n + 1}`);
-  if (head === "sq" && resolvers.questLen) return { tier: "rare", part: part(Number(b), resolvers.questLen(a)) };
-  if (/^(fachi|facbad|heir|truthFinal)/.test(head)) return { tier: "rare" };
+  // spec §11.1: a secret quest must not look special, so it wears the same "story" label as any chapter
+  if (head === "sq" && resolvers.questLen) return { tier: "story", part: part(Number(b), resolvers.questLen(a)) };
+  if (/^(fachi|facbad|heir)/.test(head)) return { tier: "rare" };
   if (head.startsWith("cal")) return { tier: "world" };
   const len = a != null && /^\d+$/.test(a) ? resolvers.storyLen?.(head) : 0;
   if (len) return { tier: "story", part: part(Number(a), len) };
