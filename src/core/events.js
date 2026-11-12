@@ -64,7 +64,9 @@ export function optionView(s, opt) {
     view.locked = true;
     view.lockText = `ต้องการ ${needLabel(k, min)}` + (k in STATS ? ` · คุณมี ${Math.floor(val(s, k))}` : "");
   }
-  if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0) * ageScale(s)) * 4), 5, 95);
+  // a worn-out mind makes every check harder: up to −30 points at zero
+  const tired = Math.max(0, 30 - (s.mind ?? 100));
+  if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0) * ageScale(s)) * 4 - tired), 5, 95);
   else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
   // risk is rolled by choose(); danger is information only (the risk lives inside the fight it starts).
   view.risk = opt.risk ?? opt.danger ?? 0;

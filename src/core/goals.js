@@ -42,6 +42,7 @@ export function alerts(s) {
   const out = [];
   if (s.hp < 30) out.push({ kind: "hp", text: "ร่างกายคุณใกล้ถึงขีดจำกัด" });
   if (s.mind < 25) out.push({ kind: "mind", text: "คุณนอนไม่หลับมาหลายคืนแล้ว" });
+  else if (s.mind < 40) out.push({ kind: "mind", text: "ความเหนื่อยสะสมทำให้ตัดสินใจพลาดง่ายขึ้น ลองพักสักเดือน" });
   if (s.debt > debtCap(s) * 0.8) out.push({ kind: "debt", text: "หนี้ใกล้เพดานที่ใครจะให้กู้เพิ่ม" });
   for (const e of CALENDAR) {
     const m = monthsUntil(s, e);

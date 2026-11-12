@@ -35,7 +35,13 @@ export function bodyMonth(s, step) {
   const base = s.hunter ? 10 : 3;
   const healing = s.injuries.some((i) => i.untilM != null) ? base / 2 : base;
   s.hp = clamp(s.hp + healing * step, 0, 100);
-  if (s.mind < 70) changeMind(s, 0.5 * step);
+  // what weighs on you every month, and what holds you up (playtest: mind sat at 100 for nearly every life)
+  let d = s.mind < 50 ? 0.3 : 0; // people bounce back a little on their own, but only from low
+  if ((s.debt ?? 0) > 0) d -= 0.4;
+  d -= 0.4 * s.injuries.filter((i) => i.untilM != null).length;
+  if (s.home && s.home.city === s.city) d += 0.3;
+  if (s.c.married) d += 0.3;
+  changeMind(s, d * step);
 }
 
 export function yearEnd(s) {

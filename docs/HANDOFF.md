@@ -49,6 +49,9 @@ Built:
    plays a saver: 181k at death and no home vs 93k plus a home, and frugal civilians die of untreated illness
    more. Still: money piles up mid-life (median ~93k at death); `mind` sits at 100 for nearly everyone, so it
    measures nothing (look at mind sources/sinks).
+   → fixed: adult work/study/train/hunt wear mind down each month, rest and people restore it, debt and open
+   wounds weigh, a home and a marriage hold you up, fights end with a mind swing, and below 30 every check is
+   harder (−1 a point). Sim row: working-age mind 40–75 (reckless 25–60); careful 67, normal 55, reckless 30.
 4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.

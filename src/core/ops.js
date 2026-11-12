@@ -173,6 +173,8 @@ function endOp(s) {
   }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
   if (def.kind === "gate" && r === "won") s.c.gateRuns = (s.c.gateRuns ?? 0) + 1; // gates won
+  // how a fight ends stays with you: a boss down lifts you, being dragged out does not
+  if (def.kind !== "job") hooks.changeMind(s, r === "won" ? (def.boss ? 4 : 0.5) : r === "lost" ? -6 : -2);
   if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") hooks.guildLoss?.(s, def);
   if (r === "lost") {
