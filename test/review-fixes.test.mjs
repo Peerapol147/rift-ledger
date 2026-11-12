@@ -61,3 +61,13 @@ test("choosing to flee in a fight is running away: no xp", () => {
   assert.equal(o.ranAway, 1);
   assert.equal(o.done, "fled");
 });
+
+test("the world keeps making news after the calendar runs out, and illness never kills without a diagnosis", () => {
+  const s = C.newLife("pulse1"); s.mon0 = 12 * 80; s.ageM = 30 * 12; s.ev = null;
+  const n0 = s.log.filter((l) => l.tag === "ข่าวโลก").length;
+  for (let i = 0; i < 120; i++) { s.ev = null; C.tick(s); if (s.dead) break; }
+  assert.ok(s.log.filter((l) => l.tag === "ข่าวโลก").length > n0 + 5, "news keeps coming in year 110+");
+  const t = C.newLife("ill1"); t.ageM = 70 * 12; t.ev = null;
+  for (let i = 0; i < 400 && !t.dead; i++) { t.ev = null; C.tick(t); }
+  if (t.dead?.cause === "โรคร้ายที่ไม่ได้รักษา") assert.ok((t.c["ev:illness"] ?? 0) >= 1, "warned first");
+});
