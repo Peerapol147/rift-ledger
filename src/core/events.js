@@ -27,6 +27,8 @@ export function val(s, key) {
   if (key === "fame") return s.fame;
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
+  if (key === "ownHome") return s.home ? 1 : 0;
+  if (key === "studying") return (s.c.studyEndM ?? 0) > s.ageM ? 1 : 0;
   if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
   if (key === "forged") return Math.max(0, ...(s.items ?? []).map((i) => i.plus ?? 0));
   const [kind, id] = key.split(":");
@@ -116,6 +118,7 @@ export function choose(s, i) {
   const ok = view.odds == null || ch(stream(s, "ev"), view.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};
   s.ev = null;
+  if (ev.id === "born") return; // the birth card only introduces the world
   s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
   log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");

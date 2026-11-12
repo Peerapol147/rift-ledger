@@ -185,5 +185,75 @@
   "now": "boss/scaffold-giant",
   "status": "open",
   "file": "boss/salt-general"
+ },
+ {
+  "id": "mon-32",
+  "type": "monster",
+  "name": "นายท่ากะดึก",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/water-shadow-lord",
+  "status": "open",
+  "file": "boss/night-harbour-master"
+ },
+ {
+  "id": "mon-33",
+  "type": "monster",
+  "name": "โฟร์แมนกะสุดท้าย",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/scaffold-giant",
+  "status": "open",
+  "file": "boss/last-shift-foreman"
+ },
+ {
+  "id": "mon-34",
+  "type": "monster",
+  "name": "เจ้าของคลื่นรบกวน",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/cable-dragon",
+  "status": "open",
+  "file": "boss/static-owner"
+ },
+ {
+  "id": "mon-35",
+  "type": "monster",
+  "name": "บรรณารักษ์เวรดึก",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/thing-on-top-floor",
+  "status": "open",
+  "file": "boss/night-librarian"
+ },
+ {
+  "id": "mon-36",
+  "type": "monster",
+  "name": "เจ้าที่ที่ถูกลืม",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/voiceless-choir",
+  "status": "open",
+  "file": "boss/forgotten-shrine-spirit"
  }
 ]

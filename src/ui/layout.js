@@ -1,17 +1,20 @@
 // The always-visible parts: left card, event panel, controls and the tab bar.
 import * as C from "../core/index.js";
-import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../data/index.js";
+import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, FAMILIES, cityOf } from "../data/index.js";
 import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
+const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f.n]));
 const STAGE_TITLE = { kid: "เด็ก", teen: "วัยรุ่น", adult: "ผู้ใหญ่", old: "ผู้สูงวัย" };
 
 function roleLine(s) {
   const st = C.stageOf(s);
   if (s.hunter) return `ฮันเตอร์ · ${esc(CLASSES[s.hunter.cls]?.n)} · Lv.${Number(s.hunter.lv)}`;
   if (s.job) return esc(C.jobTitle(s)) + ` · ${esc(CAREERS[s.job.id].n)}`;
-  return `${STAGE_TITLE[st]}ใน${esc(cityOf(s.city).n)}`;
+  // a child is somebody's child before anything else: the family stays on the card until work or power replaces it
+  const young = st === "kid" || st === "teen" ? ` · ${esc(FAMILY[s.family] ?? "")}` : "";
+  return `${C.ageY(s) < C.INFANT_AGE ? "ทารก" : STAGE_TITLE[st]}ใน${esc(cityOf(s.city).n)}${young}`;
 }
 
 export function card(s) {
@@ -34,7 +37,8 @@ export function card(s) {
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
   ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
   <div class="stats">${stats}</div>${alerts}${goals}
-  <h3>แผนเดือนนี้</h3><div class="plan">${plans}</div>`;
+  <h3>แผนเดือนนี้</h3>${plans ? `<div class="plan">${plans}</div>`
+    : `<p class="dim">ยังเล็กเกินกว่าจะวางแผนเอง ผู้ใหญ่ในบ้านดูแลคุณอยู่ คุณจะเริ่มเลือกได้ตอนอายุ ${C.INFANT_AGE} ขวบ</p>`}`;
 }
 
 function badge(v) {
@@ -79,7 +83,7 @@ function eventCard(s, waitingAuto) {
   const keys = [...new Set(ev.opts.map((o) => o.s).filter((x) => x && STATS[x]))];
   const strip = keys.length ? `<div class="evstats">${keys.map((x) => `${STATS[x]} <b>${Math.floor(s.st[x])}</b>`).join(" · ")}</div>` : "";
   const fate = !s.op && n > 1 && ev.id !== "gateChoice" ? `<button class="opt fate" data-a="fate">🎲 ให้ชะตาเลือก</button>` : "";
-  return `<div class="ev ${ev.important ? "big" : ""} t-${k.tier}">${head}<p>${esc(ev.t)}</p>${strip}${prep}
+  return `<div class="ev ${ev.important ? "big" : ""} t-${k.tier}">${head}<p class="evtext">${esc(ev.t)}</p>${strip}${prep}
     <div class="opts">${rows}${fate}</div>${wait}${s.op ? opStatus(s) : ""}</div>`;
 }
 

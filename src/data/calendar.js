@@ -84,7 +84,7 @@ export const CALENDAR = [
 ];
 
 // ---- Generators for the rest of the calendar (years 33–90).
-const RANK_WORD = { B: "แรงก์ B", A: "แรงก์ A", S: "แรงก์ S" };
+const RANK_WORD = { B: "แรงก์ B ", A: "แรงก์ A ", S: "แรงก์ S " };
 
 // A gate break in a city: the same shape everywhere, told from each life's angle.
 function gateBreak(id, year, month, country, city, cityName, rank) {

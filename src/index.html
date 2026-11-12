@@ -60,7 +60,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid 
 @media (prefers-reduced-motion:reduce){.result{animation:none}}
 .tag{display:inline-block;font-size:.78em;font-weight:700;padding:1px 7px;color:#14100a;background:var(--amb)}
 .tag.t-life{background:var(--t-life)}.tag.t-work{background:var(--t-work)}.tag.t-gate{background:var(--t-gate)}.tag.t-world{background:var(--t-world)}.tag.t-team{background:var(--t-team)}
-.ev p{margin-top:8px}.opts{display:grid;gap:6px;margin-top:10px}
+.ev p{margin-top:8px}.evtext{white-space:pre-line}.opts{display:grid;gap:6px;margin-top:10px}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:8px 10px}
 .opt small{display:block;color:var(--dim);font-size:.82em}.opt kbd{font-size:.75em;color:var(--dim);border:1px solid var(--line);padding:0 5px;margin-right:6px}
 .badge{font-size:.75em;font-weight:700;white-space:nowrap;padding:1px 6px;border:1px solid}.badge.g{color:var(--good)}.badge.m{color:var(--amb)}.badge.b{color:var(--bad)}
@@ -110,7 +110,7 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
   var a=new Audio("audio/shadows-resolve.mp3");a.loop=true;a.volume=0.4;
   var on=true;try{on=localStorage.getItem("bgm")!=="off"}catch(e){}
   var b=document.createElement("button");b.id="bgm";
-  b.style.cssText="position:fixed;left:8px;top:8px;z-index:9999;padding:3px 8px;font-size:13px;border-radius:14px;border:1px solid #555;background:#000a;color:#fff;cursor:pointer;opacity:.75";b.title="เพลง";
+  b.style.cssText="position:fixed;right:8px;top:8px;z-index:9999;padding:3px 8px;font-size:13px;border-radius:14px;border:1px solid #555;background:#000a;color:#fff;cursor:pointer;opacity:.75";b.title="เพลง";
   function ui(){b.textContent=on&&!a.paused?"🔊":"🔇"}
   function play(){if(on)a.play().then(ui).catch(function(){})}
   b.onclick=function(e){e.stopPropagation();on=!on;try{localStorage.setItem("bgm",on?"on":"off")}catch(x){}

@@ -13,10 +13,17 @@ for (const m of MILESTONES) EVENT_INDEX.set(m.id, m);
 import { monthly, books, lastly } from "./registry.js";
 export { monthly, books, lastly };
 const EVENT_CHANCE = 0.22;
-const REPEAT_CAP = 4;
-const COOLDOWN = 60; // months before the same random event can come back (playtest: 3 years felt repetitive)
+const REPEAT_CAP = 3;
+// months before the same random event can come back (a life read end to end: the same scene every 5 years, four
+// times over, read as a loop; 8 years and three times at most reads as a life)
+const COOLDOWN = 96;
+
+// Before three you do not plan your months: the grown-ups do, and you grow the way small children grow.
+export const INFANT_AGE = 3;
+const INFANT_GROWTH = { agi: 0.06, cha: 0.05, luk: 0.03, int: 0.03 };
 
 export function focusList(s) {
+  if (ageY(s) < INFANT_AGE) return [];
   const table = FOCUS[stageOf(s)];
   const hunting = !!s.hunter && !s.flags.stoppedHunting;
   return Object.entries(table).filter(([, f]) => !f.hunter || hunting).map(([id, f]) => ({ id, ...f }));
@@ -27,6 +34,7 @@ export function setFocus(s, id) {
 }
 
 function applyFocus(s, step) {
+  if (ageY(s) < INFANT_AGE) { for (const [k, v] of Object.entries(INFANT_GROWTH)) s.st[k] += v * step; return; }
   const table = FOCUS[stageOf(s)];
   if (!table[s.focus]) s.focus = Object.keys(table)[0];
   const f = table[s.focus];

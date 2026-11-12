@@ -53,7 +53,12 @@ function startScreen() {
     <span>${x.dead ? "" : btn("load:" + i, "เล่นต่อ", 'class="sm"')}${btn("del:" + i, "ลบ", 'class="sm"')}</span></div>` : "")).join("");
   $("#start").innerHTML = `<div class="st-card"><div class="dim">ปีที่ 21 หลังวันฟ้าแตก</div><h1>บันทึกหลังรอยแยก</h1>
     <p class="lede">เกิดในโลกที่เกตและหอคอยเปิดมาแล้วยี่สิบเอ็ดปี ใช้ชีวิตตั้งแต่เกิดจนวันสุดท้าย จะตื่นพลังหรือไม่ก็ได้</p>
-    <div class="row"><input data-c="seed" placeholder="Seed (เว้นว่างเพื่อสุ่ม)" style="flex:1">${btn("new", "เริ่มชีวิตใหม่", 'class="pri"')}</div>
+    <p class="lede">เกต คือรอยแยกที่มอนสเตอร์ออกมา · ฮันเตอร์ คือคนส่วนน้อยที่ตื่นพลังและเข้าไปปิดเกต · คุณอาจเป็นฮันเตอร์
+      หรือเป็นคนธรรมดาที่ทำงาน มีครอบครัว และแก่ตัวลงในโลกใบเดียวกัน</p>
+    <div class="row"><input data-c="name" maxlength="24" placeholder="ชื่อตัวละคร (เว้นว่างให้พ่อแม่ตั้งให้)" style="flex:1">${btn("new", "เริ่มชีวิตใหม่", 'class="pri"')}</div>
+    <details class="howto"><summary>ตัวเลือกเพิ่มเติม</summary>
+      <p>รหัสโลก: ใส่คำเดิมจะได้โลกและชะตาเดิมทุกครั้ง เว้นว่างเพื่อสุ่ม</p>
+      <div class="row"><input data-c="seed" placeholder="รหัสโลก (ไม่บังคับ)" style="flex:1"></div></details>
     <details class="howto"${book.get().lives ? "" : " open"}><summary>เล่นยังไง</summary>
       <p>ทุกเดือนเลือก <b>แผนเดือนนี้</b> ทางซ้าย เช่น เรียน ทำงาน ฝึกฝน หรือล่าเกตเมื่อตื่นพลังแล้ว</p>
       <p>เมื่อมีเรื่องเข้ามา เลือกทางในช่องเหตุการณ์ ตัวเลข % คือโอกาสสำเร็จตามค่าสถานะของคุณ</p>
@@ -166,7 +171,7 @@ function render() {
   if (!view.contains(document.activeElement) || document.activeElement === view) put("#view", TAB_VIEW[ui.tab]());
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
-  setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
+  setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc, s.country !== "th"), s.op?.def.place ?? null, "");
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
   $("#modal").hidden = !ui.settings;
   if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
@@ -211,8 +216,9 @@ function act(a, el) {
     new: () => {
       const seed = $("[data-c=seed]")?.value.trim() || Math.random().toString(36).slice(2, 8);
       ui.slot = freeSlot();
-      const life = C.newLife(seed);
+      const life = C.newLife(seed, { name: $("[data-c=name]")?.value.trim() });
       C.applyUnlocks(life, book.get());
+      C.openBirth(life);
       begin(life);
       if (ui.slot < 0) banner("ช่องเซฟเต็ม ชีวิตนี้จะไม่บันทึกอัตโนมัติ บันทึกเองได้ในตั้งค่า");
     },

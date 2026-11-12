@@ -34,7 +34,10 @@ export function gateOffers(s) {
   // a rookie's first three gates never hold a boss (playtest: too many hunters died in their first week)
   for (let i = 0; i < 3; i++) {
     const r = Math.max(0, Math.min(6, rank + ri(R, -1, 1)));
-    const theme = pk(R, GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1])) ?? GATES[0];
+    const fits = GATES.filter((g) => r >= g.ranks[0] && r <= g.ranks[1]);
+    // three different places on the list: a theme already offered this month is passed over while others remain
+    const fresh = fits.filter((g) => !out.some((o) => o.id === g.id));
+    const theme = pk(R, fresh.length ? fresh : fits) ?? GATES[0];
     const boss = ch(R, 0.12) && (s.c.gateRuns ?? 0) >= 3;
     out.push({ id: theme.id, rank: r, lv: GATE_LV[r] + ri(R, -2, 2), el: theme.el, boss });
   }
@@ -52,6 +55,7 @@ export function gateOp(s, g) {
   if (isBoss) foes.push(foe(theme.boss, g.lv + 3, g.el, true));
   return {
     id: "gate:" + g.id, kind: "gate", t: `${theme.n} (เกตแรงก์ ${"FEDCBAS"[g.rank]})`, rank: g.rank,
+    place: theme.place,
     foes, decisions: theme.decisions, boss: isBoss, rewards: { gold: gatePay(g.rank), items: [] },
   };
 }

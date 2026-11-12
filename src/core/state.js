@@ -32,7 +32,8 @@ export function log(s, tag, text, tone = "") {
   if (s.log.length > 600) s.log.splice(0, s.log.length - 600);
 }
 
-export function newLife(seed) {
+// o.name: the player may name the child; otherwise the family does.
+export function newLife(seed, o = {}) {
   seed = String(seed);
   const s = { v: 2, sv: 2, seed, r: {} }; // sv: schema version, see SAVE_SV in save.js
   const R = stream(s, "birth");
@@ -42,6 +43,7 @@ export function newLife(seed) {
   const st = Object.fromEntries(STAT_IDS.map((k) => [k, 4 + ri(R, 0, 3) + (family.st[k] ?? 0)]));
   Object.assign(s, {
     name: pk(R, NAMES[country][sex]),
+    named: !!o.name,
     sex,
     country,
     city: pk(R, COUNTRIES[country].cities).id,
@@ -74,6 +76,7 @@ export function newLife(seed) {
     log: [],
     dead: null,
   });
+  if (o.name) s.name = String(o.name).slice(0, 24);
   log(s, "ชะตา", `${s.name} ลืมตาดูโลกที่${COUNTRIES[country].n} · ${family.n}: ${family.d}`, "imp");
   for (const f of onNewLife) f(s);
   return s;

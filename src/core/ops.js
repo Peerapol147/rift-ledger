@@ -70,6 +70,8 @@ export function startOp(s, def, prep) {
 }
 
 const DECISION_ROUNDS = [2, 5, 8];
+// a surgery or a deal is not a gate: its log lines carry their own tag
+const opTag = (o) => (o?.def.kind === "job" ? "งานใหญ่" : "เกต");
 
 function openDecision(s) {
   const o = s.op, d = o.def.decisions[o.d++];
@@ -146,7 +148,7 @@ export function decide(s, i) {
   const ok = v.odds == null || ch(stream(s, "op"), v.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};
   s.ev = null;
-  log(s, "เกต", `${opt.l}${out.m ? " → " + out.m : ""}`, ok ? "imp" : "bad");
+  log(s, opTag(s.op), `${opt.l}${out.m ? " → " + out.m : ""}`, ok ? "imp" : "bad");
   if (out.hp) o.hp += (out.hp / 100) * o.maxHp;
   applyOutcome(s, { c: out.c, flags: out.flags, gold: out.gold, goldLabel: out.goldLabel, st: out.st, act: out.act,
     fac: out.fac }, opt.l);
@@ -213,7 +215,9 @@ function endOp(s) {
     recordFloor(s, def.tower, def.floor, true);
   }
   for (const f of afterOpHooks) f(s, o, r, gold);
-  log(s, "เกต", r === "won" ? `สำเร็จ ได้ ₿${gold}` : `ถอยออกมา ได้ ₿${gold}`, r === "won" ? "imp" : "");
+  const short = def.kind === "job" ? "งานไม่จบอย่างที่หวัง" : "ถอยออกมา";
+  log(s, def.kind === "job" ? "งานใหญ่" : "เกต", `${r === "won" ? "สำเร็จ" : short} ได้ ₿${gold}`,
+    r === "won" ? "imp" : "");
   return r;
 }
 

@@ -3,10 +3,12 @@ export const WEATHER = {normal:{label:'อากาศปกติ',sky:'#8aafc2
 // Seasons last months, not one: hot Mar-May, wet Jun-Oct, cool Nov-Feb. Each place has its own look per season,
 // and one roll per season per year picks an off year (a dry rainy season, a warm winter), so the sky holds still until the season turns.
 const SEASON={hot:{home:'summer',city:'summer',street:'sunny',off:'sunny'},wet:{home:'rainy',city:'normal',street:'rainy',off:'normal'},cool:{home:'winter',city:'winter',street:'winter',off:'normal'}};
-export function weatherFor(month=0,place='home') {
+// snow: false for places where it never snows (Thailand): their cool season is just clear weather.
+export function weatherFor(month=0,place='home',snow=true) {
  const m=((month%12)+12)%12,yr=Math.floor(month/12),k=m>=10||m<2?'cool':m<5?'hot':'wet',S=SEASON[k];
  const roll=Math.abs(Math.sin((yr-(m<2?1:0))*12.9898+k.length*78.233)*43758.5453)%1;
- return roll<0.25?S.off:S[place]||S.home;
+ const w=roll<0.25?S.off:S[place]||S.home;
+ return w==='winter'&&!snow?'normal':w;
 }
 export function drawWeather(set,W,H,G,mode,time=0,foreground=false) {
  const p=WEATHER[mode]||WEATHER.normal;

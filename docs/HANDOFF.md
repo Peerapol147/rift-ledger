@@ -57,7 +57,19 @@ Built:
    thin ages (infancy, 17–20, 50s, 62–75, 70+) and adds a 20-year payoff chain (time capsule). Playtest prints
    choices a year by stage (child 2.1, teen 2.8, adult 3.6, old 2.6); the longest median silence went 3→2 years,
    distinct events per life 81→108. Save now keeps the `good` log tone.
-4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
+3c. ~~Coherence pass~~ (owner: "the content drifted from the brief, and the opening is confusing"). Found by reading
+   whole lives end to end and by playing `play.html` in a browser, not by the sims (which all passed). Fixed:
+   a birth card that explains the world and the family, an optional name, no monthly plan before age 3, no snow in
+   Thailand; the spec's missing "18–22 study or work" milestone (`ms18b`), a doctor needs medical school and a
+   teacher a degree, promotion takes years (was a department head at 25), all 12 careers are offered (was the
+   first 5); random tower records can no longer take a floor the calendar gives to a named NPC; notable hunters
+   have full unique names; one-of-a-kind events happen once (`src/data/events/index.js`), repeats are capped at 3
+   with 8 years between; events check the life they land in (rent, marriage, kindergarten order).
+   `test/coherence.test.mjs` guards all of it. Known and left: the sim bot now works from 18 and so carries no
+   debt, which lifts its mind row above target (bot habit, not retuned); the adult event pool is still small
+   (about 3 choices a year, longest quiet stretch 3 years) and needs more written events.
+4. ~~Gate scenes repeat~~ now 8 themes (spec §15), each with its own backdrop from `place-art.js`; 5 new bosses
+   borrow art (rows mon-32..36 in `art/requests.json`). Offers never list the same gate twice.
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.
 7. **Art.** 14 borrowed sprites in `art/requests.json`. The owner may send pictures; process them with

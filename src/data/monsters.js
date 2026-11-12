@@ -54,6 +54,12 @@ export const MONSTERS = {
   "เจ้าหนี้แห่งวันฟ้าแตก": as("boss/time-eater", "boss"),
   "ผู้จัดการคลินิก": as("boss/death-manager", "boss"),
   "ผู้ลงนามคนแรก": as("boss/thing-on-top-floor", "boss", 1),
+  // gate bosses of the themes added for spec §15 (own art requested in art/requests.json)
+  "นายท่ากะดึก": as("boss/water-shadow-lord", "boss"),
+  "โฟร์แมนกะสุดท้าย": as("boss/scaffold-giant", "boss"),
+  "เจ้าของคลื่นรบกวน": as("boss/cable-dragon", "boss", 1),
+  "บรรณารักษ์เวรดึก": as("boss/thing-on-top-floor", "boss", 1),
+  "เจ้าที่ที่ถูกลืม": as("boss/voiceless-choir", "boss", 1),
   // tower floors 21–50: the dead worlds' heroes and rulers (own art requested in art/requests.json)
   "ผู้ประกาศข่าวภาคค่ำ": as("boss/voiceless-choir", "boss", 1),
   "นายกเทศมนตรีคนสุดท้าย": as("boss/death-manager", "boss"),

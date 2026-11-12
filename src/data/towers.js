@@ -8,6 +8,7 @@ export const TOWERS = {
   silent: {
     id: "silent",
     n: "The Silent Tower (หอเงียบ)",
+    th: "หอเงียบ",
     country: "th",
     record: 47,
     el: "void",
@@ -88,6 +89,7 @@ export const TOWERS = {
   drowned: {
     id: "drowned",
     n: "The Drowned Tower (หอจมน้ำ)",
+    th: "หอจมน้ำ",
     country: "kr",
     record: 44,
     el: "ice",

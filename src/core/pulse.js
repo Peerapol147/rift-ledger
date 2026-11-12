@@ -8,7 +8,8 @@ import { monthly, hooks } from "./registry.js";
 import { die } from "./body.js";
 import { COUNTRIES } from "../data/world.js";
 import { TOWERS } from "../data/towers.js";
-import { NAMES } from "../data/families.js";
+import { CALENDAR } from "../data/calendar.js";
+import { npcNameFor } from "./world.js";
 
 const news = (s, text) => log(s, "ข่าวโลก", text, "");
 const CITIES = Object.values(COUNTRIES).flatMap((c) => c.cities);
@@ -31,10 +32,16 @@ function pulse(s) {
   }
   if (roll < 0.65) {
     const t = pk(R, Object.keys(TOWERS)), cur = s.world.records[t] ?? 40;
-    if (cur >= 60) return news(s, `ทีมใหญ่จากหลายประเทศพยายามทำลายสถิติ${TOWERS[t].n} แต่ถอยกลับมาที่ชั้นเดิม`);
+    // the calendar is the locked spine (spec §4.1): a floor it gives to a named climber in a named year is theirs
+    const promised = Math.min(60, ...CALENDAR.filter((e) => e.kind === "record" && e.tower === t && !s.world.done[e.id])
+      .map((e) => e.floor - 1));
+    if (cur >= promised) return news(s, `ทีมใหญ่จากหลายประเทศพยายามทำลายสถิติ${TOWERS[t].th} แต่ถอยกลับมาที่ชั้นเดิม`);
     s.world.records[t] = cur + 1;
-    const hero = s.world.roster.filter((n) => n.alive && n.rank >= 5);
-    return news(s, `${hero.length ? pk(R, hero).n : "ทีมนิรนาม"} ทำลายสถิติ${TOWERS[t].n} ขึ้นถึงชั้น ${cur + 1}`);
+    // the climbers of a tower are mostly its own country's hunters
+    const able = s.world.roster.filter((n) => n.alive && n.rank >= 5);
+    const local = able.filter((n) => n.country === TOWERS[t].country);
+    const hero = local.length ? local : able;
+    return news(s, `${hero.length ? pk(R, hero).n : "ทีมนิรนาม"} ทำลายสถิติ${TOWERS[t].th} ขึ้นถึงชั้น ${cur + 1}`);
   }
   if (roll < 0.85) {
     // a hunter of the roster falls; someone new takes the place (you are not the only story)
@@ -44,7 +51,8 @@ function pulse(s) {
     n.alive = false;
     const country = pk(R, ["th", "kr"]), sex = ri(R, 0, 1) ? "f" : "m";
     s.c.npcGen = (s.c.npcGen ?? 0) + 1;
-    s.world.roster.push({ id: "gen" + s.c.npcGen + "_" + y, n: pk(R, NAMES[country][sex]), country, rank: ri(R, 2, 5),
+    s.world.roster.push({ id: "gen" + s.c.npcGen + "_" + y, n: npcNameFor(s, R, country, sex), country,
+      rank: ri(R, 2, 5),
       cls: n.cls, fame: 20, alive: true });
     return news(s,
       `${n.n} ฮันเตอร์แรงก์ ${RANK[n.rank] ?? "?"} ไม่ได้กลับออกมาจากเกต สื่อเริ่มพูดถึงชื่อใหม่ในรุ่นถัดไปแทน`);

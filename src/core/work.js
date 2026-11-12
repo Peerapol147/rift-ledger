@@ -16,7 +16,10 @@ export function canHire(s, id) {
   return meets(s, c.need0 ?? {});
 }
 
-export const jobOffers = (s) => (ageY(s) < 18 ? [] : Object.keys(CAREERS).filter((id) => canHire(s, id)));
+// A full-time student is not on the job market until the course ends (spec §4.1: study on, or work).
+export const studying = (s) => (s.c.studyEndM ?? 0) > s.ageM;
+export const jobOffers = (s) => (ageY(s) < 18 || studying(s) ? []
+  : Object.keys(CAREERS).filter((id) => canHire(s, id)));
 
 export function takeJob(s, id) {
   s.job = { id, tier: 0, xp: 0 };
@@ -32,10 +35,14 @@ export function quitJob(s) {
 
 export const jobTitle = (s) => (s.job ? CAREERS[s.job.id].tiers[s.job.tier] : null);
 
+// Work needed for the next step up. A month of work is worth 1 to 1.6, so even the gifted take about two years
+// to the first promotion, nine to run a department and fifteen to the top (it used to be two years to a department).
+const PROMOTE_XP = [30, 54, 84, 120];
+
 export function canPromote(s) {
   const j = s.job;
   if (!j || j.tier >= 4) return false;
-  return j.xp >= 12 * (j.tier + 1) && meets(s, CAREERS[j.id].need[j.tier + 1]);
+  return j.xp >= PROMOTE_XP[j.tier] && meets(s, CAREERS[j.id].need[j.tier + 1]);
 }
 
 export function promote(s) {
@@ -52,7 +59,7 @@ export function workMonth(s) {
   if (!j) return;
   const c = CAREERS[j.id];
   const main = Math.max(...Object.keys(c.need[1]).map((k) => s.st[k] ?? 0));
-  j.xp += s.focus === "work" ? 1 + main / 40 : 0.3;
+  j.xp += s.focus === "work" ? 1 + Math.min(60, main) / 100 : 0.3;
   // a hunter who spends the month in gates only works part-time
   const partTime = s.hunter && s.focus === "hunt";
   const pay = partTime ? Math.round(c.pay[j.tier] / 2) : c.pay[j.tier];
@@ -67,7 +74,8 @@ export function workMonth(s) {
 }
 
 export function openJobChoice(s) {
-  const offers = jobOffers(s).slice(0, 5);
+  if (studying(s)) return; // ms22 finds a student still in class: the job hunt waits for graduation
+  const offers = jobOffers(s); // every career that would take you (the first five used to hide the other seven)
   openEvent(s, {
     id: "jobChoice",
     tag: "งาน",
@@ -82,6 +90,7 @@ export function openJobChoice(s) {
 
 for (const id of Object.keys(CAREERS)) hooks.act["job:" + id] = (s) => takeJob(s, id);
 hooks.act.jobHunt = openJobChoice;
+for (const y of [2, 4, 6]) hooks.act["study" + y] = (s) => { s.c.studyEndM = s.ageM + y * 12; };
 hooks.act.retire = (s) => { quitJob(s); s.flags.retired = true; };
 hooks.act.openJobChoice = openJobChoice;
 resolvers.jobName = (id) => CAREERS[id]?.n ?? id;
@@ -90,5 +99,7 @@ monthly.push((s) => {
   workMonth(s);
   if (s.job && s.mind < 20 && ch(stream(s, "work"), 0.03)) quitJob(s);
   const free = !s.hunter || s.flags.stoppedHunting;
-  if (!s.job && free && !s.flags.retired && ageY(s) >= 23 && s.ageM % 12 === 0) openJobChoice(s);
+  // the day the course ends, the applications go out
+  if (s.c.studyEndM === s.ageM && !s.job && free) return openJobChoice(s);
+  if (!s.job && free && !s.flags.retired && !studying(s) && ageY(s) >= 23 && s.ageM % 12 === 0) openJobChoice(s);
 });
