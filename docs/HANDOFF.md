@@ -3,6 +3,9 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+**Owner's latest continuation brief:** [CLAUDE-NEXT-BRIEF.md](CLAUDE-NEXT-BRIEF.md).
+Read it before choosing the next task; it separates shipped UI work from remaining save/story work.
+
 ## Responsive interface and original character frames — 13 November 2026
 
 Branch `claude/responsive-ui` implements the owner-authorized UI subset of phases A/B.

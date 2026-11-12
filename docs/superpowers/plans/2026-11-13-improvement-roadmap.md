@@ -1,5 +1,9 @@
 # Roadmap สำหรับ Claude — ปรับ Rift Ledger โดยรักษาเรื่องและเอกลักษณ์
 
+**สถานะเพิ่มเติม:** UI บางส่วนส่งมอบแล้วใน `030aab3` บน `claude/responsive-ui`.
+อ่าน [บรีฟล่าสุด](../../CLAUDE-NEXT-BRIEF.md) ก่อนทำตาม checklist เดิม;
+ช่องที่ยังไม่ติ๊กในแผนนี้ไม่ใช่หลักฐานว่างานทั้งหมดนั้นยังไม่ได้ทำ.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. เจ้าของขอเอกสารให้ Claude; ยังไม่เริ่ม implementation ในงานรอบนี้
 
 **Goal:** ควบคุมได้ เซฟเชื่อถือได้ การเตรียมตัวอ่านออก และเรื่องจำการเลือกโดยเป็นผลงานต้นฉบับของเรา
