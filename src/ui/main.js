@@ -21,13 +21,21 @@ const SPEEDS = { 1: 0.8, 2: 0.4, 4: 0.17, 8: 0.05 };
 const POLICY_ORDER = Object.keys(POLICIES);
 const slots = C.slots(store), book = C.collection(store);
 
-const loadCfg = () => { try { return JSON.parse(store.get(CFG) ?? "{}"); } catch { return {}; } };
+const loadCfg = () => {
+  try {
+    const value = JSON.parse(store.get(CFG) ?? "{}");
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  } catch { return {}; }
+};
 const cfg0 = loadCfg();
 const ui = {
-  speed: cfg0.speed ?? 2, policy: cfg0.policy ?? "important", fs: cfg0.fs ?? 2, paused: false, tab: "log", onlyImp: false,
+  // Older settings inherited automatic choices without an explicit first-play selection.
+  speed: cfg0.manualDefaults === 1 && SPEEDS[cfg0.speed] ? cfg0.speed : 1,
+  policy: cfg0.manualDefaults === 1 && Object.hasOwn(POLICIES, cfg0.policy) ? cfg0.policy : "stop",
+  fs: cfg0.fs ?? 2, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
-const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
+const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs, manualDefaults: 1 }));
 let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0;
 
 // ---- Start, load, death
@@ -57,7 +65,7 @@ function startScreen() {
     <details class="howto"${book.get().lives ? "" : " open"}><summary>เล่นยังไง</summary>
       <p>ทุกเดือนเลือก <b>แผนเดือนนี้</b> ทางซ้าย เช่น เรียน ทำงาน ฝึกฝน หรือล่าเกตเมื่อตื่นพลังแล้ว</p>
       <p>เมื่อมีเรื่องเข้ามา เลือกทางในช่องเหตุการณ์ ตัวเลข % คือโอกาสสำเร็จตามค่าสถานะของคุณ</p>
-      <p>ออโต้เลือกเรื่องเล็กให้ และหยุดรอคุณทุกเรื่องที่มีผลต่อชีวิต ปรับได้ที่ช่องข้างปุ่มความเร็ว</p>
+      <p>ค่าเริ่มต้นหยุดรอทุกตัวเลือก ให้คุณตัดสินใจเอง หากเปิดออโต้ที่ช่องข้างปุ่มความเร็ว เกมจะเลือกบางเหตุการณ์แทนคุณ</p>
       <p>ชีวิตจบได้หลายแบบ สิ่งที่ได้เห็นจะถูกจดในสมุดสะสมและเปิดทางให้ชีวิตถัดไป</p>
     </details>
     ${rows ? `<h3>เซฟ</h3>${rows}` : ""}<p style="margin-top:12px">${feedbackLink}</p><p class="dim" style="margin-top:6px">ชีวิตที่ผ่านมา ${book.get().lives}</p></div>`;

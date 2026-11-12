@@ -3,6 +3,19 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+## Owner-requested defaults and music fix — 13 November 2026
+
+Branch `claude/manual-defaults-bundled-music` implements UX-15: first play and pre-migration
+settings start at 1× / Stop. `manualDefaults: 1` marks settings saved after this change;
+subsequent explicit policy selections persist. Life saves are unchanged. Null settings
+also fall back safely (UX-12 null case); this does not close all configuration-validation work.
+The supplied Shadow's Resolve MP3 matches the existing audio file. The build now embeds it
+in `play.html` as a data URL so downloading only that file retains music.
+Validation: 198 core tests, artcheck, linelen and build pass. Chromium verified fresh/old/null
+settings wait on a pending event, subsequent policy choice persists, and embedded audio plays
+with external audio requests blocked. Direct file:// browser testing was blocked by managed
+browser policy; the self-contained build was tested over HTTP. Other UX findings remain open.
+
 ## Owner-requested UX research — 13 November 2026 (Bangkok)
 
 Read [the actionable UX feedback](feedback/ux-2026-11-13/REPORT.md) before the next UI work.
