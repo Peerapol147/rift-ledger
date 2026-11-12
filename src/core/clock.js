@@ -24,14 +24,31 @@ export function focusList(s) {
 }
 
 export function setFocus(s, id) {
-  if (focusList(s).some((f) => f.id === id)) s.focus = id;
+  if (!focusList(s).some((f) => f.id === id)) return;
+  s.focus = id;
+  if (s.focus2 === id) s.focus2 = null;
 }
 
-function applyFocus(s, step) {
+// The secondary plan (from 13): half the monthly stat growth and a smaller pull on events, nothing else. Hunting and
+// work are whole-time systems and cannot be secondary. Spec: 2026-11-13-life-plans-and-choices-design.md.
+const NOT_SECOND = new Set(["hunt", "work"]);
+export function focus2List(s) {
+  if (ageY(s) < 13) return [];
+  return focusList(s).filter((f) => f.id !== s.focus && !NOT_SECOND.has(f.id));
+}
+
+export function setFocus2(s, id) {
+  if (id == null) s.focus2 = null;
+  else if (focus2List(s).some((f) => f.id === id)) s.focus2 = id;
+}
+
+export function applyFocus(s, step) {
   const table = FOCUS[stageOf(s)];
   if (!focusList(s).some((f) => f.id === s.focus)) s.focus = focusList(s)[0].id;
+  if (s.focus2 && !focus2List(s).some((f) => f.id === s.focus2)) s.focus2 = null;
   const f = table[s.focus];
   for (const [k, v] of Object.entries(f.st)) s.st[k] += v * step;
+  if (s.focus2) for (const [k, v] of Object.entries(table[s.focus2].st)) s.st[k] += (v / 2) * step;
   if (f.gold) addLedger(s, "ค่าขนม/งานพิเศษ", f.gold * step);
   if (f.mind) changeMind(s, f.mind * step);
   if (f.hp) s.hp = Math.min(100, s.hp + f.hp * step);

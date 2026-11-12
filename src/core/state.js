@@ -59,6 +59,7 @@ export function newLife(seed) {
     flags: {},
     c: {},
     focus: "play",
+    focus2: null,
     job: null,
     hunter: null,
     injuries: [],
