@@ -71,7 +71,21 @@ export function optionView(s, opt) {
   else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
   // risk is rolled by choose(); danger is information only (the risk lives inside the fight it starts).
   view.risk = opt.risk ?? opt.danger ?? 0;
+  view.fx = effectChips(opt.y ?? {});
   return view;
+}
+
+// What an option touches if it goes well, as short chips for its button: stats, money, health, mind, fame. Never
+// counters, factions or acts (secrets stay secret), never what happens on a failed check.
+export function effectChips(y) {
+  const out = [];
+  for (const [k, v] of Object.entries(y.st ?? {})) if (STATS[k] && v) out.push(STATS[k] + (v > 0 ? "↑" : "↓"));
+  const sign = (v) => (v > 0 ? "+" : "−");
+  if (y.gold) out.push("เงิน" + sign(y.gold));
+  if (y.hp) out.push("สุขภาพ" + sign(y.hp));
+  if (y.mind) out.push("สุขภาพจิต" + sign(y.mind));
+  if (y.fame) out.push("ชื่อเสียง" + sign(y.fame));
+  return out;
 }
 
 export function eligible(s, ev) {

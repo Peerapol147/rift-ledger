@@ -38,6 +38,9 @@ export function card(s) {
   <h3>${planTitle(s)}</h3><div class="plan">${plans}</div>`;
 }
 
+// What a choice touches if it goes well (core/events.js effectChips), small and dim under its label.
+const chips = (fx) => (fx?.length ? `<small class="chips">${fx.map(esc).join(" · ")}</small>` : "");
+
 function badge(v) {
   if (v.odds == null && !v.risk) return "";
   const parts = [];
@@ -69,7 +72,7 @@ function eventCard(s, waitingAuto) {
     n++;
     const lock = v.locked ? `<div class="lockrow">🔒 ${esc(v.lockText)} ${btn("pin:" + i, "📌 ปักเป้าหมาย", 'class="sm"')}</div>` : "";
     return `<div><button class="opt ${v.locked ? "lock" : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
-      <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}</span><span>${badge(v)}</span></button>${lock}</div>`;
+      <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}${chips(v.fx)}</span><span>${badge(v)}</span></button>${lock}</div>`;
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";
   const wait = waitingAuto ? `<div class="waitchip">⏸ เกมหยุดรอคุณเลือก</div>` : "";
