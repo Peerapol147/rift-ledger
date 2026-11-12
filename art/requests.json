@@ -10,7 +10,7 @@
   ],
   "fly": false,
   "now": "beast/glass-frog",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-6",
@@ -23,7 +23,7 @@
   ],
   "fly": false,
   "now": "construct/streetlight-spider",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-7",
@@ -36,7 +36,7 @@
   ],
   "fly": true,
   "now": "beast/signal-bat",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-9",
