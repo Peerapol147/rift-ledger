@@ -1,3 +1,7 @@
+import story0 from "../art/monsters/beast/waterless-fish.png";
+import story1 from "../art/monsters/spirit/pier-shadow.png";
+import story2 from "../art/monsters/spirit/last-passenger.png";
+import story3 from "../art/monsters/spirit/teacher-still-teaching.png";
 // Story monster art. PixelLab sprite images are embedded by build.mjs as data URLs. Which creature wears which picture is in monsters.js.
 import sewerHound from "../art/monsters/beast/sewer-hound.png";
 import acidSnail from "../art/monsters/beast/acid-snail.png";
@@ -25,8 +29,15 @@ import thingOnTopFloor from "../art/monsters/boss/thing-on-top-floor.png";
 import riftMother from "../art/monsters/boss/rift-mother.png";
 import { MONSTERS, monsterOf, tintOf } from "./data/monsters.js";
 
+// New sprites are authored left-facing; legacy sheets retain their existing stage flip.
+const LEFT_FACING=new Set(['beast/waterless-fish','spirit/pier-shadow',
+  'spirit/last-passenger','spirit/teacher-still-teaching']);
 const ART = {
-  "beast/waterless-fish": waterlessFish,
+  "beast/waterless-fish": story0,
+  "spirit/pier-shadow": story1,
+  "spirit/last-passenger": story2,
+  "spirit/teacher-still-teaching": story3,
+
   "beast/sewer-hound": sewerHound, "beast/acid-snail": acidSnail, "beast/flying-fish": flyingFish, "beast/signal-bat": signalBat, "beast/glass-frog": glassFrog,
   "construct/wire-eater": wireEater, "construct/concrete-humanoid": concreteHumanoid, "construct/streetlight-spider": streetlightSpider, "construct/driverless-machine": driverlessMachine, "construct/rail-centipede": railCentipede,
   "spirit/floating-eyes": floatingEyes, "spirit/old-house-owner": oldHouseOwner,
@@ -60,7 +71,7 @@ function tinted(b, name) {
 export function monsterRaster(name, boss) {
   if (raster[name]) return raster[name];
   const m = monsterOf(name, boss), b = base[m.art]; if (!b) return null;
-  return (raster[name] = { ...(m.borrow ? tinted(b, name) : b), fly: m.fly, big: m.kind === "boss" });
+  return (raster[name] = { ...(m.borrow ? tinted(b, name) : b), fly: m.fly, big: m.kind === "boss", flip: !LEFT_FACING.has(m.art) });
 }
 // Portraits for the DOM: one CSS class per picture, so a page full of them never repeats the image data.
 const cls = (art) => "mon-" + art.replace("/", "-");

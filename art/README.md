@@ -47,3 +47,19 @@ Five original bosses generated and refined with OpenAI `image_gen`, using parkin
 - `boss/dry-lighthouse-keeper.png` (`mon-29`) — OpenAI `image_gen`, 2026-11-13. Prompt: hovering rust-clad old keeper fused to a yellow lighthouse lamp in his chest, short leftward beam, rope and logbook, salt-white beard. Refinement changed diffuse light into a hard-edged short beam and simplified hanging props.
 - `boss/last-tide-queen.png` (`mon-30`) — OpenAI `image_gen`, 2026-11-13. Prompt: grounded queen, coral-pink crown, deep-teal frozen-wave gown with cracked salt-white trim and one open hand calling water that never arrives. Refinement made three large wave crests and an unbroken readable gown silhouette.
 - `boss/salt-general.png` (`mon-31`) — OpenAI `image_gen`, 2026-11-13. Prompt: grounded dark-iron and sand-armoured general, salt-crystal shoulder and forearm, broken spear pointing left, two pale salt-soldier statues flanking his boots. Refinement enlarged the crystal masses and soldier silhouettes and simplified the damaged spear.
+
+### Story quartet — 2026-11-13
+
+OpenAI image_gen, original existing-game references; two generation/review rounds. First draft
+lost clarity at 56px, especially the pier shadow; refined to stronger cyan edge and simpler prop
+silhouettes. Exact prompts and sources: `monsters/source-atlases/story-quartet.json`.
+ImageMagick crops/resizes/quantizes to 56×56, max14 colors, binary alpha; no procedural monster drawing.
+All four hover, face left, retain transparent margins. Viewed at native size, 4x and in stage combat.
+
+- `beast/waterless-fish`: cracked dusty-teal fish, salt crust, gasping dark gills, dead-white eye.
+- `spirit/pier-shadow`: inverted drowned silhouette, flowing hair/fingers, cyan edge and pale eyes.
+- `spirit/last-passenger`: faceless commuter, briefcase, hanging train strap, fluorescent green edge.
+- `spirit/teacher-still-teaching`: cardigan ghost, chalk and pointer, lecture frozen mid-sentence.
+
+Effect integration uses existing MIT PixelFX claw-swipe/blunt-hit with restrained palette/glow;
+source effects are unchanged. Installed skill and tools are documented in `tools/skills/README.md`.

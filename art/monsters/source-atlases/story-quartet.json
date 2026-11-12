@@ -1,0 +1,26 @@
+{
+  "tool": "OpenAI image_gen",
+  "date": "2026-11-13",
+  "references": [
+    "art/monsters/beast/flying-fish.png",
+    "art/monsters/spirit/old-house-owner.png",
+    "art/monsters/beast/ship-eating-vine.png"
+  ],
+  "rounds": [
+    {
+      "source": "story-quartet.png",
+      "prompt": "Original game monster sprite atlas, EXACT 2 columns x 2 rows, four different full monsters on transparent background. Match supplied Rift Ledger original pixel monster references strictly: chunky near-black colored outline, 10-14 muted stepped colors per creature, top-left light, readable at 56x56, eerie NOT cute, face LEFT toward player. No text, labels, scenery, borders, ground shadows or extra creatures. Clear margins. TOP LEFT waterless fish: gaunt horizontal fish swimming in air, dusty teal cracked scales crusted in salt-white, dark gasping gills, one dead-white bulging eye, tattered tail; NOT ordinary healthy fish. TOP RIGHT shadow under a pier: inverted drowned human silhouette hanging upside down like a reflection, long trailing floating hair and long fingers, deep blue-black with thin cold cyan edge and two pale eyes, empty negative spaces make silhouette readable. BOTTOM LEFT last passenger: spectral office commuter floating upright, gray suit and briefcase, one hand clutching a hanging train strap, blurred faceless head, sickly pale green fluorescent edging. BOTTOM RIGHT teacher still teaching: thin floating teacher ghost in brown cardigan and faded green clothes, chalk in hand, long pointer, mouth caught mid-lecture, tiny chalk flecks close to body. Each creature should tell its former-world story through one clear prop and silhouette, restrained glow, no huge effects. Production pixel assets, no polished illustration shading."
+    },
+    {
+      "source": "story-quartet-refined.png",
+      "prompt": "Refine this same four-monster sheet for tiny 56x56 GAME SPRITES, keeping the four identities and layout EXACTLY. Current draft loses clarity when reduced. Make each monster MUCH simpler, bold chunky pixel clusters, strong near-black single-pixel outline, 10-14 colors each, clear stepped contrast, no fine noisy textures. Especially inverted pier shadow needs visibly brighter cyan rim and pale eyes and a simpler torso with readable long fingers, not a black blob. Fish: larger white eye, simplify salt crust into 3-4 broad clusters, strong dark gill gaps. Passenger: one obvious briefcase, large triangular train strap, faceless pale head, strong gray-green outline. Teacher: bright chalk hand, clear pointer and open mouth, brown cardigan distinct from green skirt. Keep LEFT-facing, inverted shadow upside down, others upright. No floor or background, no additional effects, no text. Four full bodies in 2x2 equal cells WITH AT LEAST 40px gutter on all sides and between rows; keep everything inside each cell. Use existing project monsters' modest pixel detail, not high-resolution painting. Preserve transparency."
+    }
+  ],
+  "normalizer": "tools/normalize-story-monsters.py",
+  "outputs": [
+    "beast/waterless-fish",
+    "spirit/pier-shadow",
+    "spirit/last-passenger",
+    "spirit/teacher-still-teaching"
+  ]
+}

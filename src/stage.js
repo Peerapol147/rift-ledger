@@ -1,3 +1,4 @@
+import {monsterStrike,admitEffect} from './combat-fx.js';
 import {characterKey} from './character-identity.js';
 import {characterFrame,loadCharacter} from './character-frames.js';
 import { motionProfile } from "./character-motion.js";
@@ -118,7 +119,16 @@ export const setHero = (c, isKid, ageM = 0, career = null, classId = null, sex =
 // Grid art drawn to a target pixel height (nearest neighbour), so grid heroes stand as tall as their age.
 function scaledSprite(a, x, y, map, h, flash = 0) { const sc = h / a.length, w = a[0].length, ww = Math.round(w * sc), x0 = Math.round(x - ww / 2); for (let j = 0; j < h; j++) { const row = a[Math.min(a.length - 1, Math.floor(j / sc))]; for (let i = 0; i < ww; i++) { const ch = row[Math.min(w - 1, Math.floor(i / sc))]; if (ch === ".") continue; pix(x0 + i, y - h + j, flash > 0 ? 0xffffffff : map[ch]); } } }
 function sprite(a, x, y, map, sc = 1, flash = 0, flip = false) { const h = a.length * sc, w = a[0].length; for (let j = 0; j < a.length; j++) for (let i = 0; i < w; i++) { const ch = a[j][flip ? w - 1 - i : i]; if (ch === ".") continue; const c = flash > 0 ? 0xffffffff : map[ch]; for (let p = 0; p < sc; p++) for (let q = 0; q < sc; q++) pix(Math.round(x - (w * sc) / 2) + i * sc + p, y - h + j * sc + q, c); } }
-function spawn(name, x, y, o = {}, dur) { const mod = REG[name]; if (!mod) return null; const f = { fx: createFx(mod, { x, y, seed: (Math.random() * 9999) | 0, ...o }), dur: dur ?? Math.min(mod.meta?.duration ?? 1, 2.2) }; fxs.push(f); return f; }
+function spawn(name, x, y, o = {}, dur) {
+  const mod=REG[name];if(!mod||stage.calm)return null;
+  const f={name,fx:createFx(mod,{x,y,seed:(Math.random()*9999)|0,light:.35,...o}),
+    dur:dur??Math.min(mod.meta?.duration??1,2.2)};
+  fxs=admitEffect(fxs,f);return f;
+}
+function monsterImpact() {
+  const cue=monsterStrike(foe?.name);spawn(cue.name,PX+cue.offset,GY,cue.options);
+}
+
 const later = (t, name, x, y) => name && pend.push({ t, name, x, y });
 // Hero strike shaped by the profession sprite (presets.js STYLE): the weapon's own motion first, then the element fx (skill) or the style hit.
 function strike(st, end, skill) {
@@ -149,7 +159,7 @@ const plateHp = (v) => { const i = overlay?.querySelector(".foeplate .fbar i"); 
 function playMinor(r) { if (seq || trip || !r.foe?.n) return; clearTimeout(foeClear); plate(null); foe = { name: r.foe.n, boss: r.foe.boss, c: "#b06060", x: W + 26, a: 1, kick: 0, flash: 0, die: 0, m: { t: 0, win: r.win } }; }
 function stepMinor(dt) {
   const m = foe.m; m.t += dt;
-  if (!m.hit && m.t > 0.22) { m.hit = 1; if (m.win) { heroX = 12; foe.flash = 0.1; foe.kick = 7; spawn(heroLook?.hit || "impacts/hit-spark", EX, GY); } else { foe.x = EX - 14; heroFlash = 0.1; heroX = -6; spawn("melee/claw-swipe", PX, GY, { flip: true }); } }
+  if (!m.hit && m.t > 0.22) { m.hit = 1; if (m.win) { heroX = 12; foe.flash = 0.1; foe.kick = 7; spawn(heroLook?.hit || "impacts/hit-spark", EX, GY); } else { foe.x = EX - 14; heroFlash = 0.1; heroX = -6; monsterImpact(); } }
   if (m.win && m.t > 0.42 && !foe.die) foe.die = 0.01;
   if (m.t > 0.95) foe = null;
 }
@@ -163,8 +173,9 @@ function stepSeq(dt) {
   if (x.miss) { float("พลาด", tx); return; }
   stop = x.crit ? 0.13 : 0.06; jolt(x.crit ? 0.55 : 0.3);
   if (you && heroLook && heroClass !== "shade") strike(heroLook, x.el ? ELEMENTS[x.el].fx[seq.i % 3] : heroLook.hit, !!x.el);
-  else spawn(you ? (heroClass === "shade" ? "shadow/dark-explosion" : x.el ? ELEMENTS[x.el].fx[seq.i % 3] : seq.wfx) : "melee/claw-swipe", tx, GY, { flip: !you });
-  if (x.crit) spawn("impacts/crit-hit", tx, GY - 18);
+  else if (you) spawn(heroClass === "shade" ? "shadow/dark-explosion" : x.el ? ELEMENTS[x.el].fx[seq.i % 3] : seq.wfx, tx, GY);
+  else monsterImpact();
+  // Critical damage already has text, hit-stop and shake; keep a single contact effect.
   if (you) { foe.flash = 0.1; foe.kick = 7; } else { heroFlash = 0.1; heroX = -7; }
   float((x.crit ? "!" : "") + x.dmg, tx, x.crit ? "crit" : you ? "" : "bad"); if (x.sk) float(x.sk, W / 2, "sk");
 }
@@ -231,7 +242,8 @@ function drawFrame(now) {
       // Flyers hover and bob; a beaten foe breaks up pixel by pixel instead of blinking out.
       const height = foe.boss ? 58 : 46, scale = height / art.height, width = Math.round(art.width * scale), left = Math.round(foe.x + foe.kick - width / 2), lift = art.fly ? 7 + Math.round(Math.sin(t * 2.6) * 2) : 0, gone = foe.die || 0;
       for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-        const sx = art.width - 1 - Math.min(art.width - 1, Math.floor(x / scale)), sy = Math.min(art.height - 1, Math.floor(y / scale)), c = art.pixels[sy * art.width + sx];
+        const sourceX = Math.min(art.width - 1, Math.floor(x / scale));
+        const sx = art.flip ? art.width - 1 - sourceX : sourceX, sy = Math.min(art.height - 1, Math.floor(y / scale)), c = art.pixels[sy * art.width + sx];
         if (c && (!gone || ((sx * 7 + sy * 13) % 16) / 16 >= gone)) pix(left + x, GY - height + y - lift - Math.round(gone * 6), foe.flash > 0 ? 0xffffffff : c);
       }
     } else sprite(foe.boss ? SPR.boss : SPR.beast, Math.round(foe.x + foe.kick), GY, foeMap(foe.c), foe.boss ? 3 : 2, foe.flash, true);
