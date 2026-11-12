@@ -52,6 +52,11 @@ Built:
    → fixed: adult work/study/train/hunt wear mind down each month, rest and people restore it, debt and open
    wounds weigh, a home and a marriage hold you up, fights end with a mind swing, and below 30 every check is
    harder (−1 a point). Sim row: working-age mind 40–75 (reckless 25–60); careful 67, normal 55, reckless 30.
+3b. ~~Life-loop basics~~ done: the event roll was per tick, so 3-month childhood ticks gave children a third of
+   the events (~1 choice a year vs ~3 for adults). It is now per month. `src/data/events/quiet.js` fills the
+   thin ages (infancy, 17–20, 50s, 62–75, 70+) and adds a 20-year payoff chain (time capsule). Playtest prints
+   choices a year by stage (child 2.1, teen 2.8, adult 3.6, old 2.6); the longest median silence went 3→2 years,
+   distinct events per life 81→108. Save now keeps the `good` log tone.
 4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.

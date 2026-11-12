@@ -8,7 +8,7 @@ export const serialize = (s) => JSON.stringify(s);
 
 // Top-level numbers the UI prints; anything that is not a finite number becomes 0 (or its numeric value).
 const NUMS = ["ageM", "gold", "fame", "debt", "hp", "mind", "lifeY", "mon0"];
-const TONES = new Set(["", "imp", "bad", "leg"]);
+const TONES = new Set(["", "imp", "good", "bad", "leg"]);
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 export function deserialize(str) {
