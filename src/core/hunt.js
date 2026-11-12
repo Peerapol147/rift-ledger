@@ -3,6 +3,7 @@ import { pk, ri, ch } from "./rng.js";
 import { stream, ageY } from "./state.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { monthly } from "./registry.js";
+import { canHunt } from "./hunter.js";
 import { cityOf } from "../data/world.js";
 import { GATES } from "../data/gates.js";
 import { TOWERS, TOWER_DECISIONS } from "../data/towers.js";
@@ -82,7 +83,8 @@ export function breakCheck(s) {
   if (ageY(s) < 18) return;
   const R = stream(s, "break");
   if (!ch(R, cityOf(s.city).gateRate * 0.08)) return;
-  const ev = EVENT_INDEX.get(s.hunter ? "hunterBreakCall" : "adultBreakNear");
+  // a hunter past 60 or retired is a civilian on the street when the gate breaks
+  const ev = EVENT_INDEX.get(canHunt(s) && ageY(s) <= 60 ? "hunterBreakCall" : "adultBreakNear");
   if (ev) openEvent(s, ev);
 }
 

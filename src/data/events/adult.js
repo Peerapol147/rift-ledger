@@ -67,6 +67,7 @@ export const ADULT_EVENTS = [
     tag: "ความสัมพันธ์",
     age: [22, 45],
     once: true,
+    if: { dating: 1 },
     t: "คนที่คุณคบมาหลายปีถามว่าเราจะเอายังไงกับอนาคต",
     o: [
       { l: "ขอแต่งงาน", need: { gold: 5000 },
@@ -90,6 +91,19 @@ ADULT_EVENTS.push({
     { l: "หลบไปอยู่บ้านเพื่อน", y: { m: "คุณนอนโซฟาคนอื่นอยู่สองสัปดาห์", mind: -8 } },
   ],
 });
+
+// Meeting someone: the start that adultLove (the proposal) needs.
+ADULT_EVENTS.push(
+  { id: "adultMeet", tag: "ความสัมพันธ์", age: [20, 40], once: true, max: { married: 0 },
+    t: "ซ้อมอพยพหนีเกตแตกประจำปีของย่าน คุณถูกจับคู่ถือเปลกับคนแปลกหน้าที่หัวเราะง่ายเกินเหตุ",
+    o: [
+      { l: "ชวนไปกินข้าวหลังซ้อมเสร็จ", y: { m: "มื้อนั้นยาวจนร้านปิด คุณสองคนเริ่มนัดกันทุกสุดสัปดาห์", mind: 8,
+        c: { dating: 1 } } },
+      { l: "ขอเบอร์ไว้ก่อน", s: "cha", diff: 10, y: { m: "อีกฝ่ายทักมาก่อนตั้งแต่คืนนั้น", mind: 5, c: { dating: 1 } },
+        n: { m: "คุณจดเบอร์ผิดไปหนึ่งตัว และไม่เคยได้รู้ว่าเป็นตัวไหน", mind: -3 } },
+      { l: "ตั้งใจซ้อมอย่างเดียว", y: { m: "ครูฝึกชมว่าคุณถือเปลนิ่งที่สุดในรุ่น" } },
+    ] },
+);
 
 // Family: a second chance at love, children, adoption. Children carry the life on (core/heir.js).
 ADULT_EVENTS.push(

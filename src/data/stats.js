@@ -7,10 +7,12 @@ export const STAT_IDS = Object.keys(STATS);
 const plan = (n, st, extra = {}) => ({ n, st, ...extra });
 export const FOCUS = {
   kid: {
-    play: plan("วิ่งเล่น", { agi: 0.12, luk: 0.06, cha: 0.06 }),
-    study: plan("ตั้งใจเรียน", { int: 0.18, wil: 0.05 }),
-    sport: plan("ออกกำลัง", { str: 0.16, agi: 0.07 }),
-    chores: plan("ช่วยงานบ้าน", { wil: 0.1, cha: 0.06 }, { gold: 8 }),
+    cuddle: plan("เล่นกับพ่อแม่", { cha: 0.12, wil: 0.04 }, { age: [0, 3] }),
+    nap: plan("นอนกลางวัน", { str: 0.08, luk: 0.06 }, { age: [0, 3] }),
+    play: plan("วิ่งเล่น", { agi: 0.12, luk: 0.06, cha: 0.06 }, { age: [4, 12] }),
+    study: plan("ตั้งใจเรียน", { int: 0.18, wil: 0.05 }, { age: [4, 12] }),
+    sport: plan("ออกกำลัง", { str: 0.16, agi: 0.07 }, { age: [4, 12] }),
+    chores: plan("ช่วยงานบ้าน", { wil: 0.1, cha: 0.06 }, { gold: 8, age: [4, 12] }),
   },
   teen: {
     study: plan("อ่านหนังสือ", { int: 0.2, wil: 0.05 }, { mind: -0.3 }),

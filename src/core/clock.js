@@ -19,16 +19,17 @@ const COOLDOWN = 60; // months before the same random event can come back (playt
 export function focusList(s) {
   const table = FOCUS[stageOf(s)];
   const hunting = !!s.hunter && !s.flags.stoppedHunting;
-  return Object.entries(table).filter(([, f]) => !f.hunter || hunting).map(([id, f]) => ({ id, ...f }));
+  const a = ageY(s), fits = (f) => !f.age || (a >= f.age[0] && a <= f.age[1]);
+  return Object.entries(table).filter(([, f]) => (!f.hunter || hunting) && fits(f)).map(([id, f]) => ({ id, ...f }));
 }
 
 export function setFocus(s, id) {
-  if (FOCUS[stageOf(s)][id]) s.focus = id;
+  if (focusList(s).some((f) => f.id === id)) s.focus = id;
 }
 
 function applyFocus(s, step) {
   const table = FOCUS[stageOf(s)];
-  if (!table[s.focus]) s.focus = Object.keys(table)[0];
+  if (!focusList(s).some((f) => f.id === s.focus)) s.focus = focusList(s)[0].id;
   const f = table[s.focus];
   for (const [k, v] of Object.entries(f.st)) s.st[k] += v * step;
   if (f.gold) addLedger(s, "ค่าขนม/งานพิเศษ", f.gold * step);
