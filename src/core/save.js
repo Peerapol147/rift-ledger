@@ -59,22 +59,48 @@ export function deserialize(str) {
       for (const m of s[k]) for (const f of NUMF) if (f in m) m[f] = num(m[f]);
     }
     if ("enemies" in s) s.enemies = Array.isArray(s.enemies) ? s.enemies.filter((e) => typeof e?.n === "string") : [];
-    return s;
+    return migrate(s);
   } catch {
     return null;
   }
 }
 
+// ---- Schema versions (save-systems skill: stamp a version, migrate step by step on load).
+// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: today.
+export const SAVE_SV = 2;
+const FAC_IDS = ["assoc", "state", "church", "research", "under"];
+const MIGRATIONS = {
+  1: (s) => {
+    s.fac ??= Object.fromEntries(FAC_IDS.map((k) => [k, 0]));
+    s.store ??= { home: [], vault: [], vaultCountry: null, guild: [] };
+    s.store.guild ??= [];
+    s.enemies ??= [];
+    s.secrets ??= [];
+  },
+};
+export function migrate(s) {
+  let v = Number.isInteger(s.sv) && s.sv > 0 ? s.sv : 1;
+  while (v < SAVE_SV) { MIGRATIONS[v]?.(s); v++; }
+  s.sv = SAVE_SV;
+  return s;
+}
+
 export function slots(store, n = 3) {
-  const load = (i) => deserialize(store.get(SLOT(i)) ?? "");
+  const BAK = (i) => SLOT(i) + ".bak";
+  // a slot that no longer reads (cut short, hand-edited) falls back to the save before it
+  const load = (i) => deserialize(store.get(SLOT(i)) ?? "") ?? deserialize(store.get(BAK(i)) ?? "");
   return {
     list: () => Array.from({ length: n }, (_, i) => {
       const s = load(i);
       return s && { name: s.name, ageM: s.ageM, dead: !!s.dead };
     }),
     load,
-    save: (i, s) => store.set(SLOT(i), serialize(s)),
-    del: (i) => store.del(SLOT(i)),
+    save: (i, s) => {
+      const prev = store.get(SLOT(i));
+      if (prev && deserialize(prev)) store.set(BAK(i), prev);
+      store.set(SLOT(i), serialize(s));
+    },
+    del: (i) => { store.del(SLOT(i)); store.del(BAK(i)); },
     exportStr: (i) => store.get(SLOT(i)),
     importStr(i, str) {
       if (!deserialize(str)) return false;
