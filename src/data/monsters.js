@@ -53,6 +53,12 @@ export const MONSTERS = {
   "เจ้าหนี้แห่งวันฟ้าแตก": as("boss/time-eater", "boss"),
   "ผู้จัดการคลินิก": as("boss/death-manager", "boss"),
   "ผู้ลงนามคนแรก": as("boss/thing-on-top-floor", "boss", 1),
+  // tower floors 21–50: the dead worlds' heroes and rulers (own art requested in art/requests.json)
+  "ผู้ประกาศข่าวภาคค่ำ": as("boss/voiceless-choir", "boss", 1),
+  "นายกเทศมนตรีคนสุดท้าย": as("boss/death-manager", "boss"),
+  "ผู้เฝ้าประภาคารแห้ง": as("boss/stalled-elevator-god", "boss", 1),
+  "ราชินีน้ำขึ้นครั้งสุดท้าย": as("boss/water-shadow-lord", "boss"),
+  "แม่ทัพเกลือ": as("boss/scaffold-giant", "boss"),
   "ผู้ตรวจหน้ากากขาว": as("boss/death-manager", "boss"),
   "ผู้เผยแผ่วิถีมาร": as("boss/voiceless-choir", "boss", 1),
 };

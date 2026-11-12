@@ -58,6 +58,16 @@ Rules:
 | mon-24 | อาจารย์ที่ยังสอนอยู่ | The teacher still teaching | Silent Tower 11–15, the school | A thin teacher-ghost in a cardigan holding chalk and a pointer, mouth open mid-lecture, chalk dust drifting off them | chalk white, blackboard green, cardigan brown | yes | `spirit/teacher-still-teaching` |
 | mon-26 | ตัวคุณจากอีกฝั่ง | You, from the other side | Silent Tower 41–60 and 61+ (the late floors) | A hooded human-shaped silhouette that looks like a generic hunter, but hollow: dark inside the outline, with the dead world's violet light showing through cracks | void black, violet cracks (#6c3fc8–#a37cf2), a white pinpoint eye | yes | `spirit/you-from-the-other-side` |
 
+Added later (bosses, 64×64 allowed):
+
+| id | Thai name | English sense | Where it appears | Look | Colours | Fly | Save as |
+|---|---|---|---|---|---|---|---|
+| mon-27 | ผู้ประกาศข่าวภาคค่ำ | The evening anchor | Silent Tower 21–25 boss, the news station | A news anchor fused to a desk and a wall of glowing screens, smile frozen, cables for hair | studio blue, screen white, a red ON-AIR glow | yes | `boss/evening-anchor` |
+| mon-28 | นายกเทศมนตรีคนสุดท้าย | The last mayor | Silent Tower 36–40 boss, the government house | A tall official in a ceremonial sash, two unsigned speeches as wings, one hand holding a pen like a blade | grey suit, gold sash, paper white | no | `boss/last-mayor` |
+| mon-29 | ผู้เฝ้าประภาคารแห้ง | The dry lighthouse keeper | Drowned Tower 21–25 boss, the harbour | An old keeper merged with a lighthouse lamp, the beam sweeping from his chest, rope and logbooks hanging off him | rust, salt white, a warm yellow beam | yes | `boss/dry-lighthouse-keeper` |
+| mon-30 | ราชินีน้ำขึ้นครั้งสุดท้าย | Queen of the last high tide | Drowned Tower 31–35 boss, the council | A queen whose gown is a frozen wave, crown of dried coral, one hand raised to call water that never comes | deep teal, coral pink, cracked white | no | `boss/last-tide-queen` |
+| mon-31 | แม่ทัพเกลือ | The salt general | Drowned Tower 41–45 boss, the dry seabed battlefield | A general turned half to salt crystal, armour crusted, a broken spear, soldiers' salt statues at his feet | salt white, sand, dark iron | no | `boss/salt-general` |
+
 Notes:
 - `fly` is already set for each one in `src/data/monsters.js`. Keep it: pass `1` as the third argument of `own(...)`
   for flyers.

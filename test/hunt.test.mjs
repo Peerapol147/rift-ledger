@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { newLife, genFloor, gateOffers, awakenCheck, gateOp, towerOp } from "../src/core/index.js";
 import { TOWERS, GATES } from "../src/data/index.js";
 
-test("floors 21–50 generate with rising difficulty and filler tag", () => {
+test("floors 21–60 generate with rising difficulty; 21–50 are written, higher floors are filler", () => {
   const T = TOWERS.silent;
   assert.ok(genFloor(T, 40).lv > genFloor(T, 21).lv);
-  assert.equal(genFloor(T, 30).filler, true);
+  assert.equal(genFloor(T, 30).filler, false);
+  assert.equal(genFloor(T, 55).filler, true);
   assert.equal(genFloor(T, 10).filler, false);
   assert.equal(genFloor(T, 20).boss, true);
 });
@@ -26,7 +27,7 @@ test("op defs have foes and decisions", () => {
   assert.equal(GATES.length >= 3, true);
 });
 
-test("floors 1–20 use their band's own decisions; filler floors use the shared ones", async () => {
+test("floors 1–50 use their band's own decisions; filler floors use the shared ones", async () => {
   const { TOWER_DECISIONS } = await import("../src/data/index.js");
   const s = newLife("tw"); s.ageM = 25 * 12; awakenCheck(s, "event");
   for (const id of ["silent", "drowned"]) {
@@ -35,6 +36,7 @@ test("floors 1–20 use their band's own decisions; filler floors use the shared
       assert.notEqual(op.decisions, TOWER_DECISIONS, `${id} ${f}`);
       assert.ok(op.decisions.length >= 2);
     }
-    assert.equal(towerOp(s, id, 30).decisions, TOWER_DECISIONS);
+    assert.equal(towerOp(s, id, 55).decisions, TOWER_DECISIONS);
+    assert.notEqual(towerOp(s, id, 30).decisions, TOWER_DECISIONS);
   }
 });

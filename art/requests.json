@@ -115,5 +115,75 @@
   "fly": true,
   "now": "spirit/old-house-owner",
   "status": "open"
+ },
+ {
+  "id": "mon-27",
+  "type": "monster",
+  "name": "ผู้ประกาศข่าวภาคค่ำ",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/voiceless-choir",
+  "status": "open",
+  "file": "boss/evening-anchor"
+ },
+ {
+  "id": "mon-28",
+  "type": "monster",
+  "name": "นายกเทศมนตรีคนสุดท้าย",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/death-manager",
+  "status": "open",
+  "file": "boss/last-mayor"
+ },
+ {
+  "id": "mon-29",
+  "type": "monster",
+  "name": "ผู้เฝ้าประภาคารแห้ง",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": true,
+  "now": "boss/stalled-elevator-god",
+  "status": "open",
+  "file": "boss/dry-lighthouse-keeper"
+ },
+ {
+  "id": "mon-30",
+  "type": "monster",
+  "name": "ราชินีน้ำขึ้นครั้งสุดท้าย",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/water-shadow-lord",
+  "status": "open",
+  "file": "boss/last-tide-queen"
+ },
+ {
+  "id": "mon-31",
+  "type": "monster",
+  "name": "แม่ทัพเกลือ",
+  "folder": "boss",
+  "size": [
+   64,
+   64
+  ],
+  "fly": false,
+  "now": "boss/scaffold-giant",
+  "status": "open",
+  "file": "boss/salt-general"
  }
 ]
