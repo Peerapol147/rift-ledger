@@ -14,7 +14,7 @@ import { monthly, books, lastly } from "./registry.js";
 export { monthly, books, lastly };
 const EVENT_CHANCE = 0.22;
 const REPEAT_CAP = 4;
-const COOLDOWN = 36; // months before the same random event can come back
+const COOLDOWN = 60; // months before the same random event can come back (playtest: 3 years felt repetitive)
 
 export function focusList(s) {
   const table = FOCUS[stageOf(s)];

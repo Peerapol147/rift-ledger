@@ -36,7 +36,8 @@ test("civilian lives end of old age within lifespan range", () => {
   for (let i = 0; i < 30; i++) {
     const s = playAll(newLife("age" + i));
     assert.ok(s.dead, "life ended");
-    if (s.dead.cause === "อายุขัย") { old++; assert.ok(s.dead.ageY >= 70 && s.dead.ageY <= 100, String(s.dead.ageY)); }
+    // lifespan is 70–85, minus 2 years per permanent injury
+    if (s.dead.cause === "อายุขัย") { old++; assert.ok(s.dead.ageY >= 60 && s.dead.ageY <= 100, String(s.dead.ageY)); }
   }
   assert.ok(old >= 25, `old-age deaths ${old}`);
 });

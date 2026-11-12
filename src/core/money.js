@@ -6,7 +6,7 @@ import { ITEMS } from "../data/items.js";
 import { hooks } from "./registry.js";
 // Every change to s.gold goes through addLedger, so the money tab can always say why.
 const LEDGER_MONTHS = 24;
-const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว", "มรดกจากครอบครัว"]);
+const NOT_EARNED = new Set(["กู้ยืม", "เงินตั้งตัวจากครอบครัว", "มรดกจากครอบครัว", "ของที่ถูกยึดชำระหนี้"]);
 
 export function addLedger(s, label, amt) {
   if (!amt) return;
@@ -73,17 +73,27 @@ function payInstalment(s) {
   addLedger(s, "ผ่อนหนี้", -pay);
 }
 
-// Default: the collector takes the most valuable item that is not locked or worn, and it weighs on the mind.
+// Default: the collector takes loose things (not locked, not worn), most valuable first, until their resale covers
+// the shortfall, and credits that to you. One line in the log, not one per item.
 function seize(s) {
   const worn = new Set(Object.values(s.equip));
-  const loose = s.items.filter((i) => !i.lock && !worn.has(i.uid));
-  const take = loose.sort((a, b) => ITEMS[b.id].price - ITEMS[a.id].price)[0];
-  if (take) {
-    s.items = s.items.filter((i) => i !== take);
-    log(s, "เงิน", `เจ้าหนี้ยึด ${ITEMS[take.id].n} ไป`, "bad");
+  const loose = s.items.filter((i) => !i.lock && !worn.has(i.uid))
+    .sort((a, b) => ITEMS[b.id].price - ITEMS[a.id].price);
+  const taken = [];
+  let got = 0;
+  for (const it of loose) {
+    if (got >= -s.gold) break;
+    taken.push(it);
+    got += Math.round(ITEMS[it.id].price * 0.5);
+  }
+  if (taken.length) {
+    s.items = s.items.filter((i) => !taken.includes(i));
+    addLedger(s, "ของที่ถูกยึดชำระหนี้", got);
+    const names = taken.slice(0, 3).map((i) => ITEMS[i.id].n).join(", ") + (taken.length > 3 ? " และอื่นๆ" : "");
+    log(s, "เงิน", `เจ้าหนี้ยึดของไป ${taken.length} ชิ้น (${names})`, "bad");
+    hooks.changeMind?.(s, -8);
   }
   s.c.seized = (s.c.seized ?? 0) + 1;
-  hooks.changeMind?.(s, -8);
 }
 
 function debtMonth(s) {

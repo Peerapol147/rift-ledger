@@ -22,6 +22,7 @@ cd rift-ledger && npm install
 |---|---|
 | `npm test` | เทสต์ระบบใน `src/core` (ไม่ต้องใช้ pixelfx) |
 | `node tools/sim.mjs 1000 --policy normal` | เล่นอัตโนมัติ 1,000 ชีวิต ตรวจข้อมูลและเป้าสมดุล (`careful`, `normal`, `reckless`) |
+| `node tools/playtest.mjs 200` | บอท 4 นิสัยเล่นเกม ตรวจข้อความเพี้ยน ค่าพัง เกมค้าง และวัดความสนุกคร่าวๆ |
 | `node tools/artcheck.mjs` | ตรวจไฟล์ภาพตามข้อตกลงกับเอเจนต์ทำภาพ (ดู `AGENTS.md`) |
 | `node tools/linelen.mjs` | หาบรรทัดที่ยาวเกิน 120 ตัวอักษรใน `src/core` และ `src/data` |
 | `npm run build` | สร้าง `play.html` ใหม่ |
