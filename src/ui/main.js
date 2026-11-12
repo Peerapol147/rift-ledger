@@ -219,6 +219,7 @@ function act(a, el) {
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
     quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
     choose: () => { C.choose(s, +v); fx(); },
+    fate: () => { if (C.chooseByFate(s)) fx(); },
     pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),

@@ -45,6 +45,8 @@ function badge(v) {
   return parts.join(" ");
 }
 
+const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
+
 export function eventPanel(s, waitingAuto) {
   if (!s.ev) {
     const op = s.op ? `<p>กำลังดำเนินการ: ${esc(s.op.def.t)}</p>${opStatus(s)}` : `<p class="dim">ยังไม่มีเรื่องเข้ามา เมื่อมีเหตุการณ์หรือทางเลือกจะขึ้นที่ช่องนี้</p>`;
@@ -62,7 +64,15 @@ export function eventPanel(s, waitingAuto) {
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";
   const wait = waitingAuto ? `<div class="dim" style="margin-top:6px">ออโต้รอให้คุณเลือกเรื่องนี้เอง</div>` : "";
-  return `<div class="ev ${ev.important ? "big" : ""}">${tag(ev.tag)}<p>${esc(ev.t)}</p>${prep}<div class="opts">${rows}</div>${wait}${s.op ? opStatus(s) : ""}</div>`;
+  const k = C.eventKind(s);
+  const tier = TIER[k.tier] ? `<span class="tier ${k.tier}">${TIER[k.tier]}</span>` : "";
+  const head = `<div class="evhead">${tier}${tag(ev.tag)}${k.part ? `<small class="dim">${k.part}</small>` : ""}</div>`;
+  // your own numbers for the stats this choice tests (no odds beyond the badges already shown)
+  const keys = [...new Set(ev.opts.map((o) => o.s).filter((x) => x && STATS[x]))];
+  const strip = keys.length ? `<div class="evstats">${keys.map((x) => `${STATS[x]} <b>${Math.floor(s.st[x])}</b>`).join(" · ")}</div>` : "";
+  const fate = !s.op && n > 1 && ev.id !== "gateChoice" ? `<button class="opt fate" data-a="fate">🎲 ให้ชะตาเลือก</button>` : "";
+  return `<div class="ev ${ev.important ? "big" : ""} t-${k.tier}">${head}<p>${esc(ev.t)}</p>${strip}${prep}
+    <div class="opts">${rows}${fate}</div>${wait}${s.op ? opStatus(s) : ""}</div>`;
 }
 
 function opStatus(s) {

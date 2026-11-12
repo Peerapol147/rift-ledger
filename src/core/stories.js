@@ -4,7 +4,7 @@ import { ri } from "./rng.js";
 import { stream, stageOf } from "./state.js";
 import { openEvent } from "./events.js";
 import { canHunt } from "./hunter.js";
-import { monthly } from "./registry.js";
+import { monthly, resolvers } from "./registry.js";
 import { CLASSES } from "../data/classes.js";
 import { STORIES } from "../data/stories/index.js";
 
@@ -48,3 +48,4 @@ export function storyMonth(s) {
 }
 
 monthly.push(storyMonth);
+resolvers.storyLen = (id) => STORIES[id]?.chapters.length;
