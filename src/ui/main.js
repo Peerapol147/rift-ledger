@@ -60,7 +60,7 @@ function startScreen() {
       <p>ออโต้เลือกเรื่องเล็กให้ และหยุดรอคุณทุกเรื่องที่มีผลต่อชีวิต ปรับได้ที่ช่องข้างปุ่มความเร็ว</p>
       <p>ชีวิตจบได้หลายแบบ สิ่งที่ได้เห็นจะถูกจดในสมุดสะสมและเปิดทางให้ชีวิตถัดไป</p>
     </details>
-    ${rows ? `<h3>เซฟ</h3>${rows}` : ""}<p class="dim" style="margin-top:12px">ชีวิตที่ผ่านมา ${book.get().lives}</p></div>`;
+    ${rows ? `<h3>เซฟ</h3>${rows}` : ""}<p style="margin-top:12px">${feedbackLink}</p><p class="dim" style="margin-top:6px">ชีวิตที่ผ่านมา ${book.get().lives}</p></div>`;
   $("#start").hidden = false; $("#game").hidden = true; $("#end").hidden = true;
 }
 
@@ -100,6 +100,7 @@ function showEnd(record) {
     <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
     <div class="kv"><span>ชื่อเสียง</span><b>${d.fame}</b></div>${legacyRows()}${d.floor ? `<div class="kv"><span>ชั้นหอคอยสูงสุด</span><b>${d.floor}</b></div>` : ""}
     <p class="dim" style="margin-top:10px">ชีวิตนี้มีทางที่คุณไม่ได้เห็น ${d.unseen} ทาง</p>
+    <p style="margin-top:10px">${feedbackLink}</p>
     <div class="row">${C.canHeir(s) ? btn("heir", `เล่นต่อเป็น${C.heirWord(s)}`, 'class="pri"') : ""}${btn("new", "เริ่มชีวิตใหม่", C.canHeir(s) ? "" : 'class="pri"')}${btn("quit", "หน้าแรก")}</div></div>`;
   $("#end").hidden = false;
 }
@@ -170,6 +171,10 @@ function render() {
   $("#modal").hidden = !ui.settings;
   if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
 }
+
+// The owner's private feedback form (an artifact on claude.ai): experience only, nothing from the game is sent.
+const FEEDBACK_URL = "https://claude.ai/artifact/A3cDSFiDyyLiSPaEWeEKPw";
+const feedbackLink = `<a class="fblink" href="${FEEDBACK_URL}" target="_blank" rel="noopener">เล่นแล้วรู้สึกยังไง บอกได้ที่นี่ ↗</a>`;
 
 // ---- Loop
 function step() {
