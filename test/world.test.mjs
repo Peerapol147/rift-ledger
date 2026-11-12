@@ -73,3 +73,14 @@ test("a hunter who stopped hunting gets the default calendar view, not nothing",
   assert.equal(s.ev?.id, "cal48");
   assert.ok(Array.isArray(s.ev.opts) && s.ev.opts.length > 0);
 });
+
+test("world news reads as Thai: spaced rank letters, short tower names", () => {
+  for (const seed of ["txt1", "txt2", "txt3"]) {
+    const s = playUntil(newLife(seed), (x) => ageY(x) >= 60);
+    for (const l of s.log) {
+      assert.doesNotMatch(l.text, /[A-Z]แตก/, l.text);
+      assert.doesNotMatch(l.text, /สถิติ\S/, l.text);
+      assert.doesNotMatch(l.text, /The (Silent|Drowned) Tower/, l.text);
+    }
+  }
+});

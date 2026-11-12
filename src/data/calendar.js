@@ -45,7 +45,7 @@ export const CALENDAR = [
     tower: "silent",
     floor: 48,
     npc: "silentHolder",
-    news: "{npc} ทำลายสถิติหอเงียบ ขึ้นถึงชั้น 48 เป็นคนแรกของโลก",
+    news: "{npc} ทำลายสถิติ หอเงียบ ขึ้นถึงชั้น 48 เป็นคนแรกของโลก",
     failNews: "{npc} พยายามขึ้นหอเงียบชั้น 48 แต่ไม่สำเร็จ เพราะมีคนทำได้ก่อนแล้ว",
   },
   {
@@ -84,7 +84,7 @@ export const CALENDAR = [
 ];
 
 // ---- Generators for the rest of the calendar (years 33–90).
-const RANK_WORD = { B: "แรงก์ B", A: "แรงก์ A", S: "แรงก์ S" };
+const RANK_WORD = { B: "แรงก์ B ", A: "แรงก์ A ", S: "แรงก์ S " };
 
 // A gate break in a city: the same shape everywhere, told from each life's angle.
 function gateBreak(id, year, month, country, city, cityName, rank) {
@@ -138,7 +138,7 @@ function gateBreak(id, year, month, country, city, cityName, rank) {
 // A tower record attempt by a named NPC; a player who got there first turns it into a failure story.
 const record = (id, year, month, tower, floor, npc, name) => ({
   id, year, month, kind: "record", tower, floor, npc,
-  news: `{npc} ทำลายสถิติ${name} ขึ้นถึงชั้น ${floor}`,
+  news: `{npc} ทำลายสถิติ ${name} ขึ้นถึงชั้น ${floor}`,
   failNews: `{npc} พยายามขึ้น${name}ชั้น ${floor} แต่ไม่สำเร็จ เพราะมีคนทำได้ก่อนแล้ว`,
 });
 
