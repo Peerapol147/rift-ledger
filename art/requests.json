@@ -62,7 +62,7 @@
   ],
   "fly": true,
   "now": "spirit/floating-eyes",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-21",
@@ -75,7 +75,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-23",
@@ -88,7 +88,7 @@
   ],
   "fly": true,
   "now": "spirit/floating-eyes",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-24",
@@ -101,7 +101,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-26",
@@ -114,7 +114,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-27",
