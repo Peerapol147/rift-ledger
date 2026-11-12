@@ -1,8 +1,6 @@
 --- a/src/monster-art.js
 +++ b/src/monster-art.js
-@@ -23,9 +23,35 @@
- import cableDragon from "../art/monsters/boss/cable-dragon.png";
- import thingOnTopFloor from "../art/monsters/boss/thing-on-top-floor.png";
+@@ -25,2 +25,15 @@
  import riftMother from "../art/monsters/boss/rift-mother.png";
 +import shipEatingVine from "../art/monsters/beast/ship-eating-vine.png";
 +import containerCrab from "../art/monsters/beast/container-crab.png";
@@ -18,7 +16,7 @@
 +import lastTideQueen from "../art/monsters/boss/last-tide-queen.png";
 +import saltGeneral from "../art/monsters/boss/salt-general.png";
  import { MONSTERS, monsterOf, tintOf } from "./data/monsters.js";
- 
+@@ -28,2 +41,15 @@
  const ART = {
 +  "beast/ship-eating-vine": shipEatingVine,
 +  "beast/container-crab": containerCrab,
@@ -34,5 +32,3 @@
 +  "boss/last-tide-queen": lastTideQueen,
 +  "boss/salt-general": saltGeneral,
    "beast/waterless-fish": waterlessFish,
-   "beast/sewer-hound": sewerHound, "beast/acid-snail": acidSnail, "beast/flying-fish": flyingFish, "beast/signal-bat": signalBat, "beast/glass-frog": glassFrog,
-   "construct/wire-eater": wireEater, "construct/concrete-humanoid": concreteHumanoid, "construct/streetlight-spider": streetlightSpider, "construct/driverless-machine": driverlessMachine, "construct/rail-centipede": railCentipede,
