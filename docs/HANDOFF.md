@@ -6,6 +6,14 @@ Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design i
 **Owner's latest continuation brief:** [CLAUDE-NEXT-BRIEF.md](CLAUDE-NEXT-BRIEF.md).
 Read it before choosing the next task; it separates shipped UI work from remaining save/story work.
 
+## Download packaging fix — 13 November 2026
+
+The owner could not download the raw HTML link. HTTP verification showed GitHub serves it as
+`text/plain`; it opens source rather than a playable page or download prompt. Distribute
+`downloads/rift-ledger-play.zip` instead. It contains the current `play.html` and Thai instructions.
+After every new build run `python tools/package-download.py` before distributing the ZIP;
+the packager verifies ZIP integrity and byte equality with the built HTML.
+
 ## Owner follow-up: animated characters and audible music — 13 November 2026
 
 Follow [the motion plan](superpowers/plans/2026-11-13-character-motion.md) and latest section in
