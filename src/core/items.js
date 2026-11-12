@@ -5,7 +5,8 @@ import { addLedger } from "./money.js";
 import { deathHooks } from "./body.js";
 import { gearHooks, afterOpHooks } from "./ops.js";
 import { hooks } from "./registry.js";
-import { ITEMS, LOOT_TABLE } from "../data/items.js";
+import { ITEMS, SETS } from "../data/items.js";
+import { CLASSES } from "../data/classes.js";
 import { plusMul } from "./forge.js";
 
 export const bagCap = () => 20;
@@ -44,8 +45,13 @@ export function compare(s, uid) {
   const a = inst(s, uid), def = ITEMS[a?.id];
   const b = inst(s, s.equip[def?.slot]), cur = ITEMS[b?.id];
   const out = {};
-  const v = (d, it, k) => (d?.stats?.[k] ?? 0) * plusMul(it);
-  for (const k of ["atk", "def", "hp"]) out[k] = Math.round(v(def, a, k) - v(cur, b, k));
+  // set bonuses change too when a piece goes in or out
+  const now = setBonus(s), was = s.equip, slot = def?.slot;
+  let after = now;
+  if (slot) { s.equip = { ...was, [slot]: uid }; after = setBonus(s); s.equip = was; }
+  for (const k of ["atk", "def", "hp"]) {
+    out[k] = Math.round(gearValue(s, a, k) - gearValue(s, b, k) + after[k] - now[k]);
+  }
   return out;
 }
 
@@ -99,22 +105,42 @@ for (const id of Object.keys(ITEMS)) {
   };
 }
 
-gearHooks.push((s) => {
-  const out = { atk: 0, def: 0, hp: 0 };
+// Gear made for your role gives +25%. Only a hunter has a role.
+export const ROLE_BONUS = 1.25;
+const roleMul = (s, d) => (d?.role && d.role === CLASSES[s.hunter?.cls]?.role ? ROLE_BONUS : 1);
+export const gearValue = (s, it, k) => (ITEMS[it?.id]?.stats?.[k] ?? 0) * plusMul(it) * roleMul(s, ITEMS[it?.id]);
+
+// Pieces of each tower set being worn, and the bonus they give together.
+export function setBonus(s) {
+  const n = {}, out = { atk: 0, def: 0, hp: 0 };
   for (const uid of Object.values(s.equip)) {
-    const it = inst(s, uid), st = ITEMS[it?.id]?.stats ?? {};
-    for (const k in out) out[k] += (st[k] ?? 0) * plusMul(it);
+    const set = ITEMS[inst(s, uid)?.id]?.set;
+    if (set) n[set] = (n[set] ?? 0) + 1;
   }
+  for (const [set, c] of Object.entries(n)) {
+    const b = SETS[set]?.[Math.min(3, c)];
+    if (c >= 2 && b) for (const k in out) out[k] += b[k] ?? 0;
+  }
+  return out;
+}
+
+gearHooks.push((s) => {
+  const out = { atk: 0, def: 0, hp: 0 }, set = setBonus(s);
+  for (const uid of Object.values(s.equip)) for (const k in out) out[k] += gearValue(s, inst(s, uid), k);
+  for (const k in out) out[k] += set[k];
   return out;
 });
 
 afterOpHooks.push((s, o, r) => {
   if (r !== "won" || o.def.kind === "job") return;
   const R = stream(s, "loot");
-  const rolls = 1 + o.loot + (o.def.boss ? 1 : 0);
+  const table = lootTable(o.def), gear = table.filter((x) => ITEMS[x.id].slot);
+  const rolls = 1 + o.loot;
   for (let i = 0; i < rolls && s.items.length < bagCap(); i++) {
-    if (ri(R, 0, 1)) giveItem(s, wp(R, LOOT_TABLE).id, o.def.t);
+    if (ri(R, 0, 1)) giveItem(s, wp(R, table).id, o.def.t);
   }
+  // a boss always leaves one piece of gear
+  if (o.def.boss && gear.length && s.items.length < bagCap()) giveItem(s, wp(R, gear).id, o.def.t);
 });
 
 deathHooks.push((s, cause) => {
@@ -128,3 +154,25 @@ deathHooks.push((s, cause) => {
   log(s, "รอดตาย", "Phoenix Token แตกเป็นผุยผง คุณลืมตาขึ้นอีกครั้ง", "leg");
   return true;
 });
+
+// ---- Loot by danger: a gate's rank (or a tower floor) sets the tier of gear it can drop. Spec §9.1, loot pass.
+const GATE_TIER = [0, 0, 1, 1, 2, 2, 3];
+export const lootTier = (def) => (def.kind === "tower"
+  ? (def.floor <= 10 ? 0 : def.floor <= 20 ? 1 : def.floor <= 35 ? 2 : 3)
+  : GATE_TIER[Math.max(0, Math.min(6, def.rank ?? 0))]);
+
+export function lootTable(def) {
+  const t = lootTier(def);
+  const out = [{ id: "manaShard", w: 10 }, { id: "beastHide", w: 8 }, { id: "healPotion", w: 5 }];
+  if (t >= 1) out.push({ id: "coreStone", w: 2 });
+  if (t >= 2) out.push({ id: "bookTelekinesis", w: 0.15 });
+  for (const [id, d] of Object.entries(ITEMS)) {
+    if (!d.slot) continue;
+    if (d.set) {
+      if (def.kind === "tower" && SETS[d.set]?.tower === def.tower && d.rarity <= t + 1) out.push({ id, w: 0.8 });
+    }
+    else if (d.rarity === t) out.push({ id, w: 0.5 });
+    else if (d.rarity === t + 1) out.push({ id, w: 0.08 });
+  }
+  return out;
+}

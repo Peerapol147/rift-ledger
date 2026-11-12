@@ -1,5 +1,6 @@
 import * as C from "../../core/index.js";
-import { ITEMS, RARITY } from "../../data/index.js";
+import { ITEMS, RARITY, ROLES } from "../../data/index.js";
+import { SETS } from "../../data/items.js";
 import { esc, btn, money } from "../dom.js";
 
 const KINDS = { "": "ทั้งหมด", weapon: "อาวุธ", armor: "เกราะ", charm: "เครื่องประดับ", potion: "ยา", material: "วัตถุดิบ", book: "หนังสือสกิล", relic: "ของวิเศษ" };
@@ -24,7 +25,7 @@ export function itemsTab(s, ui) {
       !it.lock && !eq.has(it.uid) ? btn("sell:" + it.uid, "ขาย " + money(d.price * 0.5), 'class="sm"') : "",
     ].join("");
     return `<div class="item" style="--rc:${r.c}"><span><b>${esc(d.n)}${it.plus ? ` +${it.plus}` : ""}</b> ${eq.has(it.uid) ? "(สวมอยู่)" : ""}
-      <small class="dim">${r.n} · ได้จาก ${esc(it.from)}</small> ${d.slot ? delta(C.compare(s, it.uid)) : ""}</span><span>${acts}</span></div>`;
+      <small class="dim">${r.n}${d.role ? ` · เหมาะกับ${ROLES[d.role]}` : ""}${d.set ? ` · ชุด${SETS[d.set].n}` : ""} · ได้จาก ${esc(it.from)}</small> ${d.slot ? delta(C.compare(s, it.uid)) : ""}</span><span>${acts}</span></div>`;
   }).join("") || `<div class="dim">ไม่มีของที่ตรงเงื่อนไข</div>`;
   const kindSel = Object.entries(KINDS).map(([k, n]) => `<option value="${k}" ${f.kind === k || (!f.kind && !k) ? "selected" : ""}>${n}</option>`).join("");
   const sortSel = Object.entries(SORTS).map(([k, n]) => `<option value="${k}" ${f.sort === k ? "selected" : ""}>${n}</option>`).join("");

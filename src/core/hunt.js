@@ -39,7 +39,7 @@ export function gateOffers(s) {
   return out;
 }
 
-export const gatePay = (rank) => Math.round(120 * Math.pow(2.6, rank));
+export const gatePay = (rank) => Math.round(108 * Math.pow(2.6, rank));
 
 export function gateOp(s, g) {
   const theme = GATES.find((x) => x.id === g.id);
