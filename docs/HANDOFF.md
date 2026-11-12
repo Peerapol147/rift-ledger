@@ -3,6 +3,16 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+## Original improvement roadmap — owner emphasized story (13 November 2026)
+
+Start with [the Compare and evidence](research/rift-ledger-vs-way-of-xian.md), then
+[the Claude roadmap](superpowers/plans/2026-11-13-improvement-roadmap.md).
+The four detailed plans cover trust, readable decisions, **original narrative continuity**,
+and validation. Story audit starts alongside UX work; civilian and hunter pilots plus
+public heir memories are required. Do not copy reference-game code, plots, art or formulas.
+This branch contains documentation only relative to 98e5332; plans are not implemented.
+The raw HAR/reference source remains outside Git. Preserve the existing default/music fix.
+
 ## Owner-requested defaults and music fix — 13 November 2026
 
 Branch `claude/manual-defaults-bundled-music` implements UX-15: first play and pre-migration
