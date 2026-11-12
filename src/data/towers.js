@@ -1,5 +1,6 @@
-// Towers. Each is the remains of one devoured universe. Floors 1–20 have hand-written bands; higher floors use chapters
-// and are generated as filler until Phase 3 writes them. Spec §3.4.
+// Towers. Each is the remains of one devoured universe. Floors 1–50 have hand-written bands (21–50 in towers-high.js);
+// higher floors use chapters as filler. Spec §3.4.
+import { HIGH_BANDS } from "./towers-high.js";
 const band = (from, to, t, mon, boss, decisions) => ({ from, to, t, mon, boss, decisions });
 const dec = (t, o) => ({ t, o });
 
@@ -184,3 +185,5 @@ export const TOWER_DECISIONS = [
     ],
   },
 ];
+
+for (const [id, bands] of Object.entries(HIGH_BANDS)) TOWERS[id].bands.push(...bands);
