@@ -39,7 +39,8 @@ test("civilian lives end of old age within lifespan range", () => {
     // lifespan is 70–85, minus 2 years per permanent injury
     if (s.dead.cause === "อายุขัย") { old++; assert.ok(s.dead.ageY >= 60 && s.dead.ageY <= 100, String(s.dead.ageY)); }
   }
-  assert.ok(old >= 25, `old-age deaths ${old}`);
+  // illness now takes some lives too (always after a diagnosis and a choice)
+  assert.ok(old >= 20, `old-age deaths ${old}`);
 });
 
 test("whole life is deterministic", () => {
