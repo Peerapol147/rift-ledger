@@ -51,16 +51,6 @@ export const SETS = {
   drowned: { n: "ผู้เดินทะเลแห้ง", tower: "drowned", 2: { hp: 60 }, 3: { hp: 60, def: 15, atk: 10 } },
 };
 
-// What a won operation can drop, weighted. loot points from decisions add rolls.
 // Items of one rarity that a shop could sell (no relics, nothing unique).
 export const RARITY_ITEMS = (r) => Object.keys(ITEMS).filter((k) => ITEMS[k].rarity === r && ITEMS[k].kind !== "relic");
 
-export const LOOT_TABLE = [
-  { id: "manaShard", w: 10 },
-  { id: "beastHide", w: 8 },
-  { id: "healPotion", w: 5 },
-  { id: "coreStone", w: 2 },
-  { id: "hunterBow", w: 1 },
-  { id: "gateplate", w: 0.6 },
-  { id: "bookTelekinesis", w: 0.15 },
-];

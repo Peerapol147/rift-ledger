@@ -1,4 +1,5 @@
 // Saves and the cross-life collection book. Pure: takes a storage adapter { get, set, del }. Spec §10 and §13.
+import { ITEMS } from "../data/items.js";
 const SLOT = (i) => `riftledger.slot.v2.${i}`;
 const BOOK = "riftledger.book.v2";
 const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
@@ -23,7 +24,7 @@ export function deserialize(str) {
     for (const g of s.goals ?? []) g.target = num(g.target);
     for (const l of s.log ?? []) if (!TONES.has(l.tone)) l.tone = "";
     // item lists: only real records with a plain uid; plus is a whole number 0..5
-    const okItem = (i) => i && typeof i === "object" && /^i\d+$/.test(String(i.uid)) && typeof i.id === "string";
+    const okItem = (i) => i && typeof i === "object" && /^i\d+$/.test(String(i.uid)) && ITEMS[i.id] != null;
     const clean = (list) => (Array.isArray(list) ? list.filter(okItem) : []);
     s.items = clean(s.items);
     if (s.store) {

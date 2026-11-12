@@ -45,7 +45,13 @@ export function compare(s, uid) {
   const a = inst(s, uid), def = ITEMS[a?.id];
   const b = inst(s, s.equip[def?.slot]), cur = ITEMS[b?.id];
   const out = {};
-  for (const k of ["atk", "def", "hp"]) out[k] = Math.round(gearValue(s, a, k) - gearValue(s, b, k));
+  // set bonuses change too when a piece goes in or out
+  const now = setBonus(s), was = s.equip, slot = def?.slot;
+  let after = now;
+  if (slot) { s.equip = { ...was, [slot]: uid }; after = setBonus(s); s.equip = was; }
+  for (const k of ["atk", "def", "hp"]) {
+    out[k] = Math.round(gearValue(s, a, k) - gearValue(s, b, k) + after[k] - now[k]);
+  }
   return out;
 }
 
@@ -163,7 +169,7 @@ export function lootTable(def) {
   for (const [id, d] of Object.entries(ITEMS)) {
     if (!d.slot) continue;
     if (d.set) {
-      if (def.kind === "tower" && SETS[d.set].tower === def.tower && d.rarity <= t + 1) out.push({ id, w: 0.8 });
+      if (def.kind === "tower" && SETS[d.set]?.tower === def.tower && d.rarity <= t + 1) out.push({ id, w: 0.8 });
     }
     else if (d.rarity === t) out.push({ id, w: 0.5 });
     else if (d.rarity === t + 1) out.push({ id, w: 0.08 });

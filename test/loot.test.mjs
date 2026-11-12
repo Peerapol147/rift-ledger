@@ -29,3 +29,11 @@ test("gear made for your role gives +25%; a full set adds its bonus", () => {
   s.hunter.cls = Object.keys(CLASSES).find((c) => CLASSES[c].role === "vanguard");
   assert.equal(C.gearValue(s, s.items.find((i) => i.id === "rebarClub"), "atk"), 7 * 1.25);
 });
+
+test("compare counts the set bonus a swap breaks", () => {
+  const s = hunter("lt2");
+  for (const id of ["shiftLanyard", "staplerGun"]) C.equip(s, C.giveItem(s, id, "t"));
+  const before = C.heroPower(s).atk, uid = C.giveItem(s, "coralHarpoon", "t"), shown = C.compare(s, uid).atk;
+  C.equip(s, uid);
+  assert.ok(Math.abs(C.heroPower(s).atk - before - shown) <= 1, `shown ${shown}`);
+});
