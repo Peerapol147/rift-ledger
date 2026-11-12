@@ -19,7 +19,7 @@ export const MONSTERS = {
   "ปูเกราะตู้สินค้า": own("beast/container-crab", "beast"),
   "นกล่อฟ้า": own("beast/sky-lure-bird", "beast", 1),
   "แพะหินปูน": as("beast/sewer-hound", "beast"),
-  "ปลาไร้น้ำ": as("beast/flying-fish", "beast", 1),
+  "ปลาไร้น้ำ": own("beast/waterless-fish", "beast", 1),
   "ตัวกินสายไฟ": own("construct/wire-eater", "construct"),
   "มนุษย์คอนกรีต": own("construct/concrete-humanoid", "construct"),
   "แมงมุมเสาไฟ": own("construct/streetlight-spider", "construct"),

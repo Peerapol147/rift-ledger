@@ -2,6 +2,7 @@
 import sewerHound from "../art/monsters/beast/sewer-hound.png";
 import acidSnail from "../art/monsters/beast/acid-snail.png";
 import flyingFish from "../art/monsters/beast/flying-fish.png";
+import waterlessFish from "../art/monsters/beast/waterless-fish.png";
 import signalBat from "../art/monsters/beast/signal-bat.png";
 import glassFrog from "../art/monsters/beast/glass-frog.png";
 import wireEater from "../art/monsters/construct/wire-eater.png";
@@ -25,6 +26,7 @@ import riftMother from "../art/monsters/boss/rift-mother.png";
 import { MONSTERS, monsterOf, tintOf } from "./data/monsters.js";
 
 const ART = {
+  "beast/waterless-fish": waterlessFish,
   "beast/sewer-hound": sewerHound, "beast/acid-snail": acidSnail, "beast/flying-fish": flyingFish, "beast/signal-bat": signalBat, "beast/glass-frog": glassFrog,
   "construct/wire-eater": wireEater, "construct/concrete-humanoid": concreteHumanoid, "construct/streetlight-spider": streetlightSpider, "construct/driverless-machine": driverlessMachine, "construct/rail-centipede": railCentipede,
   "spirit/floating-eyes": floatingEyes, "spirit/old-house-owner": oldHouseOwner,

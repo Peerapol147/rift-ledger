@@ -1,5 +1,9 @@
 Original code-native pixel art, authored for Rift Ledger. No stock pixels copied. Source: src/hero-art.js. Shared 20px grid width, dark outline, warm skin palette. Age stages: <3 infant, <13 child, <18 teen, <60 adult, 60+ elder. Active career variants: doc, smith, cop. All preview samples validated for row width and palette coverage.
 
+### Waterless fish — 2026-11-13
+
+- `beast/waterless-fish.png` (`mon-9`) — original design generated and refined with OpenAI `image_gen`, using `beast/flying-fish.png` only as a style reference. Prompt: “A gaunt left-facing fish swimming through air, dry cracked dusty-teal scales, salt-white crust, dark gasping gills, a bulging dead-white eye and a ragged tail; eerie, top-left lighting, tinted dark outline, transparent background, no text or scenery.” Refinement: simplify to broad scale plates, three stout dorsal spines, two tail lobes and a stronger eye/gill silhouette for native-size readability. ImageMagick export: binary alpha threshold at 50%, trim, nearest-neighbour fit within 50×40, no dithering, quantize to at most 14 opaque colours plus transparency, centered on 56×56 RGBA. Final sprite has 12 opaque colours, hard alpha (0/255), bounds (3,9)–(53,47), and clear bottom rows for hovering. Compared against the existing flying fish and sky-lure bird at 1× and 4× in two rounds.
+
 Weather: original procedural pixel art in src/weather-art.js; normal, winter, summer, sunny, rainy (adds the pixelfx rain ambient). Seasons follow the calendar in multi-month blocks (hot Mar-May, wet Jun-Oct, cool Nov-Feb); home, city and street each have their own look per season, and one roll per season per year can give an off year. Outdoor scenes only; no gameplay stat effects.
 
 Cook (cook): original chef hat, teal apron and steel pan; shared age variants and palette.
