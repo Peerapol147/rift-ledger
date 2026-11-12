@@ -25,6 +25,7 @@ export function val(s, key) {
   if (key === "age") return ageY(s);
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
+  if (key === "employed") return s.job ? 1 : 0;
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
   if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
@@ -84,6 +85,8 @@ export function eligible(s, ev) {
   if (ev.once && s.c["ev:" + ev.id]) return false;
   for (const [k, min] of Object.entries(ev.if ?? {})) if (val(s, k) < min) return false;
   for (const [k, max] of Object.entries(ev.max ?? {})) if (val(s, k) > max) return false;
+  // a follow-up waits so many months after the counter it needs was first set
+  for (const [k, m] of Object.entries(ev.after ?? {})) if (s.ageM - (s.c["at:" + k] ?? -1e9) < m) return false;
   return true;
 }
 
@@ -139,7 +142,10 @@ export function applyOutcome(s, out, label = "เหตุการณ์", leth
   hooks.facOutcome?.(s, out);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
-  for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;
+  for (const [k, d] of Object.entries(out.c ?? {})) {
+    if (!s.c[k] && d > 0) s.c["at:" + k] = s.ageM; // when it began, for follow-ups that wait (`after`)
+    s.c[k] = (s.c[k] ?? 0) + d;
+  }
   Object.assign(s.flags, out.flags ?? {});
   if (out.mind) hooks.changeMind ? hooks.changeMind(s, out.mind) : (s.mind = clamp(s.mind + out.mind, 0, 100));
   if (out.injury) hooks.injure?.(s, out.injury[0], out.injury[1] ?? null);
