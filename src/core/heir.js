@@ -14,7 +14,7 @@ import { COUNTRIES } from "../data/world.js";
 import { CALENDAR } from "../data/calendar.js";
 
 export const HEIR_TAX = 0.2;
-// 20% on the first ₿50,000, 60% on the rest: a family keeps a start, not a fortune that compounds every generation
+// 20% on the first ฿50,000, 60% on the rest: a family keeps a start, not a fortune that compounds every generation
 export const estateAfterTax = (g) => Math.round(Math.min(g, 50000) * (1 - HEIR_TAX) + Math.max(0, g - 50000) * 0.4);
 export const canHeir = (s) => !!s.dead && (s.c.kids ?? 0) > 0;
 // a parent who died old leaves a grandchild

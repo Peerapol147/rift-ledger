@@ -108,7 +108,7 @@ monthly.push((s) => {
   if (!pool.length) return;
   const id = pk(stream(s, "under"), pool), d = ITEMS[id], price = Math.round(d.price * 0.6);
   s.underOffer = id;
-  openEvent(s, { id: "underShop", tag: "ฝ่ายต่างๆ", t: `ข้อความจากเบอร์แปลก: ปีนี้มี ${d.n} ราคา ₿${price} สนใจไหม`,
+  openEvent(s, { id: "underShop", tag: "ฝ่ายต่างๆ", t: `ข้อความจากเบอร์แปลก: ปีนี้มี ${d.n} ราคา ฿${price} สนใจไหม`,
     o: [{ l: "ซื้อ", need: { gold: price }, y: { m: "ของถูกส่งมาในกล่องไม่มีชื่อผู้ส่ง", gold: -price,
       goldLabel: "ของจากตลาดมืด", act: "underBuy", fac: { assoc: -2 } } },
     { l: "ไม่เอา", y: { m: "ข้อความนั้นลบตัวเองไปในหนึ่งนาที" } }] });

@@ -7,9 +7,10 @@ import { SYSTEM_EVENTS } from "./systems.js";
 import { PLACE_EVENTS_2 } from "./places2.js";
 import { AGE_EVENTS } from "./ages.js";
 import { QUIET_EVENTS } from "./quiet.js";
+import { LIFE_EVENTS } from "./life.js";
 export const ALL_EVENTS = [...KID_EVENTS, ...TEEN_EVENTS, ...ADULT_EVENTS, ...HUNTER_EVENTS, ...MORE_EVENTS,
   ...SYSTEM_EVENTS, ...PLACE_EVENTS_2,
-  ...AGE_EVENTS, ...QUIET_EVENTS];
+  ...AGE_EVENTS, ...QUIET_EVENTS, ...LIFE_EVENTS];
 
 // One-of-a-kind happenings: a strange ship on the beach or a river frozen in August is a story once and a loop the
 // second time. Everything listed here can happen once in a life.

@@ -78,7 +78,7 @@ function illness(s) {
   openEvent(s, { id: "illness", tag: "ร่างกาย", important: true,
     t: "หมอเรียกคุณกลับไปฟังผลตรวจอีกรอบ เสียงเขาเบากว่าทุกครั้ง: เป็นโรคร้าย ถ้ารักษาตอนนี้ยังมีโอกาสดี",
     o: [
-      { l: `รักษาเต็มที่ ₿${cost.toLocaleString("en-US")}`, need: { gold: cost }, s: "wil", diff: 10,
+      { l: `รักษาเต็มที่ ฿${cost.toLocaleString("en-US")}`, need: { gold: cost }, s: "wil", diff: 10,
         y: { m: "การรักษายาวนานและเหนื่อย แต่หมอบอกว่าหายแล้ว", gold: -cost, goldLabel: "ค่ารักษาโรคร้าย", hp: -15 },
         n: { m: "รักษาจนหมดทาง หมอบอกว่าเหลือเวลาไม่มาก", gold: -cost, goldLabel: "ค่ารักษาโรคร้าย",
           act: "illShort" } },

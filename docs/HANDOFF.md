@@ -66,8 +66,11 @@ Built:
    have full unique names; one-of-a-kind events happen once (`src/data/events/index.js`), repeats are capped at 3
    with 8 years between; events check the life they land in (rent, marriage, kindergarten order).
    `test/coherence.test.mjs` guards all of it. Known and left: the sim bot now works from 18 and so carries no
-   debt, which lifts its mind row above target (bot habit, not retuned); the adult event pool is still small
-   (about 3 choices a year, longest quiet stretch 3 years) and needs more written events.
+   debt, which lifts its mind row above target (bot habit, not retuned: mind row reads 81 normal / 86 careful against a 40–75 target).
+   Second pass: `src/data/events/life.js` adds 24 adult events that check marriage, children, home and job
+   (distinct stories a life 108→129, longest quiet stretch back to 2 years). Lesson: their stat rewards had to be
+   cut to 0.2, because +0.5 charm a few times lifted every bot over the promotion stat gates (civilian income
+   +32%). Money now shows as ฿ (₿ read as Bitcoin).
 4. ~~Gate scenes repeat~~ now 8 themes (spec §15), each with its own backdrop from `place-art.js`; 5 new bosses
    borrow art (rows mon-32..36 in `art/requests.json`). Offers never list the same gate twice.
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.

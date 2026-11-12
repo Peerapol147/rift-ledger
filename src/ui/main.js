@@ -73,7 +73,7 @@ function endScreen() { showEnd(true); }
 
 function legacyRows() {
   const L = C.legacyOf(s);
-  return `<div class="kv"><span>มรดกทั้งหมด</span><b>₿${L.assets.toLocaleString("en-US")}</b></div>
+  return `<div class="kv"><span>มรดกทั้งหมด</span><b>฿${L.assets.toLocaleString("en-US")}</b></div>
     ${L.kids ? `<div class="kv"><span>ลูก</span><b>${L.kids} คน</b></div>` : ""}
     ${L.guild ? `<div class="kv"><span>กิลด์ที่ก่อตั้ง</span><b>${esc(L.guild)}</b></div>` : ""}
     ${L.enemies.length ? `<div class="kv"><span>ศัตรูที่ทิ้งไว้</span><b>${esc(L.enemies.join(", "))}</b></div>` : ""}`;
@@ -102,7 +102,7 @@ function showEnd(record) {
   }
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
-    <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>₿${d.gold.toLocaleString("en-US")}</b></div>
+    <div class="kv"><span>ทรัพย์สินสุดท้าย</span><b>฿${d.gold.toLocaleString("en-US")}</b></div>
     <div class="kv"><span>ชื่อเสียง</span><b>${d.fame}</b></div>${legacyRows()}${d.floor ? `<div class="kv"><span>ชั้นหอคอยสูงสุด</span><b>${d.floor}</b></div>` : ""}
     <p class="dim" style="margin-top:10px">ชีวิตนี้มีทางที่คุณไม่ได้เห็น ${d.unseen} ทาง</p>
     <p style="margin-top:10px">${feedbackLink}</p>
@@ -271,7 +271,7 @@ function act(a, el) {
     junk: () => banner(`ขายไป ${C.autoJunk(s, { belowRarity: ui.junk })} ชิ้น`),
     loadSave: () => { const n = "ชุด " + (Object.keys(s.loadouts ?? {}).length + 1); C.saveLoadout(s, n); },
     loadUse: () => C.useLoadout(s, v),
-    borrow: () => banner(C.borrow(s, 1000) ? "กู้แล้ว ₿1,000" : "วงเงินกู้ไม่พอ"),
+    borrow: () => banner(C.borrow(s, 1000) ? "กู้แล้ว ฿1,000" : "วงเงินกู้ไม่พอ"),
     repay: () => banner(C.repay(s, 1000) ? "ชำระแล้ว" : "ไม่มีเงินพอชำระ"),
     hire: () => { const m = C.recruitOffers(s).find((x) => x.id === v); if (m) banner(C.hire(s, m) ? `${m.n} เข้าทีมแล้ว` : "จ้างไม่ได้"); },
     dismiss: () => { if (s.ev || s.op) return banner("จัดการเรื่องที่ค้างอยู่ก่อน"); if (confirm("ให้ลูกทีมคนนี้ออกจริงไหม?")) C.dismiss(s, v); },

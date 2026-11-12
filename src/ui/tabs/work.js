@@ -38,7 +38,7 @@ export function workTab(s) {
       <tr><td><b>สุทธิ</b></td><td class="n"><b>${money(m.net)}</b></td></tr></table>
     <h3>หนี้</h3><div class="kv"><span>ยอดหนี้ (ดอกเบี้ย 1%/เดือน)</span><b>${money(s.debt)}</b></div>
       <div class="kv"><span>วงเงินกู้</span><b>${money(C.debtCap(s))}</b></div>
-      <div class="row">${btn("borrow", "กู้ ₿1,000", 'class="sm"')}${btn("repay", "ชำระ ₿1,000", 'class="sm"')}</div>
+      <div class="row">${btn("borrow", "กู้ ฿1,000", 'class="sm"')}${btn("repay", "ชำระ ฿1,000", 'class="sm"')}</div>
     <h3>รายการย้อนหลัง</h3><table>${s.ledger.slice(-30).reverse().map(ledgerRow).join("")}</table>
     <h3>ย้ายที่อยู่</h3><div class="dim">ตอนนี้อยู่ ${esc(cityOf(s.city).n)} · ย้ายข้ามประเทศ ตำแหน่งงานลดลงและต้องสอบใบอนุญาตใหม่</div>
     <div class="row">${cities}</div>`;

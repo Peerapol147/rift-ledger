@@ -117,7 +117,7 @@ export function openGateChoice(s) {
   s.offers = defs;
   const info = (d) => {
     const lv = Math.max(...d.foes.map((f) => f.lv));
-    return `ศัตรู Lv.${lv} · ค่าตอบแทน ₿${d.rewards.gold.toLocaleString("en-US")}`;
+    return `ศัตรู Lv.${lv} · ค่าตอบแทน ฿${d.rewards.gold.toLocaleString("en-US")}`;
   };
   const label = (d) => (d.kind === "tower" ? d.t.split(" · ")[0] : d.t) + (d.boss ? " · มีบอส" : "");
   openEvent(s, {
@@ -128,7 +128,7 @@ export function openGateChoice(s) {
       ...defs.map((d, i) => ({ l: label(d), d: info(d), danger: dangerOf(s, d), y: { act: "gate" + i } })),
       // a boss gate can be bought down: word from the last team that went in, for a third of the pay
       ...defs.flatMap((d, i) => (d.boss ? [{
-        l: `ซื้อข้อมูลบอสก่อนเข้า (₿${intelPrice(d).toLocaleString("en-US")}) · ${label(d)}`,
+        l: `ซื้อข้อมูลบอสก่อนเข้า (฿${intelPrice(d).toLocaleString("en-US")}) · ${label(d)}`,
         d: "นายหน้าขายสิ่งที่ทีมก่อนหน้าเรียนรู้มา บอสจะตีเบาลงและล้มง่ายขึ้นสำหรับคุณ", need: { gold: intelPrice(d) },
         danger: dangerOf(s, withIntel(d)), y: { act: "intel" + i } }] : [])),
       { l: "พักเดือนนี้", y: { mind: 2 } },

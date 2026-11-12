@@ -216,7 +216,7 @@ function endOp(s) {
   }
   for (const f of afterOpHooks) f(s, o, r, gold);
   const short = def.kind === "job" ? "งานไม่จบอย่างที่หวัง" : "ถอยออกมา";
-  log(s, def.kind === "job" ? "งานใหญ่" : "เกต", `${r === "won" ? "สำเร็จ" : short} ได้ ₿${gold}`,
+  log(s, def.kind === "job" ? "งานใหญ่" : "เกต", `${r === "won" ? "สำเร็จ" : short} ได้ ฿${gold}`,
     r === "won" ? "imp" : "");
   return r;
 }

@@ -10,7 +10,7 @@ import { changeMind } from "./body.js";
 import { gatePay } from "./hunt.js";
 import { cityOf } from "../data/world.js";
 
-const money = (n) => "₿" + n.toLocaleString("en-US");
+const money = (n) => "฿" + n.toLocaleString("en-US");
 const yearly = (s, key, every = 12) => s.ageM >= (s.c[key] ?? 0) && ((s.c[key] = s.ageM + every), true);
 
 // ---- A home of your own

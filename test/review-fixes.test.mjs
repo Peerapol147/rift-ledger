@@ -48,7 +48,7 @@ test("a relic dropped into a bag full of keepers goes home, never sold for nothi
   }
   assert.equal(typeof real, "function");
   assert.ok(C.storeOf(s).home.length >= homeBefore);
-  assert.ok(!s.ledger.some((e) => e.label === "ขายของที่ถือไม่ไหว" && e.amt === 0), "nothing sold for ₿0");
+  assert.ok(!s.ledger.some((e) => e.label === "ขายของที่ถือไม่ไหว" && e.amt === 0), "nothing sold for ฿0");
 });
 
 test("choosing to flee in a fight is running away: no xp", () => {

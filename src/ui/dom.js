@@ -1,7 +1,7 @@
 // Small DOM helpers shared by every view. Views return HTML strings; clicks are handled by one delegated listener.
 export const $ = (q) => document.querySelector(q);
 export const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-export const money = (n) => "₿" + Math.round(n).toLocaleString("en-US");
+export const money = (n) => "฿" + Math.round(n).toLocaleString("en-US");
 export const pct = (v, max) => Math.max(0, Math.min(100, (100 * v) / Math.max(1, max)));
 export const bar = (cls, v, max) => `<div class="bar ${cls}"><i style="width:${pct(v, max)}%"></i></div>`;
 export const btn = (a, label, extra = "") => `<button data-a="${esc(a)}" ${extra}>${label}</button>`;

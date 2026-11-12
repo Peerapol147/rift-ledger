@@ -28,6 +28,7 @@ export function val(s, key) {
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
   if (key === "ownHome") return s.home ? 1 : 0;
+  if (key === "employed") return s.job ? 1 : 0;
   if (key === "studying") return (s.c.studyEndM ?? 0) > s.ageM ? 1 : 0;
   if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
   if (key === "forged") return Math.max(0, ...(s.items ?? []).map((i) => i.plus ?? 0));
@@ -41,7 +42,7 @@ export function val(s, key) {
 
 export function needLabel(key, min) {
   if (key in STATS) return `${STATS[key]} ${min}`;
-  if (key === "gold") return `เงิน ₿${min}`;
+  if (key === "gold") return `เงิน ฿${min}`;
   if (key === "hp") return `สุขภาพ ${min}`;
   if (key === "mind") return `สุขภาพจิต ${min}`;
   const [kind, id] = key.split(":");
