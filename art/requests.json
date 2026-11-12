@@ -49,7 +49,7 @@
   ],
   "fly": true,
   "now": "beast/flying-fish",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-20",
@@ -62,7 +62,7 @@
   ],
   "fly": true,
   "now": "spirit/floating-eyes",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-21",
@@ -75,7 +75,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-23",
@@ -88,7 +88,7 @@
   ],
   "fly": true,
   "now": "spirit/floating-eyes",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-24",
@@ -101,7 +101,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-26",
@@ -114,7 +114,7 @@
   ],
   "fly": true,
   "now": "spirit/old-house-owner",
-  "status": "open"
+  "status": "done"
  },
  {
   "id": "mon-27",
@@ -127,7 +127,7 @@
   ],
   "fly": true,
   "now": "boss/voiceless-choir",
-  "status": "open",
+  "status": "done",
   "file": "boss/evening-anchor"
  },
  {
@@ -141,7 +141,7 @@
   ],
   "fly": false,
   "now": "boss/death-manager",
-  "status": "open",
+  "status": "done",
   "file": "boss/last-mayor"
  },
  {
@@ -155,7 +155,7 @@
   ],
   "fly": true,
   "now": "boss/stalled-elevator-god",
-  "status": "open",
+  "status": "done",
   "file": "boss/dry-lighthouse-keeper"
  },
  {
@@ -169,7 +169,7 @@
   ],
   "fly": false,
   "now": "boss/water-shadow-lord",
-  "status": "open",
+  "status": "done",
   "file": "boss/last-tide-queen"
  },
  {
@@ -183,7 +183,7 @@
   ],
   "fly": false,
   "now": "boss/scaffold-giant",
-  "status": "open",
+  "status": "done",
   "file": "boss/salt-general"
  }
 ]
