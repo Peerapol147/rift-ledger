@@ -42,8 +42,13 @@ Built:
 2. ~~Boss retreat~~ verified by `test/boss-retreat.test.mjs`. New finding: at their own level nearly every solo boss
    fight with the retreat plan ends in a retreat, and the careful bot never takes a boss gate at all; bosses are
    still too hard alone (fold into item 3's balance or a combat pass). A two-rank ceiling is almost never reached.
-3. **Money as choices, not automatic taxes.** People die with about 120k. Add things worth buying (house, training,
-   a child's education, a legacy), and measure that frugal play is not over-rewarded.
+3. ~~Money as choices~~ first pass done (`src/core/spend.js`): a home (halves rent in its city, passes to the heir
+   untaxed, sold at 90% on moving), a mentor for a year (30% are frauds; checking papers with INT spots them),
+   a child's school (academic / hunter-prep / state, shapes the heir's start), a fund in your name (fame, mind, a
+   grant for the heir at 18), and paid boss intel (boss −20% hp/atk, a fatal loss half as likely). `sim --frugal`
+   plays a saver: 181k at death and no home vs 93k plus a home, and frugal civilians die of untreated illness
+   more. Still: money piles up mid-life (median ~93k at death); `mind` sits at 100 for nearly everyone, so it
+   measures nothing (look at mind sources/sinks).
 4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.

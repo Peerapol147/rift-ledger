@@ -45,7 +45,8 @@ export function living(s) {
   // until the first job (or 23), you still live at home: the family carries most of it
   const cost = cityOf(s.city).cost + hunter;
   if (!s.job && !s.hunter && ageY(s) < 23) return addLedger(s, "ค่าครองชีพ (อยู่บ้านพ่อแม่)", -Math.round(cost * 0.3));
-  addLedger(s, "ค่าครองชีพ", -(cityOf(s.city).cost + hunter + kids));
+  // a home of your own halves the city part (spend.js)
+  addLedger(s, "ค่าครองชีพ", -(Math.round(cityOf(s.city).cost * (hooks.homeShare?.(s) ?? 1)) + hunter + kids));
 }
 
 export function borrow(s, amt) {

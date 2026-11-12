@@ -13,6 +13,9 @@ const POLICY = args.includes("--policy") ? args[args.indexOf("--policy") + 1] : 
 if (!["careful", "normal", "reckless"].includes(POLICY)) throw new Error(`unknown --policy ${POLICY}`);
 const HUNT_P = { careful: 0.4, normal: 0.6, reckless: 0.85 }[POLICY];
 const PLAN = { careful: "retreat", normal: "careful", reckless: "push" }[POLICY];
+// --frugal: a player who never buys anything optional (the money-as-choices check: saving must not win outright)
+const FRUGAL = args.includes("--frugal");
+const SPEND_ACTS = /^(buyHome|mortgageHome|mentor|intel)/;
 let hardFail = false;
 const fail = (msg) => { console.log("FAIL " + msg); hardFail = true; };
 
@@ -54,7 +57,9 @@ function staticChecks() {
 
 // ---- Player policy
 function pick(s) {
-  const open = s.ev.opts.map((o, i) => ({ o, i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
+  let open = s.ev.opts.map((o, i) => ({ o, i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
+  const spends = (x) => (x.o.y?.gold ?? 0) < 0 || SPEND_ACTS.test(x.o.y?.act ?? "") || x.o.need?.gold;
+  if (FRUGAL && open.some((x) => !spends(x))) open = open.filter((x) => !spends(x));
   // The badge shows danger on gate offers; a player reads it as lower odds of coming home.
   const odds = (x) => x.v.odds ?? (x.v.risk ? (1 - x.v.risk) * 100 : 90);
   const reward = (x) => (x.o.y?.loot ?? 0) * 30 + (x.o.y?.gold ?? 0) / 50 + (x.o.y?.fame ?? 0) * 3 + odds(x) / 10;
@@ -113,6 +118,9 @@ export function measure(lives) {
     secret: pct(lives.filter((s) => (s.secrets ?? []).some((id) => (s.c["sqo:" + id] ?? 0) > 0)).length, lives.length),
     age: med(lives.map((s) => s.dead.ageY)),
     floor: med(hunters.map((s) => s.c.floor ?? 0)),
+    gold: med(lives.map((s) => s.gold - (s.debt ?? 0))),
+    home: pct(lives.filter((s) => s.home).length, lives.length),
+    mind: med(lives.map((s) => s.mind)),
   };
 }
 
@@ -180,5 +188,7 @@ const causes = {};
 for (const s of all) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
 console.log("deaths", JSON.stringify(causes));
 console.log("median age", stat("age", 0).txt, "· median floor", stat("floor", 0).txt);
+console.log(`money at death ${stat("gold", 0).txt} · own a home ${stat("home").txt}% · mind ${stat("mind", 0).txt}`
+  + (FRUGAL ? " · frugal" : ""));
 process.exitCode = hardFail ? 1 : 0;
 }

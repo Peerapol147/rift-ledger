@@ -176,7 +176,9 @@ function endOp(s) {
   if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") hooks.guildLoss?.(s, def);
   if (r === "lost") {
-    if ((def.boss || def.kind === "break") && ch(stream(s, "op"), BOSS_DEATH * (hooks.bossDeathMul?.(s) ?? 1))) {
+    // word on the boss (spend.js) also tells you where the way out is: half the chance a loss is fatal
+    const deathP = BOSS_DEATH * (def.intel ? 0.5 : 1) * (hooks.bossDeathMul?.(s) ?? 1);
+    if ((def.boss || def.kind === "break") && ch(stream(s, "op"), deathP)) {
       die(s, `พ่ายแก่ ${def.foes.find((f) => f.boss)?.n ?? def.t}`);
       return r;
     }

@@ -7,6 +7,7 @@ import { openEvent } from "./events.js";
 import { monthly, hooks } from "./registry.js";
 import { legacyOf, addEnemy } from "./legacy.js";
 import { storeOf } from "./storage.js";
+import { schoolStart } from "./spend.js";
 import { ITEMS } from "../data/items.js";
 import { NAMES, FAMILIES } from "../data/families.js";
 import { COUNTRIES } from "../data/world.js";
@@ -44,6 +45,10 @@ export function newHeir(P, seed) {
     of: P.name, rel, gold: estateAfterTax(Math.max(0, P.gold - (P.debt ?? 0))),
     guild: L.guild, enemies: L.enemies.slice(0, 3), paid: 0, guildDone: 0, grudgeDone: 0,
   };
+  // what the parent bought for the family: the schooling, the home (no estate tax on it), the fund's grant
+  schoolStart(P, s);
+  if (P.home?.city === s.city) s.home = { city: s.city, at: 0, from: P.name };
+  if (P.flags?.fund) s.c.fundGrant = 1;
   // the parent's things wait in the family home, best first, as many as it holds
   const all = [...P.items, ...P.store?.home ?? [], ...P.store?.vault ?? [], ...P.store?.guild ?? []]
     .filter((i) => i.id !== "phoenixToken" && ITEMS[i.id])
