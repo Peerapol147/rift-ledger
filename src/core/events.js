@@ -50,6 +50,9 @@ export function needLabel(key, min) {
   return `บทบาท [${ROLES[id] ?? id}]`;
 }
 
+// A child is measured against children: below 18 a check's difficulty shrinks with age (half at 6, full at 18).
+export const ageScale = (s) => Math.min(1, Math.max(0.5, (ageY(s) + 6) / 24));
+
 export function optionView(s, opt) {
   // nerve: brave options need a steady mind (spec §6.4)
   const need = Object.entries(opt.nerve ? { mind: 20, ...opt.need } : opt.need ?? {});
@@ -61,7 +64,7 @@ export function optionView(s, opt) {
     view.locked = true;
     view.lockText = `ต้องการ ${needLabel(k, min)}` + (k in STATS ? ` · คุณมี ${Math.floor(val(s, k))}` : "");
   }
-  if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0)) * 4), 5, 95);
+  if (opt.s) view.odds = clamp(Math.round(35 + (s.st[opt.s] - (opt.diff ?? 0) * ageScale(s)) * 4), 5, 95);
   else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
   // risk is rolled by choose(); danger is information only (the risk lives inside the fight it starts).
   view.risk = opt.risk ?? opt.danger ?? 0;
