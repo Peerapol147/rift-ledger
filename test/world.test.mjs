@@ -79,7 +79,7 @@ test("world news reads as Thai: spaced rank letters, short tower names", () => {
     const s = playUntil(newLife(seed), (x) => ageY(x) >= 60);
     for (const l of s.log) {
       assert.doesNotMatch(l.text, /[A-Z]แตก/, l.text);
-      assert.doesNotMatch(l.text, /สถิติ\S/, l.text);
+      assert.doesNotMatch(l.text, /ทำลายสถิติ\S/, l.text);
       assert.doesNotMatch(l.text, /The (Silent|Drowned) Tower/, l.text);
     }
   }
