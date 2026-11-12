@@ -2,7 +2,7 @@
 import { ri, shuf } from "./rng.js";
 import { stream, ageY, onNewLife } from "./state.js";
 import { openEvent, val } from "./events.js";
-import { monthly, hooks } from "./registry.js";
+import { monthly, hooks, resolvers } from "./registry.js";
 import { SECRETS } from "../data/secrets.js";
 
 const DRAWN = Object.keys(SECRETS).filter((k) => !SECRETS[k].truth);
@@ -46,6 +46,7 @@ hooks.act.subwayGift = (s) => {
 };
 
 monthly.push(secretMonth);
+resolvers.questLen = (id) => SECRETS[id]?.steps.length;
 
 // Two truths, or one truth and the sight of floor 30 with your own eyes, show the shape of the whole:
 // the next empty floor is ours.

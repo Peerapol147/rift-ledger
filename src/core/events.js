@@ -1,5 +1,5 @@
 // Events: who sees them, how options look (known locks vs hidden), and what choosing does.
-import { ch } from "./rng.js";
+import { ch, rnd } from "./rng.js";
 import { stream, ageY, log } from "./state.js";
 import { addLedger } from "./money.js";
 import { STATS } from "../data/stats.js";
@@ -145,4 +145,26 @@ export function applyOutcome(s, out, label = "เหตุการณ์", leth
     if (s.hp <= 0 && lethal) hooks.die?.(s, out.cause ?? "บาดเจ็บสาหัส");
     else if (s.hp <= 0) s.hp = 1;
   }
+}
+
+// "Let fate choose": a seeded pick among the options you can take right now.
+export function chooseByFate(s) {
+  if (!s.ev || s.ev.op) return false;
+  const open = s.ev.opts.map((o, i) => ({ i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
+  if (!open.length) return false;
+  choose(s, open[Math.floor(rnd(stream(s, "fate")) * open.length)].i);
+  return true;
+}
+
+// How an open event presents itself: a rarity word, and which part of a running story it is. Never says "secret".
+export function eventKind(s) {
+  const id = String(s.ev?.id ?? "");
+  const [head, a, b] = id.split(":");
+  const part = (n, len) => (len ? `ตอนที่ ${n + 1} จาก ${len}` : `ตอนที่ ${n + 1}`);
+  if (head === "sq" && resolvers.questLen) return { tier: "rare", part: part(Number(b), resolvers.questLen(a)) };
+  if (/^(fachi|facbad|heir|truthFinal)/.test(head)) return { tier: "rare" };
+  if (head.startsWith("cal")) return { tier: "world" };
+  const len = a != null && /^\d+$/.test(a) ? resolvers.storyLen?.(head) : 0;
+  if (len) return { tier: "story", part: part(Number(a), len) };
+  return { tier: s.ev.important ? "uncommon" : "common" };
 }
