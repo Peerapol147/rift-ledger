@@ -1,0 +1,56 @@
+[
+  {
+    "width": 1440,
+    "height": 900,
+    "age": 240,
+    "game": {
+      "cardTop": 12,
+      "planTop": 400,
+      "pageHeight": 964,
+      "logHeight": 468,
+      "hasHorizontalOverflow": false
+    },
+    "feedback": {
+      "bannerZ": "7",
+      "modalZ": "20",
+      "coveringElement": "modal"
+    },
+    "font": "17px"
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "age": 240,
+    "game": {
+      "cardTop": 4924,
+      "planTop": 5312,
+      "pageHeight": 5519,
+      "logHeight": 4463,
+      "hasHorizontalOverflow": false
+    },
+    "feedback": {
+      "bannerZ": "7",
+      "modalZ": "20",
+      "coveringElement": "modal"
+    },
+    "font": "17px"
+  },
+  {
+    "width": 320,
+    "height": 568,
+    "age": 240,
+    "game": {
+      "cardTop": 5845,
+      "planTop": 6233,
+      "pageHeight": 6440,
+      "logHeight": 5382,
+      "hasHorizontalOverflow": false
+    },
+    "feedback": {
+      "bannerZ": "7",
+      "modalZ": "20",
+      "coveringElement": "modal"
+    },
+    "font": "17px"
+  }
+]

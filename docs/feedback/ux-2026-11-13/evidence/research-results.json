@@ -1,0 +1,29 @@
+[
+  {
+    "test": "speed16",
+    "frozenAge": 0,
+    "after8Age": 3,
+    "errors": []
+  },
+  {
+    "test": "null_config",
+    "errors": [
+      "Cannot read properties of null (reading 'speed')"
+    ],
+    "startText": ""
+  },
+  {
+    "test": "deleted_active_save_returns",
+    "deleted": true,
+    "returned": true
+  },
+  {
+    "test": "invalid_import_overwrites",
+    "banner": "นำเข้าลงช่อง 3 แล้ว",
+    "overwritten": true,
+    "backup": null,
+    "errors": [
+      "Cannot read properties of undefined (reading 'seenTab:log')"
+    ]
+  }
+]

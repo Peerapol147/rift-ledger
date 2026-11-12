@@ -1,0 +1,30 @@
+{
+  "item": {
+    "id": "rustyKnife",
+    "uid": "i1"
+  },
+  "afterEquip": {
+    "equipButtonStillShown": 1,
+    "equippedLabelVisible": false,
+    "focus": "<button data-a=\"equip:i1\" class=\"sm\">สวม</button>"
+  },
+  "savedEquip": {
+    "weapon": "i1"
+  },
+  "afterBlur": {
+    "equipButtonStillShown": 0,
+    "equippedLabelVisible": true
+  },
+  "filterWhileFocused": {
+    "selected": "armor",
+    "weaponStillVisible": false
+  },
+  "font": "17px",
+  "closeAfterScrolling": {
+    "x": 41,
+    "y": 736.84375,
+    "width": 44.765625,
+    "height": 40.34375
+  },
+  "escapeCloses": true
+}
