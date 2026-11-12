@@ -78,16 +78,24 @@ function chooseFocus(s, R) {
   if (st === "kid") return setFocus(s, ids[Math.floor(rnd(R) * ids.length)]);
   if (st === "teen") return setFocus(s, rnd(R) < 0.5 ? "study" : "train");
   if (st === "old") return setFocus(s, "rest");
+  // a player reads the mind bar: worn out, they take time off (careful players sooner)
+  if (s.mind < { careful: 50, normal: 40, reckless: 25 }[POLICY]) return setFocus(s, "rest");
   if (canHunt(s)) return setFocus(s, rnd(R) < HUNT_P ? "hunt" : rnd(R) < 0.5 ? "train" : "rest");
   setFocus(s, s.job ? "work" : "study");
 }
 
-export function playLife(seed) {
+export function playLife(seed, onMonth) {
   const s = newLife(seed), R = mk(seed, "simfocus");
   s.prefs = { plan: PLAN };
   for (let n = 0; n < 60000 && !s.dead; n++) {
     if (s.ev) choose(s, pick(s));
-    else { if (!s.op && s.ageM % 3 === 0) chooseFocus(s, R); advance(s); }
+    else {
+      if (!s.op && s.ageM % 3 === 0) chooseFocus(s, R);
+      advance(s);
+      // working-age mind, sampled yearly (the sim's own bookkeeping, not game state that matters)
+      if (s.ageM % 12 === 0 && ageY(s) >= 25 && ageY(s) <= 55) { s.c.simMind = (s.c.simMind ?? 0) + s.mind; s.c.simMindN = (s.c.simMindN ?? 0) + 1; }
+      onMonth?.(s);
+    }
   }
   return s;
 }
@@ -120,7 +128,7 @@ export function measure(lives) {
     floor: med(hunters.map((s) => s.c.floor ?? 0)),
     gold: med(lives.map((s) => s.gold - (s.debt ?? 0))),
     home: pct(lives.filter((s) => s.home).length, lives.length),
-    mind: med(lives.map((s) => s.mind)),
+    mind: med(lives.filter((s) => s.c.simMindN).map((s) => s.c.simMind / s.c.simMindN)),
   };
 }
 
@@ -188,7 +196,12 @@ const causes = {};
 for (const s of all) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
 console.log("deaths", JSON.stringify(causes));
 console.log("median age", stat("age", 0).txt, "· median floor", stat("floor", 0).txt);
-console.log(`money at death ${stat("gold", 0).txt} · own a home ${stat("home").txt}% · mind ${stat("mind", 0).txt}`
+// mind has to move to mean anything: worn down by work and fights, brought back by rest and people
+// a reckless player only rests below 25 by choice, so living near the edge is that style, not a broken bar
+const MIND = POLICY === "reckless" ? [25, 60] : [40, 75];
+const mi = stat("mind", 0);
+row(`mind at 25–55 (median of lives) ${MIND[0]}–${MIND[1]}`, mi.txt, mi.mean >= MIND[0] && mi.mean <= MIND[1]);
+console.log(`money at death ${stat("gold", 0).txt} · own a home ${stat("home").txt}%`
   + (FRUGAL ? " · frugal" : ""));
 process.exitCode = hardFail ? 1 : 0;
 }
