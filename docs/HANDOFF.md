@@ -63,3 +63,7 @@ Built:
 7. **Art.** 14 borrowed sprites in `art/requests.json`. The owner may send pictures; process them with
    `tools/skills/create-game-assets`.
 8. Waiting on the owner: the long-life (eras) system, and publishing a public link (itch.io or GitHub Pages).
+
+## Story audit feedback — 2026-11-13
+
+Read [STORY-AUDIT-FEEDBACK.md](STORY-AUDIT-FEEDBACK.md) before the next narrative pass. It records six findings, core-level reproduction evidence, and a proposed three-scene phoenix rewrite. No narrative or gameplay fixes have been applied; the sample wording awaits owner review. Audit baseline: main `65e5621`.
