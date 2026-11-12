@@ -1,0 +1,312 @@
+[
+  {
+    "file": "art/animation/sources/ages-young-m.png",
+    "keys": [
+      "age-infant-m",
+      "age-toddler-m",
+      "age-child-m",
+      "age-teen-m"
+    ],
+    "prompt": "Original reference-based infant/toddler/child/teen male four-frame family.",
+    "refs": [
+      "art/civilian-ages/toddler.png",
+      "art/civilian-ages/primary.png",
+      "art/civilian-ages/junior.png"
+    ],
+    "promptNote": "Initial prompt summarized; source atlas and exact original reference files preserved."
+  },
+  {
+    "ids": [
+      "class-knight",
+      "class-shieldm"
+    ],
+    "index": 0,
+    "prompt": "Create production pixel-art animation sprite sheet for Rift Ledger, using supplied ORIGINAL game sprites as strict style/costume references. Dark one-pixel outline, stepped muted palette, detailed small pixel clusters, 3/4 facing RIGHT, adult proportions matching reference (NOT chibi), transparent background. EXACT GRID 4 columns x 4 rows of equally sized cells, one whole full-body character per cell, ample transparent gutters, fixed camera/scale/feet baseline within every row. Each row FOUR consecutive subtle idle frames: rest, anticipation, small role-specific hand/weapon gesture, returning toward rest. Keep face, clothes, equipment and body volume identical within a row. No whole-body tilting, no huge pose changes, no floating feet, no labels/text, no background/shadows. Female versions have distinctly feminine face/hair and equally practical complete armor/uniform. Preserve original role palette and iconic equipment. Row order: 1 class-knight male, 2 class-knight female, 3 class-shieldm male, 4 class-shieldm female. Make the profession look confident and striking, with readable weapon/tool silhouettes; subtle grip adjustment or readiness gesture matching its tools.",
+    "keys": [
+      "class-knight-m",
+      "class-knight-f",
+      "class-shieldm-m",
+      "class-shieldm-f"
+    ],
+    "file": "art/animation/sources/roles-0.png",
+    "refs": [
+      "art/professions/class-knight.png",
+      "art/professions/class-shieldm.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-duel",
+      "class-fmage"
+    ],
+    "index": 1,
+    "prompt": "Create production pixel-art animation sprite sheet for Rift Ledger, using supplied ORIGINAL game sprites as strict style/costume references. Dark one-pixel outline, stepped muted palette, detailed small pixel clusters, 3/4 facing RIGHT, adult proportions matching reference (NOT chibi), transparent background. EXACT GRID 4 columns x 4 rows of equally sized cells, one whole full-body character per cell, ample transparent gutters, fixed camera/scale/feet baseline within every row. Each row FOUR consecutive subtle idle frames: rest, anticipation, small role-specific hand/weapon gesture, returning toward rest. Keep face, clothes, equipment and body volume identical within a row. No whole-body tilting, no huge pose changes, no floating feet, no labels/text, no background/shadows. Female versions have distinctly feminine face/hair and equally practical complete armor/uniform. Preserve original role palette and iconic equipment. Row order: 1 class-duel male, 2 class-duel female, 3 class-fmage male, 4 class-fmage female. Make the profession look confident and striking, with readable weapon/tool silhouettes; subtle grip adjustment or readiness gesture matching its tools.",
+    "keys": [
+      "class-duel-m",
+      "class-duel-f",
+      "class-fmage-m",
+      "class-fmage-f"
+    ],
+    "file": "art/animation/sources/roles-1.png",
+    "refs": [
+      "art/professions/class-duel.png",
+      "art/professions/class-fmage.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-bowst",
+      "class-priest"
+    ],
+    "index": 2,
+    "prompt": "Create production pixel-art animation sprite sheet for Rift Ledger, using supplied ORIGINAL game sprites as strict style/costume references. Dark one-pixel outline, stepped muted palette, detailed small pixel clusters, 3/4 facing RIGHT, adult proportions matching reference (NOT chibi), transparent background. EXACT GRID 4 columns x 4 rows of equally sized cells, one whole full-body character per cell, ample transparent gutters, fixed camera/scale/feet baseline within every row. Each row FOUR consecutive subtle idle frames: rest, anticipation, small role-specific hand/weapon gesture, returning toward rest. Keep face, clothes, equipment and body volume identical within a row. No whole-body tilting, no huge pose changes, no floating feet, no labels/text, no background/shadows. Female versions have distinctly feminine face/hair and equally practical complete armor/uniform. Preserve original role palette and iconic equipment. Row order: 1 class-bowst male, 2 class-bowst female, 3 class-priest male, 4 class-priest female. Make the profession look confident and striking, with readable weapon/tool silhouettes; subtle grip adjustment or readiness gesture matching its tools.",
+    "keys": [
+      "class-bowst-m",
+      "class-bowst-f",
+      "class-priest-m",
+      "class-priest-f"
+    ],
+    "file": "art/animation/sources/roles-2.png",
+    "refs": [
+      "art/professions/class-bowst.png",
+      "art/professions/class-priest.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-trap",
+      "class-sharp"
+    ],
+    "index": 3,
+    "prompt": "Using these original game sprites as STRICT art references, make a transparent pixel art sprite atlas EXACT 4 rows x 4 columns. Each row one character in FOUR consecutive subtle idle animation frames, fixed feet and identical body proportions/clothing/tool in every frame. Row1 class-trap male, row2 class-trap female, row3 class-sharp male, row4 class-sharp female. Match the original detailed adult-proportion pixel-art style, dark outline, stepped palette, muted tones with role-specific accents; NOT chibi. Female versions have feminine hair/face and equally practical full clothing/armor. Subtle hand/weapon/tool adjustment suited to profession: trapper checks trap, sharpshooter steadies rifle, smith checks hammer, appraiser turns crystal, seal mage traces rune, magic swordsman steadies blade. Face 3/4 RIGHT. All full bodies with ample transparent margins, equal grid cells. No text, scenery, ground shadows. No whole-body rotation or scale changes. Confident, cool silhouettes matching original costume.",
+    "keys": [
+      "class-trap-m",
+      "class-trap-f",
+      "class-sharp-m",
+      "class-sharp-f"
+    ],
+    "file": "art/animation/sources/roles-3.png",
+    "refs": [
+      "art/professions/class-trap.png",
+      "art/professions/class-sharp.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-bsmith",
+      "class-audit"
+    ],
+    "index": 4,
+    "prompt": "Using these original game sprites as STRICT art references, make a transparent pixel art sprite atlas EXACT 4 rows x 4 columns. Each row one character in FOUR consecutive subtle idle animation frames, fixed feet and identical body proportions/clothing/tool in every frame. Row1 class-bsmith male, row2 class-bsmith female, row3 class-audit male, row4 class-audit female. Match the original detailed adult-proportion pixel-art style, dark outline, stepped palette, muted tones with role-specific accents; NOT chibi. Female versions have feminine hair/face and equally practical full clothing/armor. Subtle hand/weapon/tool adjustment suited to profession: trapper checks trap, sharpshooter steadies rifle, smith checks hammer, appraiser turns crystal, seal mage traces rune, magic swordsman steadies blade. Face 3/4 RIGHT. All full bodies with ample transparent margins, equal grid cells. No text, scenery, ground shadows. No whole-body rotation or scale changes. Confident, cool silhouettes matching original costume.",
+    "keys": [
+      "class-bsmith-m",
+      "class-bsmith-f",
+      "class-audit-m",
+      "class-audit-f"
+    ],
+    "file": "art/animation/sources/roles-4.png",
+    "refs": [
+      "art/professions/class-bsmith.png",
+      "art/professions/class-audit.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-seal",
+      "class-mblade"
+    ],
+    "index": 5,
+    "prompt": "Using these original game sprites as STRICT art references, make a transparent pixel art sprite atlas EXACT 4 rows x 4 columns. Each row one character in FOUR consecutive subtle idle animation frames, fixed feet and identical body proportions/clothing/tool in every frame. Row1 class-seal male, row2 class-seal female, row3 class-mblade male, row4 class-mblade female. Match the original detailed adult-proportion pixel-art style, dark outline, stepped palette, muted tones with role-specific accents; NOT chibi. Female versions have feminine hair/face and equally practical full clothing/armor. Subtle hand/weapon/tool adjustment suited to profession: trapper checks trap, sharpshooter steadies rifle, smith checks hammer, appraiser turns crystal, seal mage traces rune, magic swordsman steadies blade. Face 3/4 RIGHT. All full bodies with ample transparent margins, equal grid cells. No text, scenery, ground shadows. No whole-body rotation or scale changes. Confident, cool silhouettes matching original costume.",
+    "keys": [
+      "class-seal-m",
+      "class-seal-f",
+      "class-mblade-m",
+      "class-mblade-f"
+    ],
+    "file": "art/animation/sources/roles-5.png",
+    "refs": [
+      "art/professions/class-seal.png",
+      "art/professions/class-mblade.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-necro",
+      "class-saint"
+    ],
+    "index": 6,
+    "prompt": "Use these original game sprites as strict references. Make a transparent pixel-art animation atlas, EXACT 4 rows x 4 columns equal cells. Row1 class-necro male, row2 class-necro female, row3 class-saint male, row4 class-saint female. EACH ROW FOUR consecutive subtle idle frames: rest, anticipate, small gesture, return. Preserve identity, volume, palette, costume/equipment exactly across each row. Fixed feet baseline and scale; no camera changes. Detailed adult proportions matching references, NOT chibi, dark outlines, stepped limited palette, top-left light, three-quarter facing RIGHT. Female versions have feminine faces/hair with practical equally complete clothing/armor. Roles: necromancer beckons with grimoire; saint opens blessing hand; dark sovereign calmly commands; office clerk checks document; trader offers a small item; doctor checks medical tools. Very small believable hand motions, same torso/feet. Full bodies, transparent gutters, no text or scenery, no ground shadows. Cool distinctive role silhouettes, preserve original design language.",
+    "keys": [
+      "class-necro-m",
+      "class-necro-f",
+      "class-saint-m",
+      "class-saint-f"
+    ],
+    "file": "art/animation/sources/roles-6.png",
+    "refs": [
+      "art/professions/class-necro.png",
+      "art/professions/class-saint.png"
+    ]
+  },
+  {
+    "ids": [
+      "class-demon",
+      "career-clerk"
+    ],
+    "index": 7,
+    "prompt": "Use these original game sprites as strict references. Make a transparent pixel-art animation atlas, EXACT 4 rows x 4 columns equal cells. Row1 class-demon male, row2 class-demon female, row3 career-clerk male, row4 career-clerk female. EACH ROW FOUR consecutive subtle idle frames: rest, anticipate, small gesture, return. Preserve identity, volume, palette, costume/equipment exactly across each row. Fixed feet baseline and scale; no camera changes. Detailed adult proportions matching references, NOT chibi, dark outlines, stepped limited palette, top-left light, three-quarter facing RIGHT. Female versions have feminine faces/hair with practical equally complete clothing/armor. Roles: necromancer beckons with grimoire; saint opens blessing hand; dark sovereign calmly commands; office clerk checks document; trader offers a small item; doctor checks medical tools. Very small believable hand motions, same torso/feet. Full bodies, transparent gutters, no text or scenery, no ground shadows. Cool distinctive role silhouettes, preserve original design language.",
+    "keys": [
+      "class-demon-m",
+      "class-demon-f",
+      "career-clerk-m",
+      "career-clerk-f"
+    ],
+    "file": "art/animation/sources/roles-7.png",
+    "refs": [
+      "art/professions/class-demon.png",
+      "art/professions/career-clerk.png"
+    ]
+  },
+  {
+    "ids": [
+      "career-trader",
+      "career-doc"
+    ],
+    "index": 8,
+    "prompt": "Use these original game sprites as strict references. Make a transparent pixel-art animation atlas, EXACT 4 rows x 4 columns equal cells. Row1 career-trader male, row2 career-trader female, row3 career-doc male, row4 career-doc female. EACH ROW FOUR consecutive subtle idle frames: rest, anticipate, small gesture, return. Preserve identity, volume, palette, costume/equipment exactly across each row. Fixed feet baseline and scale; no camera changes. Detailed adult proportions matching references, NOT chibi, dark outlines, stepped limited palette, top-left light, three-quarter facing RIGHT. Female versions have feminine faces/hair with practical equally complete clothing/armor. Roles: necromancer beckons with grimoire; saint opens blessing hand; dark sovereign calmly commands; office clerk checks document; trader offers a small item; doctor checks medical tools. Very small believable hand motions, same torso/feet. Full bodies, transparent gutters, no text or scenery, no ground shadows. Cool distinctive role silhouettes, preserve original design language.",
+    "keys": [
+      "career-trader-m",
+      "career-trader-f",
+      "career-doc-m",
+      "career-doc-f"
+    ],
+    "file": "art/animation/sources/roles-8.png",
+    "refs": [
+      "art/professions/career-trader.png",
+      "art/professions/career-doc.png"
+    ]
+  },
+  {
+    "index": 13,
+    "keys": [
+      "age-infant-f",
+      "age-toddler-f",
+      "age-child-f",
+      "age-teen-f"
+    ],
+    "refs": [
+      "art/animation/sources/ages-young-m.png",
+      "art/civilian-ages/toddler.png",
+      "art/civilian-ages/junior.png"
+    ],
+    "rows": "All female: row1 newborn infant with almost bald head, just tiny sparse tuft, cream/teal swaddle and little moving hands; row2 playful toddler short sparse hair and yellow outfit; row3 child in green raglan top, short ponytail; row4 teenager in blue overshirt, ponytail. The newborn must actually look newborn, not a miniature adult. Match male sheet style closely.",
+    "prompt": "Create transparent production pixel-art animation sheet matching reference original game artwork. EXACT 4x4 equal cell grid; each ROW ONE character in FOUR subtle consecutive idle frames: rest, anticipation, small gesture, return. Preserve identity, costume, palette, scale and body proportions across each row. Stable planted feet/baseline, fixed camera, 3/4 facing RIGHT, dark pixel outline, limited stepped palette, crisp clusters, no smooth gradients. Ample transparent gutters and full body inside every cell. No text, scenery, borders or shadows. All female: row1 newborn infant with almost bald head, just tiny sparse tuft, cream/teal swaddle and little moving hands; row2 playful toddler short sparse hair and yellow outfit; row3 child in green raglan top, short ponytail; row4 teenager in blue overshirt, ponytail. The newborn must actually look newborn, not a miniature adult. Match male sheet style closely.",
+    "file": "art/animation/sources/ages-13.png"
+  },
+  {
+    "index": 14,
+    "keys": [
+      "age-adult-m",
+      "age-middle-m",
+      "age-elder-m",
+      "age-old-m"
+    ],
+    "refs": [
+      "art/civilian-ages/senior.png"
+    ],
+    "rows": "All male: row1 young adult 25 in olive casual jacket; row2 middle age50 same jacket with slightly graying temples; row3 elder65 silver hair gently relaxed stance; row4 elderly85 white hair, cane, slightly stooped. Match original outfit and facial style. Gentle hand adjustment/breathing; elderly hand adjusts cane grip.",
+    "prompt": "Create transparent production pixel-art animation sheet matching reference original game artwork. EXACT 4x4 equal cell grid; each ROW ONE character in FOUR subtle consecutive idle frames: rest, anticipation, small gesture, return. Preserve identity, costume, palette, scale and body proportions across each row. Stable planted feet/baseline, fixed camera, 3/4 facing RIGHT, dark pixel outline, limited stepped palette, crisp clusters, no smooth gradients. Ample transparent gutters and full body inside every cell. No text, scenery, borders or shadows. All male: row1 young adult 25 in olive casual jacket; row2 middle age50 same jacket with slightly graying temples; row3 elder65 silver hair gently relaxed stance; row4 elderly85 white hair, cane, slightly stooped. Match original outfit and facial style. Gentle hand adjustment/breathing; elderly hand adjusts cane grip.",
+    "file": "art/animation/sources/ages-14.png"
+  },
+  {
+    "index": 15,
+    "keys": [
+      "age-adult-f",
+      "age-middle-f",
+      "age-elder-f",
+      "age-old-f"
+    ],
+    "refs": [
+      "art/civilian-ages/senior.png"
+    ],
+    "rows": "All female: row1 adult25 in olive casual jacket, dark ponytail; row2 middle50 same jacket, graying tied hair; row3 elder65 silver bun, relaxed stance; row4 elderly85 white bun, cane, slightly stooped. Feminine faces and practical full casual clothing. Gentle hand adjustment/breathing; elderly hand adjusts cane grip.",
+    "prompt": "Create transparent production pixel-art animation sheet matching reference original game artwork. EXACT 4x4 equal cell grid; each ROW ONE character in FOUR subtle consecutive idle frames: rest, anticipation, small gesture, return. Preserve identity, costume, palette, scale and body proportions across each row. Stable planted feet/baseline, fixed camera, 3/4 facing RIGHT, dark pixel outline, limited stepped palette, crisp clusters, no smooth gradients. Ample transparent gutters and full body inside every cell. No text, scenery, borders or shadows. All female: row1 adult25 in olive casual jacket, dark ponytail; row2 middle50 same jacket, graying tied hair; row3 elder65 silver bun, relaxed stance; row4 elderly85 white bun, cane, slightly stooped. Feminine faces and practical full casual clothing. Gentle hand adjustment/breathing; elderly hand adjusts cane grip.",
+    "file": "art/animation/sources/ages-15.png"
+  },
+  {
+    "ids": [
+      "career-porter",
+      "career-press"
+    ],
+    "index": 9,
+    "prompt": "Create pixel-art sprite animation atlas using supplied original game sprites as strict style and costume references. EXACT 4 rows by 4 columns equal cells on transparent background. Row1 career-porter male, row2 career-porter female, row3 career-press male, row4 career-press female. Every row 4 consecutive SUBTLE idle frames (rest, preparation, small tool gesture, return). Keep feet planted, scale and clothing/face identical across frames, no morphing. Profession actions: porter adjusts backpack strap; reporter notes on pad; police checks radio; teacher gestures with book; lawyer explains using file; adjuster inspects crystal; rescuer checks equipment; cook gently stirs pan. Dark crisp pixel outlines, stepped color ramps, detailed adult proportions (NOT chibi), same muted original palette. Confident/cool outfits appropriate to each job; women visibly feminine hair and face but practical full clothing. All face 3/4 RIGHT. Full-body, ample transparent cell margins. No text, scenery, borders, shadows, ground, blur, or whole-body rotation.",
+    "keys": [
+      "career-porter-m",
+      "career-porter-f",
+      "career-press-m",
+      "career-press-f"
+    ],
+    "file": "art/animation/sources/roles-9.png",
+    "refs": [
+      "art/professions/career-porter.png",
+      "art/professions/career-press.png"
+    ]
+  },
+  {
+    "ids": [
+      "career-cop",
+      "career-teach"
+    ],
+    "index": 10,
+    "prompt": "Create pixel-art sprite animation atlas using supplied original game sprites as strict style and costume references. EXACT 4 rows by 4 columns equal cells on transparent background. Row1 career-cop male, row2 career-cop female, row3 career-teach male, row4 career-teach female. Every row 4 consecutive SUBTLE idle frames (rest, preparation, small tool gesture, return). Keep feet planted, scale and clothing/face identical across frames, no morphing. Profession actions: porter adjusts backpack strap; reporter notes on pad; police checks radio; teacher gestures with book; lawyer explains using file; adjuster inspects crystal; rescuer checks equipment; cook gently stirs pan. Dark crisp pixel outlines, stepped color ramps, detailed adult proportions (NOT chibi), same muted original palette. Confident/cool outfits appropriate to each job; women visibly feminine hair and face but practical full clothing. All face 3/4 RIGHT. Full-body, ample transparent cell margins. No text, scenery, borders, shadows, ground, blur, or whole-body rotation.",
+    "keys": [
+      "career-cop-m",
+      "career-cop-f",
+      "career-teach-m",
+      "career-teach-f"
+    ],
+    "file": "art/animation/sources/roles-10.png",
+    "refs": [
+      "art/professions/career-cop.png",
+      "art/professions/career-teach.png"
+    ]
+  },
+  {
+    "ids": [
+      "career-lawyer",
+      "career-adjuster"
+    ],
+    "index": 11,
+    "prompt": "Create pixel-art sprite animation atlas using supplied original game sprites as strict style and costume references. EXACT 4 rows by 4 columns equal cells on transparent background. Row1 career-lawyer male, row2 career-lawyer female, row3 career-adjuster male, row4 career-adjuster female. Every row 4 consecutive SUBTLE idle frames (rest, preparation, small tool gesture, return). Keep feet planted, scale and clothing/face identical across frames, no morphing. Profession actions: porter adjusts backpack strap; reporter notes on pad; police checks radio; teacher gestures with book; lawyer explains using file; adjuster inspects crystal; rescuer checks equipment; cook gently stirs pan. Dark crisp pixel outlines, stepped color ramps, detailed adult proportions (NOT chibi), same muted original palette. Confident/cool outfits appropriate to each job; women visibly feminine hair and face but practical full clothing. All face 3/4 RIGHT. Full-body, ample transparent cell margins. No text, scenery, borders, shadows, ground, blur, or whole-body rotation.",
+    "keys": [
+      "career-lawyer-m",
+      "career-lawyer-f",
+      "career-adjuster-m",
+      "career-adjuster-f"
+    ],
+    "file": "art/animation/sources/roles-11.png",
+    "refs": [
+      "art/professions/career-lawyer.png",
+      "art/professions/career-adjuster.png"
+    ]
+  },
+  {
+    "ids": [
+      "career-rescue",
+      "career-cook"
+    ],
+    "index": 12,
+    "prompt": "Create pixel-art sprite animation atlas using supplied original game sprites as strict style and costume references. EXACT 4 rows by 4 columns equal cells on transparent background. Row1 career-rescue male, row2 career-rescue female, row3 career-cook male, row4 career-cook female. Every row 4 consecutive SUBTLE idle frames (rest, preparation, small tool gesture, return). Keep feet planted, scale and clothing/face identical across frames, no morphing. Profession actions: porter adjusts backpack strap; reporter notes on pad; police checks radio; teacher gestures with book; lawyer explains using file; adjuster inspects crystal; rescuer checks equipment; cook gently stirs pan. Dark crisp pixel outlines, stepped color ramps, detailed adult proportions (NOT chibi), same muted original palette. Confident/cool outfits appropriate to each job; women visibly feminine hair and face but practical full clothing. All face 3/4 RIGHT. Full-body, ample transparent cell margins. No text, scenery, borders, shadows, ground, blur, or whole-body rotation.",
+    "keys": [
+      "career-rescue-m",
+      "career-rescue-f",
+      "career-cook-m",
+      "career-cook-f"
+    ],
+    "file": "art/animation/sources/roles-12.png",
+    "refs": [
+      "art/professions/career-rescue.png",
+      "art/professions/career-cook.png"
+    ]
+  }
+]

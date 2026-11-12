@@ -23,12 +23,12 @@ export function settingsView(ui, slotList) {
   const fs = [1, 2, 3].map((n) => btn("fs:" + n, ["เล็ก", "ปกติ", "ใหญ่"][n - 1], `class="sm ${ui.fs === n ? "on" : ""}"`)).join("");
   const slots = slotList.map((x, i) => `<div class="item"><span>ช่อง ${i + 1}: ${x ? `${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}` : `<span class="dim">ว่าง</span>`}</span>
     <span>${btn("save:" + i, "บันทึก", 'class="sm"')}${x ? btn("load:" + i, "โหลด", 'class="sm"') + btn("export:" + i, "ส่งออก", 'class="sm"') + btn("del:" + i, "ลบ", 'class="sm"') : ""}</span></div>`).join("");
-  return `<div class="st-card"><h3>ตั้งค่า</h3>
+  return `<div class="st-card"><header class="dialog-head"><h2 id="settings-title">ตั้งค่า</h2>${btn("close", "ปิด", 'class="sm"')}</header>
     <h4>ออโต้</h4><div class="row">${pol}</div>
     <h4>ขนาดตัวอักษร</h4><div class="row">${fs}</div>
     <h4>เซฟ (บันทึกอัตโนมัติทุกปีลงช่องที่เล่นอยู่)</h4>${slots}
-    <div class="row"><input data-c="importText" placeholder="วางข้อความเซฟที่ส่งออกไว้" style="flex:1">${btn("import", "นำเข้าช่อง 3", 'class="sm"')}</div>
+    <div class="row"><input data-c="importText" aria-label="ข้อความเซฟที่จะนำเข้า" value="${esc(ui.importText)}" placeholder="วางข้อความเซฟที่ส่งออกไว้" style="flex:1">${btn("import", "นำเข้าช่อง 3", 'class="sm"')}</div>
     ${ui.exportText ? `<textarea readonly style="width:100%;height:80px;margin-top:6px">${esc(ui.exportText)}</textarea>` : ""}
     <h4>คำศัพท์</h4>${GLOSSARY.map(([k, d]) => `<div><b>${k}</b> <span class="dim">${d}</span></div>`).join("")}
-    <div class="row">${btn("close", "ปิด", 'class="pri"')}${btn("quit", "กลับหน้าแรก")}</div></div>`;
+    <div class="row">${btn("quit", "กลับหน้าแรก")}</div></div>`;
 }

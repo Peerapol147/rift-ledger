@@ -3,6 +3,72 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+**Owner's latest continuation brief:** [CLAUDE-NEXT-BRIEF.md](CLAUDE-NEXT-BRIEF.md).
+Read it before choosing the next task; it separates shipped UI work from remaining save/story work.
+
+## Download packaging fix — 13 November 2026
+
+The owner could not download the raw HTML link. HTTP verification showed GitHub serves it as
+`text/plain`; it opens source rather than a playable page or download prompt. Distribute
+`downloads/rift-ledger-play.zip` instead. It contains the current `play.html` and Thai instructions.
+After every new build run `python tools/package-download.py` before distributing the ZIP;
+the packager verifies ZIP integrity and byte equality with the built HTML.
+
+## Character redraw — latest owner direction
+
+The owner rejected the previous procedural region motion and rotating portrait art.
+Those render paths are replaced by 68 generated four-frame strips (272 frames): both sexes,
+eight ages, 15 classes and 11 shared career art identities. Read `art/animation/README.md`
+and the latest Claude brief. Original reference PNGs are preserved. The stage and portrait
+select the same identity from public age/class/career/sex. Stage idle freezes during actions.
+Do not restore the rejected procedural animation from the historical motion plan.
+
+Music button is reachable over the start screen, retries blocked autoplay on one tap and reports
+actual playback state. Stale play rejection cannot overwrite successful playback feedback.
+Validation commands include `tools/young-audio-regression.mjs` and
+`tools/motion-continuity-regression.mjs` alongside existing UX regressions. Current verification: 205 core tests, 10 existing UX browser scenarios, plus new audio/motion and continuity checks passed; artcheck, linelen and build passed. Historical counts below belong to earlier commits.
+
+## Responsive interface and original character frames — 13 November 2026
+
+Branch `claude/responsive-ui` implements the owner-authorized UI subset of phases A/B.
+See [implementation and verification](feedback/ux-refresh-2026-11-13.md).
+Includes completed-tap choices, modal focus isolation, inventory refresh, reading pauses,
+mobile monthly-plan access, original profession/rank frames, and age-correct portraits.
+Infants under 12 months use the existing swaddled art; 12–35 months use toddler art.
+Do not mark the full roadmap complete: persistence integrity and narrative phase C remain open.
+Core tests: 201 passed; browser interaction regressions: 10 passed; artcheck/linelen/build passed.
+
+## Original improvement roadmap — owner emphasized story (13 November 2026)
+
+Start with [the Compare and evidence](research/rift-ledger-vs-way-of-xian.md), then
+[the Claude roadmap](superpowers/plans/2026-11-13-improvement-roadmap.md).
+The four detailed plans cover trust, readable decisions, **original narrative continuity**,
+and validation. Story audit starts alongside UX work; civilian and hunter pilots plus
+public heir memories are required. Do not copy reference-game code, plots, art or formulas.
+The comparison commit da275a7 contains documentation only relative to 98e5332.
+The UI subset implemented later is recorded above; the rest of the plans remain open.
+The raw HAR/reference source remains outside Git. Preserve the existing default/music fix.
+
+## Owner-requested defaults and music fix — 13 November 2026
+
+Branch `claude/manual-defaults-bundled-music` implements UX-15: first play and pre-migration
+settings start at 1× / Stop. `manualDefaults: 1` marks settings saved after this change;
+subsequent explicit policy selections persist. Life saves are unchanged. Null settings
+also fall back safely (UX-12 null case); this does not close all configuration-validation work.
+The supplied Shadow's Resolve MP3 matches the existing audio file. The build now embeds it
+in `play.html` as a data URL so downloading only that file retains music.
+Validation: 198 core tests, artcheck, linelen and build pass. Chromium verified fresh/old/null
+settings wait on a pending event, subsequent policy choice persists, and embedded audio plays
+with external audio requests blocked. Direct file:// browser testing was blocked by managed
+browser policy; the self-contained build was tested over HTTP. Other UX findings remain open.
+
+## Owner-requested UX research — 13 November 2026 (Bangkok)
+
+Read [the actionable UX feedback](feedback/ux-2026-11-13/REPORT.md) before the next UI work.
+It contains 13 reproduced issues, 2 design recommendations, portable browser diagnostics,
+and acceptance criteria. Prioritize data loss and accidental decisions. This is research,
+not implemented fixes; preserve the owner’s saves and existing game rules.
+
 ## The owner
 - Thai-speaking and not a programmer. Reply in Thai, plainly, with no jargon.
 - Give a recommendation, not a menu. Push back with reasons when a request would hurt the game.

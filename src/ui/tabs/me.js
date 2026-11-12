@@ -1,5 +1,6 @@
 import * as C from "../../core/index.js";
 import { STATS, CLASSES, SKILLS, ROLES, RANKS } from "../../data/index.js";
+import { profileVisual } from "../profile.js";
 import { esc } from "../dom.js";
 
 import { INJURY } from "../../data/injuries.js";
@@ -29,6 +30,6 @@ export function meTab(s) {
   const home = C.ageY(s) >= 18 ? `<div class="kv"><span>ที่อยู่</span><b>${C.ownsHere(s) ? "บ้านของตัวเอง"
     : s.home ? "เช่า (บ้านของคุณอยู่อีกเมือง)" : "ห้องเช่า"}</b></div>` : "";
   const mentor = s.ageM < (s.c.mentorUntil ?? 0) ? `<div class="kv"><span>ครูฝึก</span><b>อีก ${s.c.mentorUntil - s.ageM} เดือน</b></div>` : "";
-  return `${fam}${home}${mentor}<h3>ค่าสถานะ</h3><table>${stats}</table>
+  return `<div class="me-portrait">${profileVisual(s)}</div>${fam}${home}${mentor}<h3>ค่าสถานะ</h3><table>${stats}</table>
     <h3>ร่างกาย</h3>${C.ageY(s) >= 18 ? `<div class="kv"><span>อายุขัยโดยประมาณ</span><b>${C.lifespan(s)} ปี</b></div>` : ""}<h4>บาดแผล</h4>${inj}${power}`;
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "equal",
+    "trials": 20000,
+    "winRate": 0.5062,
+    "powerRatio": 1
+  },
+  {
+    "name": "one_level_higher",
+    "trials": 20000,
+    "winRate": 0.8941,
+    "powerRatio": 1.7000000000000002
+  },
+  {
+    "name": "same_level_max_stage",
+    "trials": 20000,
+    "winRate": 0.73735,
+    "powerRatio": 1.3
+  },
+  {
+    "name": "full_gear_vs_none",
+    "trials": 20000,
+    "winRate": 0.9376,
+    "powerRatio": 1.8
+  }
+]
