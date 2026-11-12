@@ -159,7 +159,7 @@ export function decide(s, i) {
   // leaving someone behind: an own teammate pays for it, or in someone else's team the leader's trust does
   if (opt.lose?.ally && (hooks.loseAlly?.(s, !!o.def.boss) || s.party)) o.lostAlly++;
   if (!ok && opt.risk) injure(s, "graveWound", o.def.boss ? null : 6);
-  if (out.flee) o.done = o.done ?? "fled";
+  if (out.flee && !o.done) { o.done = "fled"; o.ranAway = 1; } // running away, by choice
   if (o.hp <= 0) o.done = "lost";
 }
 

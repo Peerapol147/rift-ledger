@@ -61,7 +61,8 @@ export function gateOp(s, g) {
 export function towerPay(lv) {
   const i = Math.max(0, Math.min(GATE_LV.length - 2, GATE_LV.findLastIndex((g) => g <= lv)));
   const rf = i + Math.max(0, Math.min(1, (lv - GATE_LV[i]) / (GATE_LV[i + 1] - GATE_LV[i])));
-  return Math.round(108 * Math.pow(2.6, rf) * 1.2);
+  // low floors are small jobs, like F–E gates
+  return Math.round(108 * Math.pow(2.6, rf) * 1.2 * (rf <= 1 ? 0.75 : 1));
 }
 
 export function towerOp(s, towerId, floor) {

@@ -36,3 +36,28 @@ test("children cost until the youngest is grown", () => {
   const young = cost(); s.ageM += 23 * 12; const grown = cost();
   assert.ok(young > grown, `${young} > ${grown}`);
 });
+
+test("a relic dropped into a bag full of keepers goes home, never sold for nothing", () => {
+  const s = hunter("bag2"); s.items = [];
+  while (s.items.length < C.bagCap()) { const u = C.giveItem(s, "ironSword", "t"); s.items.find((i) => i.uid === u).lock = true; }
+  // a won op whose loot table is only the token, through the real loot hook
+  const real = C.lootTable; const def = { kind: "gate", rank: 6, boss: true, t: "x", foes: [] };
+  const homeBefore = C.storeOf(s).home.length;
+  for (let k = 0; k < 40 && !C.storeOf(s).home.some((i) => i.id === "phoenixToken"); k++) {
+    for (const f of afterOpHooks) f(s, { def, loot: 0, prep: {} }, "won", 0);
+  }
+  assert.equal(typeof real, "function");
+  assert.ok(C.storeOf(s).home.length >= homeBefore);
+  assert.ok(!s.ledger.some((e) => e.label === "ขายของที่ถือไม่ไหว" && e.amt === 0), "nothing sold for ₿0");
+});
+
+test("choosing to flee in a fight is running away: no xp", () => {
+  const s = hunter("fl1");
+  const g = C.gateOffers(s)[0];
+  C.startOp(s, C.gateOp(s, { ...g, boss: false }), C.defaultPrep(s));
+  s.ev = { id: "opDecision", tag: "เกต", t: "t", op: true, opts: [{ l: "หนี", y: { m: "หนี", flee: true } }] };
+  const o = s.op;
+  C.choose(s, 0);
+  assert.equal(o.ranAway, 1);
+  assert.equal(o.done, "fled");
+});

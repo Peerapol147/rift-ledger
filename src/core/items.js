@@ -143,6 +143,12 @@ function take(s, id, from) {
     sellItem(s, cheap.uid);
     return giveItem(s, id, from);
   }
+  if (["relic", "book"].includes(ITEMS[id].kind)) { // too precious to sell: it goes home
+    s.c.uid = (s.c.uid ?? 0) + 1;
+    const home = (s.store ??= { home: [], vault: [], vaultCountry: null, guild: [] }).home;
+    home.push({ uid: "i" + s.c.uid, id, from, lock: false, m: s.ageM });
+    return log(s, "ของ", `กระเป๋าเต็ม ส่ง ${ITEMS[id].n} ไปเก็บที่บ้าน`);
+  }
   log(s, "ของ", `กระเป๋าเต็ม ขาย ${ITEMS[id].n} ที่เพิ่งได้ทิ้งในราคาถูก`);
   addLedger(s, "ขายของที่ถือไม่ไหว", Math.round(ITEMS[id].price * 0.3)); // sold on the spot, at a dealer's price
 }
