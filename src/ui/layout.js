@@ -3,6 +3,7 @@ import * as C from "../core/index.js";
 import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../data/index.js";
 import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
+import { planTitle } from "./art.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
 const STAGE_TITLE = { kid: "เด็ก", teen: "วัยรุ่น", adult: "ผู้ใหญ่", old: "ผู้สูงวัย" };
@@ -34,7 +35,7 @@ export function card(s) {
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
   ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
   <div class="stats">${stats}</div>${alerts}${goals}
-  <h3>แผนเดือนนี้</h3><div class="plan">${plans}</div>`;
+  <h3>${planTitle(s)}</h3><div class="plan">${plans}</div>`;
 }
 
 function badge(v) {

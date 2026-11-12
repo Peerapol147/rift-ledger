@@ -13,8 +13,16 @@ const CAREER_SCENE = {
 export const classArt = (cls) => CLASSES[cls]?.art.replace(/^class-/, "") ?? null;
 export const careerArt = (id) => CAREER_ART[id] ?? null;
 
+// Night-time words in an event's text: the stage darkens for them (a blackout, the small hours, a sleepless night).
+const NIGHT = /กลางคืน|กลางดึก|คืนหนึ่ง|ไฟดับ|ตีหนึ่ง|ตีสอง|ตีสาม|ตีสี่|นอนไม่หลับ|ทั้งคืน|เที่ยงคืน|คืนนี้|คืนที่/;
+export const isNight = (text) => NIGHT.test(text ?? "");
+
+// A baby's plan is how the parents raise them; from four the child picks.
+export const planTitle = (s) => (s.ageM < 48 ? "พ่อแม่เลี้ยงคุณแบบ" : "แผนเดือนนี้");
+
 export function sceneOf(s, stageName) {
-  if (stageName === "kid") return "home";
+  // babies live indoors; a child's night-time event happens at home, not out on the street
+  if (stageName === "kid") return s.ageM < 48 || isNight(s.ev?.t) ? "room" : "home";
   if (s.op) return s.op.def.kind === "tower" ? "tower" : s.op.def.kind === "job" ? CAREER_SCENE[s.job?.id] ?? "city" : "rift";
   if (s.ev?.tag === "เกตแตก" || s.ev?.tag === "เหตุการณ์โลก") return "rift";
   if (s.hunter && !s.flags.stoppedHunting) return { train: "arena", rest: "home", hunt: "guild" }[s.focus] ?? "city";

@@ -1,10 +1,10 @@
 // Boot, the play loop, input and rendering. Reads core state; changes it only through core functions.
 import * as C from "../core/index.js";
 
-import { initStage, setScene, setHero, trigger } from "../stage.js";
+import { initStage, setScene, setHero, trigger, stage } from "../stage.js";
 import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
-import { classArt, careerArt, sceneOf } from "./art.js";
+import { classArt, careerArt, sceneOf, isNight } from "./art.js";
 import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
@@ -167,6 +167,7 @@ function render() {
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
+  stage.night = isNight(s.ev?.t);
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
   $("#modal").hidden = !ui.settings;
   if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
