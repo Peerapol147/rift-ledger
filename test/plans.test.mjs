@@ -44,3 +44,39 @@ test("a secondary that does not exist in the next stage clears", () => {
   s.ageM = 18 * 12; C.applyFocus(s, 1);
   assert.equal(s.focus2, null);
 });
+
+// Task 3: the main plan pulls its kind of event, and the log says so.
+const studyShare = (s) => {
+  const pool = C.randomPool(s);
+  const w = (e) => (e.w ?? 1) * C.planWeight(s, e);
+  const all = pool.reduce((a, e) => a + w(e), 0);
+  return pool.filter((e) => C.kindsOf(e).includes("study")).reduce((a, e) => a + w(e), 0) / all;
+};
+
+test("a study plan makes study events far likelier than a work plan does", () => {
+  const a = at("pull", 30), b = at("pull", 30);
+  C.setFocus(a, "study"); C.setFocus(b, "work");
+  assert.ok(studyShare(a) / studyShare(b) >= 1.8, `${studyShare(a)} vs ${studyShare(b)}`);
+});
+
+test("plan weights: main 2.5, secondary 1.5, otherwise 1", () => {
+  const s = at("w", 30); C.setFocus(s, "study"); C.setFocus2(s, "social");
+  const e = (st) => ({ id: "x", tag: "ชีวิต", o: [{ l: "a", y: { st } }] });
+  assert.equal(C.planWeight(s, e({ int: 1 })), 2.5);
+  assert.equal(C.planWeight(s, e({ cha: 1 })), 1.5);
+  assert.equal(C.planWeight(s, e({ str: 1 })), 1);
+});
+
+test("an event a plan brought on says so in the log", () => {
+  const s = at("log", 30); C.setFocus(s, "study");
+  C.openRandom(s, { id: "x", tag: "ชีวิต", t: "หนังสือเล่มใหม่", o: [{ l: "อ่าน", y: { st: { int: 0.1 } } }] });
+  assert.equal(s.ev.fromPlan, "เรียนเพิ่ม");
+  C.choose(s, 0);
+  assert.match(s.log.at(-1).text, / · มาจากแผน เรียนเพิ่ม$/);
+});
+
+test("a milestone or calendar event is not credited to a plan", () => {
+  const s = at("ms", 30); C.setFocus(s, "study");
+  C.openEvent(s, { id: "y", tag: "ชีวิต", t: "t", o: [{ l: "a", y: { st: { int: 0.1 } } }] });
+  assert.equal(s.ev.fromPlan, undefined);
+});

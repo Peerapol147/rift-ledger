@@ -2,6 +2,7 @@
 import { stream, stageOf, ageY } from "./state.js";
 import { ch, wp } from "./rng.js";
 import { eligible, openEvent, EVENT_INDEX } from "./events.js";
+import { kindsOf } from "./kinds.js";
 import { addLedger } from "./money.js";
 import { bodyMonth, yearEnd, changeMind } from "./body.js";
 import { FOCUS } from "../data/stats.js";
@@ -78,7 +79,26 @@ function randomEvent(s, step) {
   if (!ch(R, 1 - (1 - EVENT_CHANCE) ** step)) return null;
   const pool = randomPool(s);
   if (!pool.length) return null;
-  return wp(R, pool, (e) => (e.w ?? 1) / (1 + (s.c["ev:" + e.id] ?? 0) * 2));
+  return wp(R, pool, (e) => ((e.w ?? 1) * planWeight(s, e)) / (1 + (s.c["ev:" + e.id] ?? 0) * 2));
+}
+
+// How hard the life's plans pull an event: the main plan's kinds ×2.5, the secondary's ×1.5 (the main wins).
+const MAIN_PULL = 2.5, SECOND_PULL = 1.5;
+const planOf = (s, id) => (id ? FOCUS[stageOf(s)][id] : null);
+export function planWeight(s, ev) {
+  const k = kindsOf(ev), main = planOf(s, s.focus), side = planOf(s, s.focus2);
+  if (main?.kinds?.some((x) => k.includes(x))) return MAIN_PULL;
+  if (side?.kinds?.some((x) => k.includes(x))) return SECOND_PULL;
+  return 1;
+}
+
+// A random event, opened with the name of the plan that pulled it (shown in the log), if one did.
+export function openRandom(s, ev) {
+  openEvent(s, ev);
+  if (planWeight(s, ev) > 1) {
+    const main = planOf(s, s.focus);
+    s.ev.fromPlan = main?.kinds?.some((x) => kindsOf(ev).includes(x)) ? main.n : planOf(s, s.focus2).n;
+  }
 }
 
 export function tick(s) {
@@ -93,8 +113,8 @@ export function tick(s) {
   for (const sys of books) { sys(s, step); if (s.dead) return; }
   for (const sys of monthly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
   for (const sys of lastly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
-  const ev = dueEvent(s) ?? randomEvent(s, step);
+  const due = dueEvent(s), ev = due ?? randomEvent(s, step);
   if (!ev) return;
   s.c["last:" + ev.id] = s.ageM;
-  openEvent(s, ev);
+  if (due) openEvent(s, ev); else openRandom(s, ev);
 }

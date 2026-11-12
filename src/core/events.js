@@ -121,7 +121,8 @@ export function choose(s, i) {
   s.ev = null;
   s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
-  log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
+  const from = ev.fromPlan ? ` · มาจากแผน ${ev.fromPlan}` : "";
+  log(s, ev.tag, `${ev.t} → ${opt.l}${tail}${from}`, ok ? "imp" : "bad");
   applyOutcome(s, out, opt.l, !!opt.risk);
 }
 
