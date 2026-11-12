@@ -73,7 +73,9 @@ export function awakenCheck(s, cause) {
   if (s.hunter) return false;
   if (cause === "event") { awaken(s, cause); return true; }
   const r = stream(s, "awaken");
-  const boost = Math.min(0.03, ((s.c.nearRift ?? 0) + (s.c.trainHard ?? 0)) * 0.01);
+  // half a point per rift scare or hard training, up to +3%: nearly every child has 3–4 of these by 15, so a
+  // bigger step maxed out for everyone and made the real rate (with late awakenings) drift above 25%
+  const boost = Math.min(0.03, ((s.c.nearRift ?? 0) + (s.c.trainHard ?? 0)) * 0.005);
   const p = cause === "screen" ? AWAKEN_RATE - 0.03 + boost : LATE_P;
   if (!ch(r, p)) return false;
   awaken(s, cause);

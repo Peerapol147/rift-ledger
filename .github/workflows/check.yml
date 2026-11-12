@@ -14,6 +14,6 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: node tools/artcheck.mjs
-      - run: node tools/sim.mjs 300
+      - run: node tools/sim.mjs 1000 --seeds a,b,c
       - run: node tools/playtest.mjs 40
       - run: npm run build
