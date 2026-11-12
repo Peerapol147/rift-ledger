@@ -26,7 +26,7 @@ cd rift-ledger && npm install
 | `node tools/lifecheck.mjs 200` | เล่นหลายชีวิต แล้วฟ้องเหตุการณ์ที่มาซ้ำเกินที่ประกาศ ข้อความเพี้ยน และเหตุการณ์ที่ไม่เข้ากับชีวิต |
 | `node tools/artcheck.mjs` | ตรวจไฟล์ภาพตามข้อตกลงกับเอเจนต์ทำภาพ (ดู `AGENTS.md`) |
 | `node tools/linelen.mjs` | หาบรรทัดที่ยาวเกิน 120 ตัวอักษรใน `src/core` และ `src/data` |
-| `npm run build` | สร้าง `play.html` ใหม่ |
+| `npm run build` | สร้าง `play.html` ใหม่ และแพ็ก `downloads/rift-ledger-play.zip` (play.html + เพลง + วิธีเปิด) ให้ตรงกันเสมอ |
 
 `tools/sim.mjs` จะจบด้วย exit code 1 ถ้าข้อมูลอ้างถึงสิ่งที่ไม่มีอยู่ บรรทัดยาวเกิน อัตราตื่นพลังหลุดเป้า (เมื่อเล่น 1,000 ชีวิตขึ้นไป) หรือผลไม่เหมือนเดิมเมื่อเล่น seed เดิมซ้ำ
 
