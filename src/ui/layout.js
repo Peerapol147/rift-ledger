@@ -47,7 +47,12 @@ function badge(v) {
 
 const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
 
-export function eventPanel(s, waitingAuto) {
+export function eventPanel(s, waitingAuto, result) {
+  const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}</div>` : "";
+  return res + eventCard(s, waitingAuto);
+}
+
+function eventCard(s, waitingAuto) {
   if (!s.ev) {
     const op = s.op ? `<p>กำลังดำเนินการ: ${esc(s.op.def.t)}</p>${opStatus(s)}` : `<p class="dim">ยังไม่มีเรื่องเข้ามา เมื่อมีเหตุการณ์หรือทางเลือกจะขึ้นที่ช่องนี้</p>`;
     return `<div class="ev"><span class="tag">เหตุการณ์</span>${op}<p class="dim">1–9 เลือก · Space หยุด · +/− ความเร็ว · A เปลี่ยนโหมดออโต้</p></div>`;
@@ -65,7 +70,7 @@ export function eventPanel(s, waitingAuto) {
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";
   const wait = waitingAuto ? `<div class="dim" style="margin-top:6px">ออโต้รอให้คุณเลือกเรื่องนี้เอง</div>` : "";
   const k = C.eventKind(s);
-  const tier = TIER[k.tier] ? `<span class="tier ${k.tier}">${TIER[k.tier]}</span>` : "";
+  const tier = TIER[k.tier] && TIER[k.tier] !== ev.tag ? `<span class="tier ${k.tier}">${TIER[k.tier]}</span>` : "";
   const head = `<div class="evhead">${tier}${tag(ev.tag)}${k.part ? `<small class="dim">${k.part}</small>` : ""}</div>`;
   // your own numbers for the stats this choice tests (no odds beyond the badges already shown)
   const keys = [...new Set(ev.opts.map((o) => o.s).filter((x) => x && STATS[x]))];

@@ -48,6 +48,10 @@ input,select{background:#0c1018;border:1px solid var(--line);padding:6px 8px;bor
 .tier.uncommon{color:#62e0a1}.tier.story{color:var(--amb)}.tier.rare{color:#c3a6ff}.tier.world{color:var(--bad)}
 .evstats{font-size:.8em;color:var(--dim);margin-top:6px}.evstats b{color:#fff}
 .opt.fate{opacity:.8;font-size:.9em}
+.result{margin-bottom:8px;padding:8px 12px;border-left:3px solid var(--amb);background:var(--pan);animation:pop .22s ease-out}
+.result.good{border-left-color:#62e0a1}.result.bad{border-left-color:var(--bad)}
+@keyframes pop{0%{transform:scale(.96);opacity:0}70%{transform:scale(1.01);opacity:1}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.result{animation:none}}
 .tag{display:inline-block;font-size:.78em;font-weight:700;padding:1px 7px;color:#14100a;background:var(--amb)}
 .tag.t-life{background:var(--t-life)}.tag.t-work{background:var(--t-work)}.tag.t-gate{background:var(--t-gate)}.tag.t-world{background:var(--t-world)}.tag.t-team{background:var(--t-team)}
 .ev p{margin-top:8px}.opts{display:grid;gap:6px;margin-top:10px}

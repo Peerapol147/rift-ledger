@@ -68,6 +68,14 @@ function legacyRows() {
     ${L.enemies.length ? `<div class="kv"><span>ศัตรูที่ทิ้งไว้</span><b>${esc(L.enemies.join(", "))}</b></div>` : ""}`;
 }
 
+// game-feel: what your choice did shows for a few seconds where you made it (the log keeps it too)
+function showResult(n0) {
+  const l = s.log.slice(n0).find((x) => x.text.includes(" → "));
+  if (!l) return;
+  ui.result = { text: l.text.split(" → ").slice(1).join(" → "), tone: l.tone, until: performance.now() + 4000 };
+  dirty = true;
+}
+
 // items stay put while a fight or a choice is open
 function busy() { if (s.ev || s.op) { banner("จัดการเรื่องที่ค้างอยู่ก่อน"); return true; } return false; }
 
@@ -143,7 +151,8 @@ function render() {
   if (!TABS.some(([k, , ok]) => k === ui.tab && ok(s))) ui.tab = "log";
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
   put("#card", card(s));
-  put("#event", eventPanel(s, waiting && ui.policy !== "stop"));
+  if (ui.result && performance.now() > ui.result.until) ui.result = null;
+  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
@@ -218,8 +227,8 @@ function act(a, el) {
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
     quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
-    choose: () => { C.choose(s, +v); fx(); },
-    fate: () => { if (C.chooseByFate(s)) fx(); },
+    choose: () => { const n0 = s.log.length; C.choose(s, +v); showResult(n0); fx(); },
+    fate: () => { const n0 = s.log.length; if (C.chooseByFate(s)) { showResult(n0); fx(); } },
     pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),
