@@ -6,6 +6,18 @@ Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design i
 **Owner's latest continuation brief:** [CLAUDE-NEXT-BRIEF.md](CLAUDE-NEXT-BRIEF.md).
 Read it before choosing the next task; it separates shipped UI work from remaining save/story work.
 
+## Owner follow-up: animated characters and audible music — 13 November 2026
+
+Follow [the motion plan](superpowers/plans/2026-11-13-character-motion.md) and latest section in
+[Claude's brief](CLAUDE-NEXT-BRIEF.md). Sparse-haired young art replaces the adult-like infant head.
+Motion motifs cover all ages, 15 classes and 12 careers, using procedural pixel-region movement
+in the stage and gentler whole-image portrait motion. Stage idle yields to combat/travel;
+reduced motion freezes added gestures. Portrait phase survives monthly DOM refreshes.
+Music button is reachable over the start screen, retries blocked autoplay on one tap and reports
+actual playback state. Stale play rejection cannot overwrite successful playback feedback.
+Validation commands include `tools/young-audio-regression.mjs` and
+`tools/motion-continuity-regression.mjs` alongside existing UX regressions. Current verification: 205 core tests, 10 existing UX browser scenarios, plus new audio/motion and continuity checks passed; artcheck, linelen and build passed. Historical counts below belong to earlier commits.
+
 ## Responsive interface and original character frames — 13 November 2026
 
 Branch `claude/responsive-ui` implements the owner-authorized UI subset of phases A/B.

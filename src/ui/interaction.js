@@ -12,6 +12,10 @@ export function replaceView(root, html) {
   const selected = owned && active.tagName === 'SELECT' ? active.value : null;
   const scroll = root.scrollTop;
   root.innerHTML = html;
+  // Monthly stats refresh must not restart the character's idle pose.
+  for (const portrait of root.querySelectorAll('.profile-sprite')) {
+    for (const animation of portrait.getAnimations()) animation.currentTime = performance.now();
+  }
   if (owned) {
     const next = key && root.querySelector(key);
     (next || root).focus({preventScroll:true});

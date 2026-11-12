@@ -25,7 +25,16 @@ export function makeHeroArt(ageM = 0, career = null, tint = '#277d83') {
   }
   const pal = {...BASE};
   let rows = [...CHILD];
-  if (life === 'infant') rows = [...rows.slice(0, 11), '......nttttn........', '.....nttttttn.......', '.....nttttttn.......', '......nttttn........', '.......nnnn.........'];
+  if (life === 'infant' || life === 'toddler') {
+    // Round bare scalp, one small tuft, wide eyes; no scaled-down adult hairstyle.
+    const head = ['........hh..........','......nSSSSn........','.....nSSSSSSn.......','....nSSSSSSSSn......',
+      '....nSnSSSnSSn......','....nsSSSSSSsn......','.....nsSSSSsn.......','......nssssn........'];
+    const body = life === 'infant'
+      ? ['.....nttttttn.......','....nttCtttttn......','....ntttCCtttn......','.....nttttCtn.......','......nttttn........','.......nnnn.........']
+      : ['.....ncCCCCcn.......','....nsncCCcnsn......','....nsncCCcnsn......','.....nnccccnn.......',
+         '......nccccn........','......nSnnSn........','.....nSSnnSSn.......','.....nnnnnnnn.......'];
+    rows = [...head, ...body];
+  }
   if (life === 'teen') rows.splice(19, 0, rows[19], rows[19]);
   if (life !== 'infant' && life !== 'toddler' && life !== 'child' && life !== 'teen') {
     rows.splice(17, 0, rows[16], rows[16]);

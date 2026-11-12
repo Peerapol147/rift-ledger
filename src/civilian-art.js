@@ -15,8 +15,8 @@ function greyed(art, g) {
  const out = { ...art, pixels: px }; GREY.set(key, out); return out;
 }
 export function civilianArt(ageM=0, career=null, classId=null) {
- // Infants use makeHeroArt's swaddled model instead of a scaled standing child.
- if (ageM < 12 || career || classId) return null;
+ // Infants and toddlers share the original small, sparse-haired models with the portrait.
+ if (ageM < 36 || career || classId) return null;
  const age = Math.max(0, Number(ageM) || 0) / 12;
  let art = AGES[age < 6 ? 0 : age < 12 ? 1 : age < 15 ? 2 : 3];
  const g = age < 45 ? 0 : age < 60 ? 0.35 : age < 75 ? 0.7 : 1;

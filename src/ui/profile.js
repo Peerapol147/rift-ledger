@@ -1,7 +1,8 @@
 // An original character dossier, illustrated with this project's existing sprites.
 import { profileStyle } from './profile-style.js';
 import { PORTRAITS } from './portraits.js';
-import { careerArt } from './art.js';
+import { careerArt, classArt } from './art.js';
+import { motionProfile } from '../character-motion.js';
 import { CLASSES } from '../data/classes.js';
 import { makeHeroArt } from '../hero-art.js';
 import { civilianArt } from '../civilian-art.js';
@@ -26,19 +27,21 @@ const MARKS = {
 };
 const emblem = mark => `<svg viewBox="0 0 24 26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="${MARKS[mark] || MARKS.star}"/></svg>`;
 // Reuse the original code-native swaddled infant; the stage uses this same artwork before age one.
-const infant = (() => {
-  const art=makeHeroArt(0), rects=[];
+const youngPortrait = ageM => {
+  const art=makeHeroArt(ageM), rects=[];
   art.rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(art.palette[c])rects.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${art.palette[c]}"/>`);}));
   return 'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 ${art.rows.length}" shape-rendering="crispEdges">${rects.join('')}</svg>`);
-})();
+};
+const infant = youngPortrait(0), little = youngPortrait(12);
 export function profileVisual(s) {
   const style=profileStyle(s), age=s.ageM;
-  const art=age<12?infant:age<36?toddler:s.hunter?PORTRAITS[CLASSES[s.hunter.cls]?.art]
+  const motion=motionProfile(age,s.hunter?classArt(s.hunter.cls):null,s.job?careerArt(s.job.id):null);
+  const art=age<12?infant:age<36?little:s.hunter?PORTRAITS[CLASSES[s.hunter.cls]?.art]
     :s.job?PORTRAITS['career-'+careerArt(s.job.id)]:({toddler,primary,junior,senior:adult})[civilianArt(age)?.id];
-  return `<div class="profile-art grade-${style.grade}" style="--profile:${style.color}">
+  return `<div class="profile-art grade-${style.grade}" style="--profile:${style.color};--motion-time:${motion.period}s;--motion-turn:${motion.amount}deg" data-motion="${motion.kind}">
     <div class="profile-orbit" aria-hidden="true"></div><div class="profile-sigil">${emblem(style.mark)}</div>
     <span class="profile-caption">${esc(style.label)}</span>
-    ${art?`<img class="profile-sprite ${age<12?'infant':''}" src="${art}" alt="ภาพประกอบ${esc(style.label)}" draggable="false">`:''}
+    ${art?`<img title="${esc(motion.label)}" class="profile-sprite ${age<12?'infant':age<36?'toddler':''}" src="${art}" alt="ภาพประกอบ${esc(style.label)}" draggable="false">`:''}
     <div class="rank-medallion"><small>${age<36?'ช่วงวัย':s.hunter?'แรงก์':s.job?'ระดับงาน':'ชีวิต'}</small><b>${esc(style.badge)}</b></div>
     <div class="profile-rail" aria-hidden="true"><i></i><span>◆</span><i></i></div>
   </div>`;
