@@ -99,7 +99,9 @@ if (process.argv[1]?.endsWith("sim.mjs")) {
 staticChecks();
 const lives = [];
 const t0 = Date.now();
-for (let i = 0; i < N; i++) lives.push(playLife(`sim${i}`));
+// --seed <prefix> runs an independent sample (default "sim")
+const SEED = args[args.indexOf("--seed") + 1] && args.includes("--seed") ? args[args.indexOf("--seed") + 1] : "sim";
+for (let i = 0; i < N; i++) lives.push(playLife(`${SEED}${i}`));
 const hunters = lives.filter((s) => s.hunter), civs = lives.filter((s) => !s.hunter);
 console.log(`\n${N} lives · policy ${POLICY} · ${((Date.now() - t0) / 1000).toFixed(1)}s · hunters ${hunters.length}`);
 
