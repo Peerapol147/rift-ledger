@@ -78,7 +78,7 @@ function legacyRows() {
 function showResult(n0) {
   const l = s.log.slice(n0).find((x) => x.text.includes(" → "));
   if (!l) return;
-  ui.result = { text: l.text.split(" → ").slice(1).join(" → "), tone: l.tone, until: performance.now() + 4000 };
+  ui.result = { text: l.text.split(" → ").slice(1).join(" → "), tone: l.tone, fx: l.fx, until: performance.now() + 6000 };
   dirty = true;
 }
 
@@ -159,7 +159,10 @@ function render() {
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
   put("#card", card(s));
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
-  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
+  // the big card only for a choice that waits for the player, so auto-picked small events never flash it
+  if (ui.evMin && ui.evMin !== s.ev?.id) ui.evMin = null;
+  const modal = s.ev && (waiting || ui.policy === "stop" || ui.paused) ? (ui.evMin ? "min" : true) : false;
+  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result, modal));
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
@@ -248,6 +251,8 @@ function act(a, el) {
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
     settings: () => { ui.settings = true; ui.exportText = ""; },
+    evmin: () => { ui.evMin = s.ev?.id ?? null; },
+    evopen: () => { ui.evMin = null; },
     close: () => { ui.settings = false; },
     tab: () => { ui.tab = v; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },

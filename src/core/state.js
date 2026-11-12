@@ -27,6 +27,15 @@ export function dateText(s) {
   return `ปี ${year} (ปีที่ ${year - WORLD.RIFT_YEAR} หลังฟ้าแตก) เดือน ${(m % 12) + 1}`;
 }
 
+// Where each stat started: a 4–7 birth roll plus the family's bonus (born is null for saves from before it was kept).
+export function statOrigin(s) {
+  const fam = FAMILIES.find((f) => f.id === s.family)?.st ?? {};
+  return Object.fromEntries(STAT_IDS.map((k) => {
+    const born = s.born?.[k] ?? null, f = fam[k] ?? 0;
+    return [k, { born, fam: f, roll: born == null ? null : born - f, now: s.st[k] }];
+  }));
+}
+
 export function log(s, tag, text, tone = "") {
   s.log.push({ m: s.ageM, tag, text, tone });
   if (s.log.length > 600) s.log.splice(0, s.log.length - 600);
@@ -49,6 +58,7 @@ export function newLife(seed) {
     mon0: ri(R, 0, 11),
     ageM: 0,
     st,
+    born: { ...st },
     hp: 100,
     mind: 100,
     lifeY: 70 + ri(R, 0, 15),

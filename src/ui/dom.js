@@ -21,3 +21,11 @@ const TAG_CLASS = {
   ข่าวโลก: "t-world", เหตุการณ์โลก: "t-world",
 };
 export const tag = (t) => `<span class="tag ${TAG_CLASS[t] ?? ""}">${esc(t)}</span>`;
+
+// What a choice changed, as small coloured chips (log lines and the result toast).
+const FX_NAME = { str: "กาย", agi: "ไว", int: "ปัญญา", wil: "จิต", cha: "เสน่ห์", luk: "โชค", hp: "สุขภาพ",
+  mind: "สุขภาพจิต", gold: "เงิน", fame: "ชื่อเสียง" };
+export const fxChips = (fx) => (fx ?? []).map((e) => {
+  const v = e.k === "gold" ? (e.d > 0 ? "+" : "−") + money(Math.abs(e.d)) : (e.d > 0 ? "+" : "−") + Math.abs(e.d);
+  return `<span class="fx ${e.d > 0 ? "up" : "down"}">${FX_NAME[e.k] ?? esc(e.k)} ${v}</span>`;
+}).join("");

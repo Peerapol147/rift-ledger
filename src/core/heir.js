@@ -33,6 +33,7 @@ export function newHeir(P, seed) {
   for (const [k, v] of Object.entries(old?.st ?? {})) s.st[k] -= v;
   for (const [k, v] of Object.entries(fam.st)) s.st[k] += v;
   s.family = fam.id;
+  s.born = { ...s.st }; // the birth roll against this family; schooling below counts as what came after
   if (P.unlockFamily) s.unlockFamily = { ...P.unlockFamily };
   s.mon0 = (P.mon0 ?? 0) + P.ageM;
   s.world = JSON.parse(JSON.stringify(P.world));

@@ -1,4 +1,4 @@
-import { esc, tag, btn } from "../dom.js";
+import { esc, tag, btn, fxChips } from "../dom.js";
 import { yearSummary } from "../../core/goals.js";
 
 export function logTab(s, ui) {
@@ -7,7 +7,7 @@ export function logTab(s, ui) {
   for (let i = rows.length - 1; i >= 0 && i >= rows.length - 250; i--) {
     const l = rows[i], y = Math.floor(l.m / 12);
     if (y !== year) { year = y; out += `<div class="yr">อายุ ${y}</div>`; }
-    out += `<div class="l ${l.tone}">${tag(l.tag)}<span>${esc(l.text)}</span></div>`;
+    out += `<div class="l ${l.tone}">${tag(l.tag)}<span>${esc(l.text)}${l.fx ? ` ${fxChips(l.fx)}` : ""}</span></div>`;
   }
   const ys = s.ageM >= 12 ? yearSummary(s, Math.floor(s.ageM / 12) - 1) : null;
   const sum = ys?.lines.length

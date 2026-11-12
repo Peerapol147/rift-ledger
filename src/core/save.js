@@ -1,5 +1,6 @@
 // Saves and the cross-life collection book. Pure: takes a storage adapter { get, set, del }. Spec §10 and §13.
 import { ITEMS } from "../data/items.js";
+import { FX_KEYS } from "./events.js";
 const SLOT = (i) => `riftledger.slot.v2.${i}`;
 const BOOK = "riftledger.book.v2";
 const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
@@ -22,7 +23,16 @@ export function deserialize(str) {
     for (const k of Object.keys(s.world?.records ?? {})) s.world.records[k] = num(s.world.records[k]);
     for (const k of Object.keys(s.c ?? {})) s.c[k] = num(s.c[k]);
     for (const g of s.goals ?? []) g.target = num(g.target);
-    for (const l of s.log ?? []) if (!TONES.has(l.tone)) l.tone = "";
+    for (const l of s.log ?? []) {
+      if (!TONES.has(l.tone)) l.tone = "";
+      // a choice's results: known keys with whole numbers only
+      if ("fx" in l) {
+        const fx = Array.isArray(l.fx) ? l.fx.filter((e) => FX_KEYS.includes(e?.k) && Number.isFinite(+e.d))
+          .map((e) => ({ k: e.k, d: Math.round(+e.d) })) : [];
+        if (fx.length) l.fx = fx; else delete l.fx;
+      }
+    }
+    if (s.born) for (const k of Object.keys(s.born)) s.born[k] = num(s.born[k]);
     // item lists: only real records with a plain uid; plus is a whole number 0..5
     const okItem = (i) => i && typeof i === "object" && /^i\d+$/.test(String(i.uid)) && ITEMS[i.id] != null;
     const clean = (list) => (Array.isArray(list) ? list.filter(okItem) : []);

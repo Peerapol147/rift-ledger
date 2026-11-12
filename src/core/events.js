@@ -119,8 +119,16 @@ export function choose(s, i) {
   s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
   log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
+  const line = s.log.at(-1), before = numbers(s);
   applyOutcome(s, out, opt.l, !!opt.risk);
+  const after = numbers(s);
+  const fx = FX_KEYS.map((k) => ({ k, d: Math.round(after[k] - before[k]) })).filter((e) => e.d !== 0);
+  if (fx.length) line.fx = fx;
 }
+
+// The numbers a choice can move, kept on its log line so the log shows what it did.
+export const FX_KEYS = [...Object.keys(STATS), "hp", "mind", "gold", "fame"];
+const numbers = (s) => Object.fromEntries(FX_KEYS.map((k) => [k, STATS[k] ? s.st[k] ?? 0 : s[k] ?? 0]));
 
 // Options the player could not see or could not pick, counted for the death summary (never named).
 export function countUnseen(s, opts) {

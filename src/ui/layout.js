@@ -1,7 +1,7 @@
 // The always-visible parts: left card, event panel, controls and the tab bar.
 import * as C from "../core/index.js";
 import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../data/index.js";
-import { esc, money, bar, btn, tag } from "./dom.js";
+import { esc, money, bar, btn, tag, fxChips } from "./dom.js";
 import { prepPanel } from "./prep.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
@@ -47,15 +47,27 @@ function badge(v) {
 
 const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
 
-export function eventPanel(s, waitingAuto, result) {
-  const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}</div>` : "";
+export function eventPanel(s, waitingAuto, result, modal) {
+  const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}`
+    + `${result.fx ? `<div>${fxChips(result.fx)}</div>` : ""}</div>` : "";
   // phones show the character card below everything, so the essentials ride here (CSS shows it only there)
   const m = `<div class="mstat">อายุ <b>${C.ageY(s)}</b> สุขภาพ <b>${Math.round(s.hp)}</b> จิต <b>${Math.round(s.mind)}</b>`
     + ` เงิน <b>${money(s.gold)}</b></div>`;
+  // a choice waiting for the player is a big card over the scene; collapsed, it leaves a chip to reopen it
+  if (s.ev && modal === "min") return m + res + `<div class="ev evchip">${btn("evopen", "📜 มีเรื่องรอให้คุณเลือก · เปิดดู", 'class="pri"')}</div>`;
+  if (s.ev && modal) return m + res + `<div class="evlay">${eventCard(s, waitingAuto, true)}</div>`;
   return m + res + eventCard(s, waitingAuto);
 }
 
-function eventCard(s, waitingAuto) {
+// The numbers the example card shows on top: age, health, mind, money, then the six stats.
+function statBar(s) {
+  const six = Object.entries(STATS).map(([k, n]) => `<span>${n} <b>${Math.floor(s.st[k])}</b></span>`).join("");
+  return `<div class="evbar"><span>อายุ <b>${C.ageY(s)}</b></span><span>สุขภาพ <b>${Math.round(s.hp)}</b></span>`
+    + `<span>สุขภาพจิต <b>${Math.round(s.mind)}</b></span><span>เงิน <b>${money(s.gold)}</b></span></div>`
+    + `<div class="evbar">${six}</div>`;
+}
+
+function eventCard(s, waitingAuto, big = false) {
   if (!s.ev) {
     const op = s.op ? `<p>กำลังดำเนินการ: ${esc(s.op.def.t)}</p>${opStatus(s)}` : `<p class="dim">ยังไม่มีเรื่องเข้ามา เมื่อมีเหตุการณ์หรือทางเลือกจะขึ้นที่ช่องนี้</p>`;
     return `<div class="ev"><span class="tag">เหตุการณ์</span>${op}<p class="dim">1–9 เลือก · Space หยุด · +/− ความเร็ว · A เปลี่ยนโหมดออโต้</p></div>`;
@@ -74,10 +86,12 @@ function eventCard(s, waitingAuto) {
   const wait = waitingAuto ? `<div class="waitchip">⏸ เกมหยุดรอคุณเลือก</div>` : "";
   const k = C.eventKind(s);
   const tier = TIER[k.tier] && TIER[k.tier] !== ev.tag ? `<span class="tier ${k.tier}">${TIER[k.tier]}</span>` : "";
-  const head = `<div class="evhead">${tier}${tag(ev.tag)}${k.part ? `<small class="dim">${k.part}</small>` : ""}</div>`;
+  const min = big ? btn("evmin", "▾ ย่อไว้ก่อน", 'class="evmin"') : "";
+  const head = `<div class="evtop"><div class="evhead">${tier}${tag(ev.tag)}${k.part ? `<small class="dim">${k.part}</small>` : ""}</div>`
+    + `${min}</div>${big ? statBar(s) : ""}`;
   // your own numbers for the stats this choice tests (no odds beyond the badges already shown)
   const keys = [...new Set(ev.opts.map((o) => o.s).filter((x) => x && STATS[x]))];
-  const strip = keys.length ? `<div class="evstats">${keys.map((x) => `${STATS[x]} <b>${Math.floor(s.st[x])}</b>`).join(" · ")}</div>` : "";
+  const strip = keys.length && !big ? `<div class="evstats">${keys.map((x) => `${STATS[x]} <b>${Math.floor(s.st[x])}</b>`).join(" · ")}</div>` : "";
   const fate = !s.op && n > 1 && ev.id !== "gateChoice" ? `<button class="opt fate" data-a="fate">🎲 ให้ชะตาเลือก</button>` : "";
   return `<div class="ev ${ev.important ? "big" : ""} t-${k.tier}">${head}<p>${esc(ev.t)}</p>${strip}${prep}
     <div class="opts">${rows}${fate}</div>${wait}${s.op ? opStatus(s) : ""}</div>`;
