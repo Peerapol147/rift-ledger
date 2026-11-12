@@ -38,8 +38,9 @@ export const debtCap = (s) => Math.max(5000, Math.round(trailingIncome(s) * 24))
 
 export function living(s) {
   if (ageY(s) < 18) return;
-  const hunter = s.hunter ? 40 + s.hunter.rank * 40 : 0;
-  const kids = (s.c.kids ?? 0) * 60;
+  // licence and gear upkeep only while you still hunt; children cost until they are grown (about 25 years)
+  const hunter = s.hunter && !s.flags.stoppedHunting ? 40 + s.hunter.rank * 40 : 0;
+  const kids = ageY(s) < 55 ? (s.c.kids ?? 0) * 60 : 0;
   // until the first job (or 23), you still live at home: the family carries most of it
   const cost = cityOf(s.city).cost + hunter;
   if (!s.job && ageY(s) < 23) return addLedger(s, "ค่าครองชีพ (อยู่บ้านพ่อแม่)", -Math.round(cost * 0.3));

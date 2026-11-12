@@ -53,7 +53,7 @@ function hunterMonth(s) {
     s.st[main] += 0.25 * trainFactor(s);
     gainXp(s, 6 * trainFactor(s));
   }
-  if (canRankUp(s) && !s.c.rankEvalOpen) {
+  if (canRankUp(s) && !s.c.rankEvalOpen && s.ageM >= (s.c.rankEvalAt ?? 0)) {
     s.c.rankEvalOpen = 1;
     return openEvent(s, EVENT_INDEX.get("rankEval"));
   }
@@ -123,3 +123,4 @@ hooks.act.hideRank = (s) => { s.flags.hiddenRank = true; };
 
 monthly.push(hunterMonth);
 lastly.push(huntMonth);
+hooks.act.rankEvalLater = (s) => { s.c.rankEvalAt = s.ageM + 12; };

@@ -190,7 +190,8 @@ function endOp(s) {
   const gold = Math.round(def.rewards.gold * share * mul * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
-  const xpShare = (r === "won" ? 1 : 0.3) * (o.prep.share ? 0.7 : 1); // in a party the leader does most of the killing
+  // fleeing teaches nothing; in a party the leader does most of the killing
+  const xpShare = (r === "won" ? 1 : 0) * (o.prep.share ? 0.7 : 1); // in a party the leader does most of the killing
   if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP * xpMul(s));
   if (def.kind === "job" && s.job) s.job.xp += 4 * share;
   if (r === "won" && def.kind === "tower") {

@@ -55,6 +55,9 @@ export function gateOp(s, g) {
   };
 }
 
+// A floor pays like a gate of the rank its monsters match, plus a fifth for the climb.
+const towerPay = (lv) => Math.round(gatePay(Math.max(0, GATE_LV.findLastIndex((g) => g <= lv))) * 1.2);
+
 export function towerOp(s, towerId, floor) {
   const T = TOWERS[towerId];
   const f = genFloor(T, floor);
@@ -63,7 +66,7 @@ export function towerOp(s, towerId, floor) {
   if (f.boss) foes.push(foe(f.bossName, f.lv + 4, T.el, true));
   return {
     id: `tower:${towerId}:${floor}`, kind: "tower", t: `${T.n} ชั้น ${floor} · ${f.t}`, tower: towerId, floor,
-    foes, decisions: f.decisions ?? TOWER_DECISIONS, boss: f.boss, rewards: { gold: 40 * floor, items: [] },
+    foes, decisions: f.decisions ?? TOWER_DECISIONS, boss: f.boss, rewards: { gold: towerPay(f.lv), items: [] },
   };
 }
 

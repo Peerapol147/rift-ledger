@@ -131,16 +131,24 @@ gearHooks.push((s) => {
   return out;
 });
 
+// Loot into a full bag: the cheapest loose thing is sold to make room, or the new find is sold on the spot.
+function take(s, id, from) {
+  if (s.items.length < bagCap()) return giveItem(s, id, from);
+  const worn = new Set(Object.values(s.equip));
+  const cheap = s.items.filter((i) => !i.lock && !worn.has(i.uid))
+    .sort((a, b) => ITEMS[a.id].price - ITEMS[b.id].price)[0];
+  if (cheap && ITEMS[cheap.id].price < ITEMS[id].price) { sellItem(s, cheap.uid); return giveItem(s, id, from); }
+  addLedger(s, "ขายของที่ถือไม่ไหว", Math.round(ITEMS[id].price * 0.5));
+}
+
 afterOpHooks.push((s, o, r) => {
   if (r !== "won" || o.def.kind === "job") return;
   const R = stream(s, "loot");
   const table = lootTable(o.def), gear = table.filter((x) => ITEMS[x.id].slot);
   const rolls = 1 + o.loot;
-  for (let i = 0; i < rolls && s.items.length < bagCap(); i++) {
-    if (ri(R, 0, 1)) giveItem(s, wp(R, table).id, o.def.t);
-  }
+  for (let i = 0; i < rolls; i++) if (ri(R, 0, 1)) take(s, wp(R, table).id, o.def.t);
   // a boss always leaves one piece of gear
-  if (o.def.boss && gear.length && s.items.length < bagCap()) giveItem(s, wp(R, gear).id, o.def.t);
+  if (o.def.boss && gear.length) take(s, wp(R, gear).id, o.def.t);
 });
 
 deathHooks.push((s, cause) => {
