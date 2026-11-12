@@ -1,11 +1,13 @@
 // Hunter progression: XP and levels, class skills, training near the hidden ceiling, rank re-evaluation, burnout.
 import { ch } from "./rng.js";
 import { stream, log } from "./state.js";
+import { addLedger } from "./money.js";
 import { openEvent, EVENT_INDEX, hooks } from "./events.js";
 import { monthly, lastly } from "./registry.js";
 import { LV_CAP, canRankUp, rankUp, ceilingHint } from "./awaken.js";
 import { gateOffers, gateOp, towerOp, GATE_LV } from "./hunt.js";
-import { estimateRisk } from "./ops.js";
+import { estimateRisk, startOp, defaultPrep } from "./ops.js";
+import { intelPrice, withIntel } from "./spend.js";
 import { COUNTRIES } from "../data/world.js";
 import { CLASSES } from "../data/classes.js";
 import { SKILLS } from "../data/skills.js";
@@ -35,7 +37,7 @@ export function gainXp(s, n) {
   if (!h) return;
   const cap = LV_CAP[h.rank];
   // every rank climbed makes the next one slower
-  h.xp += n * RANK_XP[h.rank] * Math.pow(CLIMB_SLOW, h.rank - (h.rank0 ?? h.rank));
+  h.xp += n * RANK_XP[h.rank] * Math.pow(CLIMB_SLOW, h.rank - (h.rank0 ?? h.rank)) * (hooks.mentorXp?.(s) ?? 1);
   while (h.lv < cap && h.xp >= xpNeed(h.lv)) {
     h.xp -= xpNeed(h.lv);
     h.lv++;
@@ -124,9 +126,23 @@ export function openGateChoice(s) {
     t: "สมาคมส่งรายการเกตที่เปิดรับฮันเตอร์เดือนนี้",
     o: [
       ...defs.map((d, i) => ({ l: label(d), d: info(d), danger: dangerOf(s, d), y: { act: "gate" + i } })),
+      // a boss gate can be bought down: word from the last team that went in, for a third of the pay
+      ...defs.flatMap((d, i) => (d.boss ? [{
+        l: `ซื้อข้อมูลบอสก่อนเข้า (₿${intelPrice(d).toLocaleString("en-US")}) · ${label(d)}`,
+        d: "นายหน้าขายสิ่งที่ทีมก่อนหน้าเรียนรู้มา บอสจะตีเบาลงและล้มง่ายขึ้นสำหรับคุณ", need: { gold: intelPrice(d) },
+        danger: dangerOf(s, withIntel(d)), y: { act: "intel" + i } }] : [])),
       { l: "พักเดือนนี้", y: { mind: 2 } },
     ],
   });
+}
+
+for (let i = 0; i < 6; i++) {
+  hooks.act["intel" + i] = (s) => {
+    const d = s.offers?.[i];
+    if (!d) return;
+    addLedger(s, "ค่าข้อมูลบอส", -intelPrice(d));
+    startOp(s, withIntel(d), defaultPrep(s));
+  };
 }
 
 hooks.act.rankUp = (s) => { s.c.rankEvalOpen = 0; rankUp(s); };

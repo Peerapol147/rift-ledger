@@ -89,6 +89,7 @@ export function moveCity(s, cityId) {
   const to = cityOf(cityId);
   if (!to || to.id === s.city) return false;
   const country = Object.keys(COUNTRIES).find((k) => COUNTRIES[k].cities.includes(to));
+  hooks.leaveHome?.(s);
   addLedger(s, "ค่าย้ายบ้าน", -to.cost * 3);
   if (country !== s.country) {
     s.flags.relicense = true;
