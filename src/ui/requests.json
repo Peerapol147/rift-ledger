@@ -1,0 +1,58 @@
+[
+ {
+  "id": "ui-1",
+  "area": "scene",
+  "problem": "A newborn is drawn as a small child standing outside in the street.",
+  "want": "Under age 3: an indoor scene, and a baby (in a cot or carried), not a walking figure.",
+  "status": "open"
+ },
+ {
+  "id": "ui-2",
+  "area": "scene",
+  "problem": "The scene does not follow the event: a night-time blackout or a shelter event plays over a daytime street in the rain.",
+  "want": "The backdrop and light match where and when the open event happens, at least indoors/outdoors and day/night.",
+  "status": "open"
+ },
+ {
+  "id": "ui-3",
+  "area": "phone",
+  "problem": "On a phone the character card (name, age, health, money, month plan) sits below the log, a long scroll from the event.",
+  "want": "The essentials and the month plan are reachable without scrolling past the log; nothing is hidden under the fixed tab bar.",
+  "status": "open"
+ },
+ {
+  "id": "ui-4",
+  "area": "event",
+  "problem": "The result of the last choice appears as a line above the next event and is easy to miss; a new player cannot tell what their choice changed.",
+  "want": "After a choice the player sees what happened and what changed (stat, money, mood), before or beside the next event.",
+  "status": "open"
+ },
+ {
+  "id": "ui-5",
+  "area": "start",
+  "problem": "The start screen is one card of text; saved lives, the collection and how-to-play compete in the same block.",
+  "want": "A first screen a new player understands in ten seconds: what the game is, one obvious way to begin, saved lives clearly apart.",
+  "status": "open"
+ },
+ {
+  "id": "ui-6",
+  "area": "card",
+  "problem": "Six stats, two bars, money and the plan are shown from birth with no explanation of what any of them does.",
+  "want": "A way to learn what each stat and bar means where it is shown (the glossary exists in Settings but nobody finds it there).",
+  "status": "open"
+ },
+ {
+  "id": "ui-7",
+  "area": "gate",
+  "problem": "Gates now pass a backdrop key (`s.op.def.place`: z_port, z_factory, z_bridge, z_campus, z_cliff, z_subway) to `setScene`. This was wired by the code agent and not looked at in a browser.",
+  "want": "Each of the 8 gate themes shows its own backdrop; check all of them and fix what looks wrong.",
+  "status": "open"
+ },
+ {
+  "id": "ui-8",
+  "area": "tabs",
+  "problem": "The me / world / collection tabs were not reviewed for a child or for a hunter.",
+  "want": "Each tab reads clearly at every stage of life (spec §11.2–11.3); report what is confusing as new rows.",
+  "status": "open"
+ }
+]
