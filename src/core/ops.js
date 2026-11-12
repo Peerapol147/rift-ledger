@@ -14,7 +14,7 @@ import { ITEMS } from "../data/items.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
-const OP_XP = 8.5; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
+const OP_XP = 6.25; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
 const BOSS_DEATH = 0.22; // chance that losing to a boss is fatal; otherwise a permanent wound
 const PLAN = { push: { atk: 1.15, def: 0.9 }, careful: { atk: 0.95, def: 1.1 }, retreat: { atk: 0.9, def: 1.15 } };
 import { gearHooks, afterOpHooks } from "./registry.js";
@@ -198,9 +198,10 @@ function endOp(s) {
   const gold = Math.round(def.rewards.gold * share * mul * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
-  // a chosen retreat teaches least but never less than losing; running out of time teaches a little more;
-  // in a party the leader does most of the killing
-  const xpShare = (r === "won" ? 1 : o.ranAway ? 0.15 : 0.3) * (o.prep.share ? 0.7 : 1); // retreat >= a loss (0.2/lv)
+  // a fight you leave alive teaches 30%, whether you chose to retreat or ran out of time: more than losing
+  // (0.2 per level). At 15% a careful hunter, who retreats often, reached their ceiling half as often as others.
+  // In a party the leader does most of the killing.
+  const xpShare = (r === "won" ? 1 : 0.3) * (o.prep.share ? 0.7 : 1);
   if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP * xpMul(s));
   if (def.kind === "job" && s.job) s.job.xp += 4 * share;
   if (r === "won" && def.kind === "tower") {

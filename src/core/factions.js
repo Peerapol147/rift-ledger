@@ -93,8 +93,10 @@ monthly.push((s) => {
 // Perks while the faction still likes you (the flag stays; the money stops if standing falls below 20).
 books.push((s, step = 1) => {
   const f = s.fac ?? {};
-  if (s.flags.patronAssoc && (f.assoc ?? 0) >= 20) addLedger(s, "เบี้ยกรรมการสมาคม", 800 * step);
-  if (s.flags.patronState && (f.state ?? 0) >= 20) addLedger(s, "เงินเดือนที่ปรึกษารัฐ", 1000 * step);
+  // a seat on a board is a side income, about a part-time job (a full-time salary is ~300 a month): at 800–1,000
+  // it paid three times a career and made low-rank hunters out-earn every civilian
+  if (s.flags.patronAssoc && (f.assoc ?? 0) >= 20) addLedger(s, "เบี้ยกรรมการสมาคม", 150 * step);
+  if (s.flags.patronState && (f.state ?? 0) >= 20) addLedger(s, "เงินเดือนที่ปรึกษารัฐ", 200 * step);
   if (s.flags.patronChurch && (f.church ?? 0) >= 20) changeMind(s, 2 * step);
 });
 

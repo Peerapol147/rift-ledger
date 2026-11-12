@@ -1,5 +1,5 @@
 // Plays many lives on autopilot with a player policy and checks the spec §14 balance targets.
-// node tools/sim.mjs [lives=300] [--policy careful|normal|reckless]
+// node tools/sim.mjs [lives=300] [--policy careful|normal|reckless] [--seeds a,b,c | --seed x]
 import { execFileSync } from "node:child_process";
 import { newLife, advance, choose, optionView, stageOf, setFocus, focusList, ageY, canHunt } from "../src/core/index.js";
 import { mk, rnd } from "../src/core/rng.js";
@@ -95,65 +95,90 @@ function row(name, value, ok, hard = false) {
   if (!ok && hard) hardFail = true;
 }
 
+// One sample of lives -> the balance numbers that spec §14 targets.
+export function measure(lives) {
+  const hunters = lives.filter((s) => s.hunter), civs = lives.filter((s) => !s.hunter);
+  const perYear = (s) => (s.c.earned ?? 0) / Math.max(1, ageY(s) - 18);
+  const room = hunters.filter((s) => s.hunter.ceil > s.hunter.rank0);
+  const early = hunters.filter((s) => s.dead.cause !== "อายุขัย" && s.dead.ageY < 50).length;
+  return {
+    hunters: hunters.length,
+    awaken: pct(hunters.length, lives.length),
+    early: pct(early, hunters.length),
+    oldAge: pct(civs.filter((s) => s.dead.cause === "อายุขัย").length, civs.length),
+    hi: med(hunters.filter((s) => s.hunter.rank >= 3).map(perYear)),
+    civ: med(civs.map(perYear)),
+    lo: med(hunters.filter((s) => s.hunter.rank <= 1).map(perYear)),
+    ceil: pct(room.filter((s) => s.hunter.rank === s.hunter.ceil).length, room.length),
+    secret: pct(lives.filter((s) => (s.secrets ?? []).some((id) => (s.c["sqo:" + id] ?? 0) > 0)).length, lives.length),
+    age: med(lives.map((s) => s.dead.ageY)),
+    floor: med(hunters.map((s) => s.c.floor ?? 0)),
+  };
+}
+
 if (process.argv[1]?.endsWith("sim.mjs")) {
 staticChecks();
-const lives = [];
 const t0 = Date.now();
-// --seed <prefix> runs an independent sample (default "sim")
-const SEED = args[args.indexOf("--seed") + 1] && args.includes("--seed") ? args[args.indexOf("--seed") + 1] : "sim";
-for (let i = 0; i < N; i++) lives.push(playLife(`${SEED}${i}`));
-const hunters = lives.filter((s) => s.hunter), civs = lives.filter((s) => !s.hunter);
-console.log(`\n${N} lives · policy ${POLICY} · ${((Date.now() - t0) / 1000).toFixed(1)}s · hunters ${hunters.length}`);
+// --seeds a,b,c runs several independent samples and judges the mean (never tune to one sample);
+// --seed x runs one sample (default "sim")
+const at = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
+const SEEDS = at("--seeds")?.split(",") ?? [at("--seed") ?? "sim"];
+const samples = SEEDS.map((seed) => {
+  const lives = [];
+  for (let i = 0; i < N; i++) lives.push(playLife(`${seed}${i}`));
+  return { seed, lives, m: measure(lives) };
+});
+const all = samples.flatMap((x) => x.lives);
+console.log(`\n${N} lives × ${SEEDS.length} seed sets (${SEEDS.join(",")}) · policy ${POLICY} · `
+  + `${((Date.now() - t0) / 1000).toFixed(1)}s`);
+// mean over the samples, with the lowest and highest sample shown so a lucky set cannot hide a drift
+const stat = (k, d = 1) => {
+  const v = samples.map((x) => x.m[k]), mean = v.reduce((a, b) => a + b, 0) / v.length;
+  const spread = v.length > 1 ? ` [${Math.min(...v).toFixed(d)}–${Math.max(...v).toFixed(d)}]` : "";
+  return { mean, txt: mean.toFixed(d) + spread };
+};
+const total = N * SEEDS.length;
 
-const aw = pct(hunters.length, N);
-row("awaken 23–27%", aw.toFixed(1) + "%", aw >= 23 && aw <= 27, N >= 1000);
+const aw = stat("awaken");
+// the spec's 25% ± 2: judged on the mean of every life run, so it is only a hard check with enough lives
+row("awaken 23–27%", aw.txt + "%", aw.mean >= 23 && aw.mean <= 27, total >= 3000);
+const hunters = all.filter((s) => s.hunter);
 const r0 = Array(8).fill(0);
 for (const s of hunters) r0[s.hunter.rank0]++;
-// within 3 standard errors of the spec's weights for this many hunters
-const rankOk = [40, 20, 15, 10, 9, 5, 1].every((w, i) =>
-  Math.abs(pct(r0[i], hunters.length) - w) <= 3 * Math.sqrt((w * (100 - w)) / Math.max(1, hunters.length)) + 0.5);
-// this run's few hundred hunters: shown for reference; the 20k-draw row below is the check
-console.log(`start rank F/E/D/C/B/A/S this run ${r0.slice(0, 7).map((n) => pct(n, hunters.length).toFixed(0)).join("/")}`
-  + `${rankOk ? "" : " (sample noise vs the spec weights)"}`);
-// The roll itself on a large independent sample (the row above sees only this run's few hundred hunters).
+console.log(`start rank F/E/D/C/B/A/S all samples ${r0.slice(0, 7).map((n) => pct(n, hunters.length).toFixed(0)).join("/")}`);
+// The roll itself on a large independent sample.
 const big = Array(8).fill(0);
 for (let i = 0; i < 20000; i++) big[rollRank(mk("rank-check-" + i, "rank"))]++;
 const rollOk = [40, 20, 15, 10, 9, 5, 1].every((w, i) => Math.abs(pct(big[i], 20000) - w) <= 2);
 row("rank roll on 20k draws (±2)", big.slice(0, 7).map((n) => pct(n, 20000).toFixed(1)).join("/"), rollOk);
-const early = hunters.filter((s) => s.dead.cause !== "อายุขัย" && s.dead.ageY < 50).length;
-const earlyP = pct(early, hunters.length);
 // spec §14 sets careful (≤8%) and reckless (~25%); normal only has to sit between them
 const target = { careful: [0, 8], normal: [1, 20], reckless: [20, 30] }[POLICY];
-row(`hunter death <50 (${target[0]}–${target[1]}%)`, earlyP.toFixed(1) + "%", earlyP >= target[0] && earlyP <= target[1]);
-const old = pct(civs.filter((s) => s.dead.cause === "อายุขัย").length, civs.length);
-row("civilians die of old age ≥85%", old.toFixed(1) + "%", old >= 85);
-const perYear = (s) => (s.c.earned ?? 0) / Math.max(1, ageY(s) - 18);
-const hi = med(hunters.filter((s) => s.hunter.rank >= 3).map(perYear));
-const cv = med(civs.map(perYear));
-const lo = med(hunters.filter((s) => s.hunter.rank <= 1).map(perYear));
+const ea = stat("early");
+row(`hunter death <50 (${target[0]}–${target[1]}%)`, ea.txt + "%", ea.mean >= target[0] && ea.mean <= target[1]);
+const old = stat("oldAge");
+row("civilians die of old age ≥85%", old.txt + "%", old.mean >= 85);
 // spec §6.1: C+ hunters out-earn most civilians; F–E hunters earn about the same as a good job or less (≤ +5%)
 // a reckless F–E hunter takes a ~20% chance of dying before 50 for the extra gates: a risk premium up to +30% is fair
 const loCap = POLICY === "reckless" ? 1.3 : 1.05;
-row(`income/yr C+ > civ ≳ F–E (≤+${Math.round((loCap - 1) * 100)}%)`, `${hi.toFixed(0)} > ${cv.toFixed(0)} ≳ ${lo.toFixed(0)}`,
-  hi > cv && lo <= cv * loCap);
+const hi = stat("hi", 0), cv = stat("civ", 0), lo = stat("lo", 0);
+row(`income/yr C+ > civ ≳ F–E (≤+${Math.round((loCap - 1) * 100)}%)`, `${hi.txt} > ${cv.txt} ≳ ${lo.txt}`,
+  hi.mean > cv.mean && lo.mean <= cv.mean * loCap);
 // Among hunters who had room to grow (ceiling above start rank), how many got all the way up.
-const room = hunters.filter((s) => s.hunter.ceil > s.hunter.rank0);
-const ceil = pct(room.filter((s) => s.hunter.rank === s.hunter.ceil).length, room.length);
 // spec §14 asks 30–50% overall. Per policy the band shifts with how much a player hunts: a careful player trains
 // and rests more and climbs less; a reckless one takes every gate and climbs most. The bands are fixed for those
 // reasons, not moved to make a run pass.
 const CEIL = { careful: [25, 45], normal: [35, 55], reckless: [40, 60] }[POLICY];
-row(`hunters with room who reach ceiling ${CEIL[0]}–${CEIL[1]}%`, ceil.toFixed(1) + "%", ceil >= CEIL[0] && ceil <= CEIL[1]);
+const ce = stat("ceil");
+row(`hunters with room who reach ceiling ${CEIL[0]}–${CEIL[1]}%`, ce.txt + "%", ce.mean >= CEIL[0] && ce.mean <= CEIL[1]);
 const same = [0, 1, 2].every((i) => JSON.stringify(playLife("det" + i)) === JSON.stringify(playLife("det" + i)));
 row("determinism", same ? "same" : "DIFFERENT", same, true);
-// Secret quests: share of lives that saw the first step of at least one of their three.
-const sqReach = pct(lives.filter((s) => (s.secrets ?? []).some((id) => (s.c["sqo:" + id] ?? 0) > 0)).length, N);
-row("lives that find a secret quest ≥30%", sqReach.toFixed(1) + "%", sqReach >= 30);
-const tokens = lives.filter((s) => s.flags.gotToken).length;
-console.log("phoenix tokens", tokens, "· secret quests finished", lives.reduce((a, s) => a + (s.secrets ?? []).filter((id) => (s.c["sq:" + id] ?? 0) >= D.SECRETS[id].steps.length).length, 0));
+const sq = stat("secret");
+row("lives that find a secret quest ≥30%", sq.txt + "%", sq.mean >= 30);
+const tokens = all.filter((s) => s.flags.gotToken).length;
+console.log("phoenix tokens", tokens, "· secret quests finished", all.reduce((a, s) => a + (s.secrets ?? []).filter((id) => (s.c["sq:" + id] ?? 0) >= D.SECRETS[id].steps.length).length, 0));
 const causes = {};
-for (const s of lives) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
+for (const s of all) causes[s.dead.cause] = (causes[s.dead.cause] ?? 0) + 1;
 console.log("deaths", JSON.stringify(causes));
-console.log("median age", med(lives.map((s) => s.dead.ageY)), "· median floor", med(hunters.map((s) => s.c.floor ?? 0)));
+console.log("median age", stat("age", 0).txt, "· median floor", stat("floor", 0).txt);
 process.exitCode = hardFail ? 1 : 0;
 }

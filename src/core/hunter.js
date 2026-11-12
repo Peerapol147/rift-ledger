@@ -13,7 +13,11 @@ import { SKILLS } from "../data/skills.js";
 // Hunting is possible for awakened people who have not retired from it and are not on a break.
 export const canHunt = (s) => !!s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0);
 
-const CLIMB_SLOW = 0.15;
+const CLIMB_SLOW = 0.8;
+// XP is worth more at higher ranks so each rank-up takes a similar, slowly rising number of gates
+// (about 40 at F up to 115 at A). Without it F→E took 29 gates and A→S 192, so low ranks always reached their
+// ceiling and high ranks never did.
+const RANK_XP = [0.3, 0.7, 0.9, 1.0, 1.9, 2.2, 2.2, 2.2];
 
 export const xpNeed = (lv) => Math.round(40 * Math.pow(lv, 1.5));
 
@@ -30,7 +34,8 @@ export function gainXp(s, n) {
   const h = s.hunter;
   if (!h) return;
   const cap = LV_CAP[h.rank];
-  h.xp += n * Math.pow(CLIMB_SLOW, h.rank - (h.rank0 ?? h.rank)); // every rank climbed makes the next one slower
+  // every rank climbed makes the next one slower
+  h.xp += n * RANK_XP[h.rank] * Math.pow(CLIMB_SLOW, h.rank - (h.rank0 ?? h.rank));
   while (h.lv < cap && h.xp >= xpNeed(h.lv)) {
     h.xp -= xpNeed(h.lv);
     h.lv++;
@@ -57,7 +62,9 @@ function hunterMonth(s) {
   if (s.focus === "train") {
     const main = CLASSES[h.cls].main;
     s.st[main] += 0.25 * trainFactor(s);
-    gainXp(s, 6 * trainFactor(s));
+    // a month of hard training is worth about a third of a gate at your rank, so a careful hunter who trains
+    // instead of taking every gate still climbs, only slower
+    gainXp(s, GATE_LV[h.rank] * 10 * trainFactor(s));
   }
   if (canRankUp(s) && !s.c.rankEvalOpen && s.ageM >= (s.c.rankEvalAt ?? 0)) {
     s.c.rankEvalOpen = 1;

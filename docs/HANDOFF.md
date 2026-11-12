@@ -15,11 +15,11 @@ Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design i
 
 ## How we work
 - Branch `claude/loving-dijkstra-ywn8qq`. Commit, open a PR, merge it yourself, then reset the branch to main.
-- Before merging: `npm test`, `node tools/linelen.mjs`, `node tools/sim.mjs 1000 --policy careful|normal|reckless`,
+- Before merging: `npm test`, `node tools/linelen.mjs`, `node tools/sim.mjs 1000 --policy careful|normal|reckless --seeds a,b,c,d,e`,
   `node tools/playtest.mjs 200`, `npm run build`, and commit `play.html`.
 - Call an independent reviewer subagent only for big system changes. Content goes through tests, sims and the
   playtest instead.
-- Balance: never tune to one seed set. Use `--seed a..e` and report the spread (see the backlog).
+- Balance: never tune to one seed set. `--seeds a,b,c,d,e` prints the mean and [lowest–highest] sample; judge the mean.
 - Re-check against the spec before big merges. Send the owner the new `play.html` after each merge.
 - Owner feedback form (private artifact): https://claude.ai/artifact/A3cDSFiDyyLiSPaEWeEKPw. Its data is read with
   ArtifactData, collection `feedback`.
@@ -35,10 +35,13 @@ Built:
 - endless world news (`src/core/pulse.js`), illness with a choice, the bot playtester, versioned saves with a backup
 
 ## Backlog (owner agreed, in order)
-1. **Balance on many seeds.** Make sim report the mean and spread over several `--seed` sets, and run that in CI.
-   Known: the awakening rate drifts to about 28% on some sets, normal-policy ceiling reach averages about 56%, and
-   F–E income is slightly high. Fix causes; never move targets without a game reason.
-2. **Check that retreating from a boss can actually happen** (a retreat below 35% hp). Bosses may kill in one hit.
+1. ~~Balance on many seeds~~ done: sim judges the mean of `--seeds`, CI runs 3 sets. Causes fixed: the awakening
+   boost maxed out for everyone (now +0.5% a point), F→E took 29 gates and A→S 192 (now XP per rank), a careful
+   retreat taught half of a timeout (now both 30%), board stipends paid 3× a salary. Left: normal F–E income sits
+   ~0.5% over its +5% cap (inside one standard error); reckless civilians refuse treatment so their old-age row warns.
+2. ~~Boss retreat~~ verified by `test/boss-retreat.test.mjs`. New finding: at their own level nearly every solo boss
+   fight with the retreat plan ends in a retreat, and the careful bot never takes a boss gate at all; bosses are
+   still too hard alone (fold into item 3's balance or a combat pass). A two-rank ceiling is almost never reached.
 3. **Money as choices, not automatic taxes.** People die with about 120k. Add things worth buying (house, training,
    a child's education, a legacy), and measure that frugal play is not over-rewarded.
 4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
