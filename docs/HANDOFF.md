@@ -66,4 +66,11 @@ Built:
 
 ## Story audit feedback — 2026-11-13
 
-Read [STORY-AUDIT-FEEDBACK.md](STORY-AUDIT-FEEDBACK.md) before the next narrative pass. It records six findings, core-level reproduction evidence, and a proposed three-scene phoenix rewrite. No narrative or gameplay fixes have been applied; the sample wording awaits owner review. Audit baseline: main `65e5621`.
+Read [STORY-AUDIT-FEEDBACK.md](STORY-AUDIT-FEEDBACK.md) before the next narrative pass. It records six findings, core-level reproduction evidence, and a proposed three-scene phoenix rewrite. Audit baseline: main `65e5621`.
+
+**Status: all six findings fixed and the phoenix draft applied** (owner approved). Wording only, no balance change:
+support:3 records `spLost` and support:4 no longer says every team came home; shop:1 "refuse all" records
+`shopClean`, which opens an honest way through the shop:3 inspection; office:4 no longer names a hunter you never
+helped; office:2 calls the 3000 a one-off bonus, not a raise; seven's door is "near its next opening" instead of a
+fake seven-year wait (the 12–24 month gap is kept); the ticket businessman was told in a dream to pass the blade to
+whoever brought the ticket back. Guarded by `test/story-continuity.test.mjs`.
