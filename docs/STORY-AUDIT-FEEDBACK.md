@@ -111,3 +111,7 @@
 ## ขอบเขตหลักฐาน
 
 ข้อ 1–5 ตรวจข้อมูลและใช้สถานะควบคุมเรียก core จริงใน snapshot ของ main ไม่ใช่ playthrough ทุกชีวิต ข้อ 6 เป็นข้อเสนอเชิงบรรณาธิการ รอบตรวจนี้ไม่ได้แก้ source และไม่ได้รัน simulation ทั้งเกมเพื่ออ้างความพร้อมหลังแก้
+
+## Follow-up: Claude's implementation reviewed
+
+See [2026-11-13 follow-up review](reviews/2026-11-13-story-followup.md) for review of `4eb649d` on `claude/dreamy-ptolemy-1cxsdc`. Several original findings are fixed; support continuity, legacy shop saves, and ticket timing remain. Tests: 204 passed; artcheck and the 40-life playtest passed. The original audit and draft above are historical, not a statement that Claude has made no changes since.

@@ -68,9 +68,15 @@ Built:
 
 Read [STORY-AUDIT-FEEDBACK.md](STORY-AUDIT-FEEDBACK.md) before the next narrative pass. It records six findings, core-level reproduction evidence, and a proposed three-scene phoenix rewrite. Audit baseline: main `65e5621`.
 
-**Status: all six findings fixed and the phoenix draft applied** (owner approved). Wording only, no balance change:
+**Status (first pass, 4eb649d): six findings addressed and the phoenix draft applied** (owner approved). Wording only, no balance change:
 support:3 records `spLost` and support:4 no longer says every team came home; shop:1 "refuse all" records
 `shopClean`, which opens an honest way through the shop:3 inspection; office:4 no longer names a hunter you never
 helped; office:2 calls the 3000 a one-off bonus, not a raise; seven's door is "near its next opening" instead of a
 fake seven-year wait (the 12–24 month gap is kept); the ticket businessman was told in a dream to pass the blade to
 whoever brought the ticket back. Guarded by `test/story-continuity.test.mjs`.
+
+## Review workflow — owner instruction, 2026-11-13
+
+After every review, automatically record actionable feedback in the project and push it on a non-main branch so Claude can read it. Include reviewed branch/commit, findings with reproduction evidence, resolved items, validation outcomes and limitations; link the report here. No separate permission is needed for this documentation handoff. This does not authorize pushing directly to main or merging.
+
+Latest: [story follow-up review of 4eb649d](reviews/2026-11-13-story-followup.md). Three follow-ups remain: support outcome-dependent continuity, honest inspection for legacy shop saves, and the ticket quest's one-night promise versus its 6–12 month gap. See the report for confirmed fixes and verification; the earlier audit status above is historical.
