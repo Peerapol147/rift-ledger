@@ -67,3 +67,9 @@ Built:
 ## Story audit feedback — 2026-11-13
 
 Read [STORY-AUDIT-FEEDBACK.md](STORY-AUDIT-FEEDBACK.md) before the next narrative pass. It records six findings, core-level reproduction evidence, and a proposed three-scene phoenix rewrite. No narrative or gameplay fixes have been applied; the sample wording awaits owner review. Audit baseline: main `65e5621`.
+
+## Review workflow — owner instruction, 2026-11-13
+
+After every review, automatically record actionable feedback in the project and push it on a non-main branch so Claude can read it. Include reviewed branch/commit, findings with reproduction evidence, resolved items, validation outcomes and limitations; link the report here. No separate permission is needed for this documentation handoff. This does not authorize pushing directly to main or merging.
+
+Latest: [story follow-up review of 4eb649d](reviews/2026-11-13-story-followup.md). Three follow-ups remain: support outcome-dependent continuity, honest inspection for legacy shop saves, and the ticket quest's one-night promise versus its 6–12 month gap. See the report for confirmed fixes and verification; the earlier audit status above is historical.
