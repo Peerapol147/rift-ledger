@@ -96,6 +96,7 @@ export function openEvent(s, ev) {
     id: ev.id, tag: ev.tag ?? "ชีวิต", t: fill(s, ev.t), opts: withEscape(s, ev.o),
     important: !!ev.important, milestone: !!ev.milestone || String(ev.id).startsWith("cal"), noAuto: !!ev.noAuto,
   };
+  if (ev.importantOnce) s.ev.importantOnce = true;
   if (ev.member) s.evMember = ev.member;
 }
 

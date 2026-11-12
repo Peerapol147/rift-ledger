@@ -11,6 +11,15 @@ function score(s, opt, v) {
   return sc;
 }
 
+// Routine picks the autopilot always handles: the monthly gate list and the party's monthly call.
+const ROUTINE = new Set(["gateChoice", "partyGate"]);
+// importantOnce events (a debt collector at the door) stop only the first time.
+// A choice worth the player's own hand: a stat check, or an outcome that lasts (counters, flags, factions,
+// a follow-up, an act, an injury, a teammate). Pure money or mood stays with the autopilot.
+const LASTING = ["c", "flags", "fac", "act", "next", "injury", "ally"];
+const matters = (ev) => ev.opts.length > 1 && ev.opts.some((o) => o.s
+  || [o.y, o.n].some((out) => out && LASTING.some((k) => out[k] != null)));
+
 // An option is dangerous if it can kill, can take all remaining health, or can leave a permanent injury.
 function dangerous(s, opt, v) {
   if (v.risk > 0) return true;
@@ -21,7 +30,8 @@ export function autoDecide(s, policy) {
   const ev = s.ev;
   if (!ev || policy === "stop" || ev.noAuto) return -1;
   if (ev.op && s.op?.def.boss) return -1; // the player always fights bosses by hand
-  if (policy === "important" && ev.important) return -1;
+  const repeatVisit = ev.importantOnce && (s.c["ev:" + ev.id] ?? 0) > 0;
+  if (policy === "important" && !repeatVisit && (ev.important || (!ROUTINE.has(ev.id) && matters(ev)))) return -1;
   if (ev.milestone) return -1;
   const open = ev.opts
     .map((opt, i) => ({ opt, i, v: optionView(s, opt) }))

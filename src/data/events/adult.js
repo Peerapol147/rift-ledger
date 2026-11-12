@@ -82,6 +82,7 @@ ADULT_EVENTS.push({
   k: "x",
   tag: "เงิน",
   important: true,
+  importantOnce: true, // later visits are handled by the autopilot
   t: "ชายสองคนยืนรอหน้าห้อง บอกว่ามาจากบริษัทติดตามหนี้",
   o: [
     { l: "ขอผัดผ่อน", s: "cha", diff: 16, y: { m: "พวกเขายอมให้เวลาอีกเดือน", mind: -4 },
