@@ -129,7 +129,7 @@ export function stepOp(s) {
     if (o.foes.every((f) => f.cur <= 0)) o.done = "won";
     else { foeTurn(s, o, R); quickHeal(s, o); }
     if (!o.done && o.hp <= 0) o.done = "lost";
-    else if (!o.done && o.prep.plan === "retreat" && !o.def.boss && o.hp < o.maxHp * 0.5) {
+    else if (!o.done && o.prep.plan === "retreat" && o.hp < o.maxHp * (o.def.boss ? 0.35 : 0.5)) {
       o.done = "fled"; o.ranAway = 1;
     }
     else if (!o.done && o.round >= MAX_ROUNDS) o.done = "fled";
@@ -187,14 +187,20 @@ function endOp(s) {
     else log(s, "เกต", "คุณถูกลากออกมาโดยทีมกู้ภัยของสมาคม", "bad");
     return r;
   }
+  // backing out of a boss is allowed, and it costs: a wound that takes months and no pay
+  if (r === "fled" && def.boss && o.ranAway) {
+    injure(s, "beaten", 4);
+    log(s, "เกต", "คุณถอยออกจากห้องบอส รอดมาได้แต่บาดเจ็บ", "bad");
+    return r;
+  }
   const share = (r === "won" ? 1 : 0.3) * (o.prep.share ?? 1);
   const mul = def.kind === "job" ? 1 : hooks.payMul?.(s) ?? 1;
   const gold = Math.round(def.rewards.gold * share * mul * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
-  // a chosen retreat teaches nothing; a fight that ran out of time still teaches a little; in a party the leader
-  // does most of the killing
-  const xpShare = (r === "won" ? 1 : o.ranAway ? 0 : 0.3) * (o.prep.share ? 0.7 : 1);
+  // a chosen retreat teaches least but never less than losing; running out of time teaches a little more;
+  // in a party the leader does most of the killing
+  const xpShare = (r === "won" ? 1 : o.ranAway ? 0.15 : 0.3) * (o.prep.share ? 0.7 : 1); // retreat >= a loss (0.2/lv)
   if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP * xpMul(s));
   if (def.kind === "job" && s.job) s.job.xp += 4 * share;
   if (r === "won" && def.kind === "tower") {

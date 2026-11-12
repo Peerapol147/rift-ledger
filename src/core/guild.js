@@ -58,7 +58,7 @@ afterOpHooks.push((s, o, r, gold) => {
   const d = guildDef(s);
   if (d && gold > 0) addLedger(s, "ส่วนแบ่งกิลด์", -Math.round(gold * d.cut * (s.guild.role === "officer" ? 0.5 : 1)));
   if (r === "won") s.guild.standing = clampG(s.guild.standing + (o.def.guildJob ? 4 : 1));
-  else if (r === "fled") s.guild.standing = clampG(s.guild.standing - (o.def.guildJob ? 4 : 1));
+  else if (r === "fled" && o.ranAway) s.guild.standing = clampG(s.guild.standing - (o.def.guildJob ? 4 : 1));
 });
 
 hooks.guildPerk = guildPerk;
@@ -71,7 +71,9 @@ hooks.xpMul = (s) => (guildPerk(s) === "elite" ? 1.2 : 1);
 // Your own guild: dues from the name you made and the people you lead, against rent and staff.
 books.push((s, step = 1) => {
   if (s.guild?.role !== "master") return;
-  const inc = s.fame * 40 + s.team.filter((m) => m.alive).reduce((a, m) => a + 150 * (m.rank + 1), 0);
+  // dues come from a working guild: fame counts up to 100, and a master who stopped hunting draws half
+  const team = s.team.filter((m) => m.alive).reduce((a, m) => a + 150 * (m.rank + 1), 0);
+  const inc = (Math.min(100, s.fame) * 40 + team) * (s.flags.stoppedHunting ? 0.5 : 1);
   addLedger(s, "รายได้กิลด์", Math.round(inc * step));
   addLedger(s, "ค่าดำเนินการกิลด์", -FOUND.upkeep * step);
 });
