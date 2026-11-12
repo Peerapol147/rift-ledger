@@ -11,6 +11,6 @@ test("fate picks an open option deterministically; event kind labels chains with
   const s = mk(); s.ev.id = "office:2";
   assert.deepEqual(C.eventKind(s), { tier: "story", part: "ตอนที่ 3 จาก 5" });
   s.ev.id = "sq:phoenix:0";
-  assert.equal(C.eventKind(s).tier, "rare");
+  assert.equal(C.eventKind(s).tier, "story", "a secret quest looks like any story chapter");
   assert.ok(!JSON.stringify(C.eventKind(s)).includes("ลับ"));
 });
