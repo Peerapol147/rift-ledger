@@ -19,7 +19,7 @@ const PLANS = {
 };
 const worth = (o) => (o.y?.gold ?? 0) / 100 + (o.y?.fame ?? 0) * 3 + (o.y?.loot ?? 0) * 5 + (o.s ? 1 : 0);
 const BAD_TEXT = /undefined|NaN|null|\{[a-z]+\}|\[object/;
-const bugs = new Map(), fun = { lives: 0, choices: 0, distinct: 0, rare: 0, hunters: 0, ages: [], causes: {}, silences: [] };
+const bugs = new Map(), fun = { lives: 0, choices: 0, distinct: 0, rare: 0, hunters: 0, ages: [], causes: {}, silences: [], perStage: {} };
 const bug = (kind, detail) => { const k = kind + " · " + detail; bugs.set(k, (bugs.get(k) ?? 0) + 1); };
 
 function checkState(s, where) {
@@ -51,6 +51,8 @@ for (const [pname, pick] of Object.entries(PERSONAS)) {
         const x = pick(s, open, R);
         s.c["tried:" + id + ":" + x.i] = 1;
         seen.add(id.split(":")[0]);
+        if (!ev.op) { const st = C.ageY(s) < 13 ? "เด็ก" : C.ageY(s) < 18 ? "วัยรุ่น" : C.ageY(s) < 60 ? "ผู้ใหญ่" : "สูงวัย";
+          (fun.perStage[st] ??= [0, 0])[0]++; }
         if (!ev.op) { worstGap = Math.max(worstGap, s.ageM - lastChoiceM); lastChoiceM = s.ageM; fun.choices++; }
         if (/^(sq|fachi|facbad|heir|truth)/.test(id)) fun.rare++;
         const before = s.ev;
@@ -65,6 +67,9 @@ for (const [pname, pick] of Object.entries(PERSONAS)) {
     if (!s.dead) bug("ชีวิตไม่จบ", `${s.seed} อายุ ${C.ageY(s)}`);
     for (const l of s.log) if (BAD_TEXT.test(l.text)) bug("บันทึกเพี้ยน", l.text.slice(0, 70));
     fun.lives++; fun.distinct += seen.size; if (s.hunter) fun.hunters++;
+    const a = C.ageY(s);
+    for (const [st, lo, hi] of [["เด็ก", 0, 13], ["วัยรุ่น", 13, 18], ["ผู้ใหญ่", 18, 60], ["สูงวัย", 60, 200]])
+      (fun.perStage[st] ??= [0, 0])[1] += Math.max(0, Math.min(a, hi) - lo);
     fun.ages.push(C.ageY(s)); fun.silences.push(worstGap);
     const cause = s.dead?.cause ?? "?"; fun.causes[cause] = (fun.causes[cause] ?? 0) + 1;
   }
@@ -75,6 +80,7 @@ console.log(`เล่น ${fun.lives} ชีวิต (${Object.keys(PERSONAS).
 console.log(`ต่อชีวิต: เลือกเอง ${(fun.choices / fun.lives).toFixed(0)} ครั้ง · เรื่องไม่ซ้ำ ${(fun.distinct / fun.lives).toFixed(0)}`
   + ` · เรื่องหายาก ${(fun.rare / fun.lives).toFixed(1)} · ฮันเตอร์ ${Math.round(fun.hunters / fun.lives * 100)}%`);
 console.log(`อายุตอนตาย (มัธยฐาน) ${med(fun.ages)} · ช่วงที่ไม่มีให้เลือกนานสุด (มัธยฐาน) ${Math.round(med(fun.silences) / 12)} ปี`);
+console.log("ตัวเลือกต่อปีตามวัย: " + Object.entries(fun.perStage).map(([k, [n, y]]) => `${k} ${(n / y).toFixed(1)}`).join(" · "));
 console.log("สาเหตุการตาย:", Object.entries(fun.causes).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => `${k} ${v}`).join(" · "));
 console.log(bugs.size ? `บั๊ก ${bugs.size} แบบ:` : "ไม่เจอบั๊ก");
 for (const [k, v] of [...bugs].sort((a, b) => b[1] - a[1]).slice(0, 30)) console.log(`  ${v}×  ${k}`);

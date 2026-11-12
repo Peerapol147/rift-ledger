@@ -46,9 +46,10 @@ function dueEvent(s) {
   return MILESTONES.find((m) => ageY(s) >= m.age[0] && !s.c["ev:" + m.id]);
 }
 
-function randomEvent(s) {
+function randomEvent(s, step) {
   const R = stream(s, "pick");
-  if (!ch(R, EVENT_CHANCE)) return null;
+  // the chance is per month: a 3-month childhood tick rolls for all three (playtest: childhood had 1/3 the events)
+  if (!ch(R, 1 - (1 - EVENT_CHANCE) ** step)) return null;
   // a random event happens at most REPEAT_CAP times in a life (cap: n on the event overrides): variety over habit
   const fresh = (e) => s.ageM - (s.c["last:" + e.id] ?? -999) >= COOLDOWN
     && (s.c["ev:" + e.id] ?? 0) < (e.cap ?? REPEAT_CAP);
@@ -69,7 +70,7 @@ export function tick(s) {
   for (const sys of books) { sys(s, step); if (s.dead) return; }
   for (const sys of monthly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
   for (const sys of lastly) { sys(s, step); if (s.dead || s.ev || s.op) return; }
-  const ev = dueEvent(s) ?? randomEvent(s);
+  const ev = dueEvent(s) ?? randomEvent(s, step);
   if (!ev) return;
   s.c["last:" + ev.id] = s.ageM;
   openEvent(s, ev);
