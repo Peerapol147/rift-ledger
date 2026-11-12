@@ -49,7 +49,10 @@ const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่อ�
 
 export function eventPanel(s, waitingAuto, result) {
   const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}</div>` : "";
-  return res + eventCard(s, waitingAuto);
+  // phones show the character card below everything, so the essentials ride here (CSS shows it only there)
+  const m = `<div class="mstat">อายุ <b>${C.ageY(s)}</b> สุขภาพ <b>${Math.round(s.hp)}</b> จิต <b>${Math.round(s.mind)}</b>`
+    + ` เงิน <b>${money(s.gold)}</b></div>`;
+  return m + res + eventCard(s, waitingAuto);
 }
 
 function eventCard(s, waitingAuto) {

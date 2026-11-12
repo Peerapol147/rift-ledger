@@ -13,11 +13,11 @@ import { SKILLS } from "../data/skills.js";
 // Hunting is possible for awakened people who have not retired from it and are not on a break.
 export const canHunt = (s) => !!s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0);
 
-const CLIMB_SLOW = 0.3;
+const CLIMB_SLOW = 0.15;
 
 export const xpNeed = (lv) => Math.round(40 * Math.pow(lv, 1.5));
 
-function learnUpTo(s) {
+export function learnUpTo(s) {
   const h = s.hunter;
   for (const [lv, id] of CLASSES[h.cls].skills) {
     if (lv > h.lv || h.skills.includes(id)) continue;
@@ -35,7 +35,13 @@ export function gainXp(s, n) {
     h.xp -= xpNeed(h.lv);
     h.lv++;
   }
-  if (h.lv >= cap) h.xp = 0;
+  if (h.lv >= cap) {
+    // a hunter stuck at their cap still grows a little: every 600 xp past it is a fraction of a main stat
+    h.over = (h.over ?? 0) + h.xp;
+    h.xp = 0;
+    const main = CLASSES[h.cls].main;
+    while (h.over >= 600) { h.over -= 600; h.past = (h.past ?? 0) + 1; s.st[main] += 0.5 / (1 + h.past * 0.15); }
+  }
   learnUpTo(s);
 }
 
@@ -124,3 +130,4 @@ hooks.act.hideRank = (s) => { s.flags.hiddenRank = true; };
 monthly.push(hunterMonth);
 lastly.push(huntMonth);
 hooks.act.rankEvalLater = (s) => { s.c.rankEvalAt = s.ageM + 12; };
+hooks.learn = learnUpTo;

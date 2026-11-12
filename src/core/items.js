@@ -135,10 +135,16 @@ gearHooks.push((s) => {
 function take(s, id, from) {
   if (s.items.length < bagCap()) return giveItem(s, id, from);
   const worn = new Set(Object.values(s.equip));
-  const cheap = s.items.filter((i) => !i.lock && !worn.has(i.uid))
-    .sort((a, b) => ITEMS[a.id].price - ITEMS[b.id].price)[0];
-  if (cheap && ITEMS[cheap.id].price < ITEMS[id].price) { sellItem(s, cheap.uid); return giveItem(s, id, from); }
-  addLedger(s, "ขายของที่ถือไม่ไหว", Math.round(ITEMS[id].price * 0.5));
+  // only plain loot is ever sold for room: never a relic (the Phoenix Token), a skill book, or anything locked or worn
+  const sellable = (i) => !i.lock && !worn.has(i.uid) && !["relic", "book"].includes(ITEMS[i.id].kind);
+  const cheap = s.items.filter(sellable).sort((a, b) => ITEMS[a.id].price - ITEMS[b.id].price)[0];
+  if (cheap && ITEMS[cheap.id].price < ITEMS[id].price) {
+    log(s, "ของ", `กระเป๋าเต็ม ขาย ${ITEMS[cheap.id].n} เพื่อเก็บ ${ITEMS[id].n}`);
+    sellItem(s, cheap.uid);
+    return giveItem(s, id, from);
+  }
+  log(s, "ของ", `กระเป๋าเต็ม ขาย ${ITEMS[id].n} ที่เพิ่งได้ทิ้งในราคาถูก`);
+  addLedger(s, "ขายของที่ถือไม่ไหว", Math.round(ITEMS[id].price * 0.3)); // sold on the spot, at a dealer's price
 }
 
 afterOpHooks.push((s, o, r) => {

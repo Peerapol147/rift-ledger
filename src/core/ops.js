@@ -14,8 +14,8 @@ import { ITEMS } from "../data/items.js";
 import { CAREERS, BIG_JOBS } from "../data/careers.js";
 
 const MAX_ROUNDS = 12;
-const OP_XP = 15; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
-const BOSS_DEATH = 0.4; // chance that losing to a boss is fatal; otherwise a permanent wound
+const OP_XP = 8.5; // XP multiplier: a hunter reaches their rank cap in roughly 80 cleared gates
+const BOSS_DEATH = 0.22; // chance that losing to a boss is fatal; otherwise a permanent wound
 const PLAN = { push: { atk: 1.15, def: 0.9 }, careful: { atk: 0.95, def: 1.1 }, retreat: { atk: 0.9, def: 1.15 } };
 import { gearHooks, afterOpHooks } from "./registry.js";
 export { gearHooks, afterOpHooks };
@@ -129,7 +129,9 @@ export function stepOp(s) {
     if (o.foes.every((f) => f.cur <= 0)) o.done = "won";
     else { foeTurn(s, o, R); quickHeal(s, o); }
     if (!o.done && o.hp <= 0) o.done = "lost";
-    else if (!o.done && o.prep.plan === "retreat" && !o.def.boss && o.hp < o.maxHp * 0.5) o.done = "fled";
+    else if (!o.done && o.prep.plan === "retreat" && !o.def.boss && o.hp < o.maxHp * 0.5) {
+      o.done = "fled"; o.ranAway = 1;
+    }
     else if (!o.done && o.round >= MAX_ROUNDS) o.done = "fled";
   }
   return o.done ? endOp(s) : "running";
@@ -170,7 +172,7 @@ function endOp(s) {
     s.lastFight = { foe, rounds: o.beats, win: r === "won" };
   }
   s.hp = Math.max(1, Math.round((Math.max(0, o.hp) / o.maxHp) * 100));
-  if (def.kind === "gate") s.c.gateRuns = (s.c.gateRuns ?? 0) + 1;
+  if (def.kind === "gate" && r === "won") s.c.gateRuns = (s.c.gateRuns ?? 0) + 1; // gates won
   if (def.illegal) hooks.illegalEnd?.(s, def);
   if (r === "lost") hooks.guildLoss?.(s, def);
   if (r === "lost") {
@@ -190,8 +192,9 @@ function endOp(s) {
   const gold = Math.round(def.rewards.gold * share * mul * (1 + o.loot * 0.4 + Math.max(0, o.score) * 0.2));
   addLedger(s, def.kind === "job" ? "ค่าตอบแทนงานใหญ่" : "ค่าตอบแทนเกต", gold);
   const foeXp = def.foes.reduce((a, f) => a + f.lv * (f.boss ? 4 : 1.5), 0);
-  // fleeing teaches nothing; in a party the leader does most of the killing
-  const xpShare = (r === "won" ? 1 : 0) * (o.prep.share ? 0.7 : 1); // in a party the leader does most of the killing
+  // a chosen retreat teaches nothing; a fight that ran out of time still teaches a little; in a party the leader
+  // does most of the killing
+  const xpShare = (r === "won" ? 1 : o.ranAway ? 0 : 0.3) * (o.prep.share ? 0.7 : 1);
   if (s.hunter && def.kind !== "job") gainXp(s, foeXp * xpShare * OP_XP * xpMul(s));
   if (def.kind === "job" && s.job) s.job.xp += 4 * share;
   if (r === "won" && def.kind === "tower") {

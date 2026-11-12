@@ -3,7 +3,8 @@
 export const KINDS = {beast: "สัตว์กลายพันธุ์", construct: "เศษเมืองมีชีวิต", spirit: "เงาและวิญญาณ", boss: "เจ้าถิ่น"};
 
 // Combat strength per kind, multiplied by level in core/hunt.js.
-export const KIND_POWER = { beast: 1, construct: 1.15, spirit: 1.05, boss: 2.2 };
+// balance pass: boss 2.2 made every boss a 40% death at any rank
+export const KIND_POWER = { beast: 1, construct: 1.15, spirit: 1.05, boss: 1.65 };
 
 const own = (art, kind, fly = 0) => ({ art, kind, fly });
 const as = (art, kind, fly = 0) => ({ art, kind, fly, borrow: 1 });

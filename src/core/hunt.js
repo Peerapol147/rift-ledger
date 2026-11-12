@@ -41,7 +41,8 @@ export function gateOffers(s) {
   return out;
 }
 
-export const gatePay = (rank) => Math.round(108 * Math.pow(2.6, rank));
+// rank F and E gates are small jobs (balance: F–E hunters out-earned an ordinary job)
+export const gatePay = (rank) => Math.round(108 * Math.pow(2.6, rank) * (rank <= 1 ? 0.75 : 1));
 
 export function gateOp(s, g) {
   const theme = GATES.find((x) => x.id === g.id);
@@ -56,7 +57,12 @@ export function gateOp(s, g) {
 }
 
 // A floor pays like a gate of the rank its monsters match, plus a fifth for the climb.
-const towerPay = (lv) => Math.round(gatePay(Math.max(0, GATE_LV.findLastIndex((g) => g <= lv))) * 1.2);
+// (a smooth curve: the floor's level placed between gate ranks, so no flat steps or drops)
+export function towerPay(lv) {
+  const i = Math.max(0, Math.min(GATE_LV.length - 2, GATE_LV.findLastIndex((g) => g <= lv)));
+  const rf = i + Math.max(0, Math.min(1, (lv - GATE_LV[i]) / (GATE_LV[i + 1] - GATE_LV[i])));
+  return Math.round(108 * Math.pow(2.6, rf) * 1.2);
+}
 
 export function towerOp(s, towerId, floor) {
   const T = TOWERS[towerId];
