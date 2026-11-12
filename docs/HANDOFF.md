@@ -3,6 +3,16 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+## Responsive interface and original character frames — 13 November 2026
+
+Branch `claude/responsive-ui` implements the owner-authorized UI subset of phases A/B.
+See [implementation and verification](feedback/ux-refresh-2026-11-13.md).
+Includes completed-tap choices, modal focus isolation, inventory refresh, reading pauses,
+mobile monthly-plan access, original profession/rank frames, and age-correct portraits.
+Infants under 12 months use the existing swaddled art; 12–35 months use toddler art.
+Do not mark the full roadmap complete: persistence integrity and narrative phase C remain open.
+Core tests: 201 passed; browser interaction regressions: 10 passed; artcheck/linelen/build passed.
+
 ## Original improvement roadmap — owner emphasized story (13 November 2026)
 
 Start with [the Compare and evidence](research/rift-ledger-vs-way-of-xian.md), then
@@ -10,7 +20,8 @@ Start with [the Compare and evidence](research/rift-ledger-vs-way-of-xian.md), t
 The four detailed plans cover trust, readable decisions, **original narrative continuity**,
 and validation. Story audit starts alongside UX work; civilian and hunter pilots plus
 public heir memories are required. Do not copy reference-game code, plots, art or formulas.
-This branch contains documentation only relative to 98e5332; plans are not implemented.
+The comparison commit da275a7 contains documentation only relative to 98e5332.
+The UI subset implemented later is recorded above; the rest of the plans remain open.
 The raw HAR/reference source remains outside Git. Preserve the existing default/music fix.
 
 ## Owner-requested defaults and music fix — 13 November 2026

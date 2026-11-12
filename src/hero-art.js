@@ -2,8 +2,8 @@ import { CHILD_ART } from "./child-art.js";
 // Original code-native art. Shared grid, outline and palette across life stages.
 const CHILD = ["........nnn.........","......nnhhhnn.......",".....nhhhhHhhn......","....nhHHhhhhhhhn....","....nhhhhhhhhhhn....","...nhhhhsSSshhhn....","....nhhssSSSshn.....","....nsssnSsnssn.....",".....nsSSSSSsn......","......nssSssn.......",".......nssnn........",".....nncttcann......","....ncCcttcacn......","...ncCCcttcacn......","...ncCcntncabn......","...nssnctncbbn......","...nSsnccncbbn......","....nnnccnnnn.......","......nddDdn........","......nddDdn........","......ndnndn........",".....nddnnddn.......",".....nwwnnwwn.......",".....nnnnnnnn......."];
 const BASE = {"n":"#202333","h":"#493642","H":"#73505a","s":"#dda17f","S":"#ffd0a3","c":"#277d83","C":"#52b3ac","t":"#f3dfb3","a":"#bf854d","b":"#835638","d":"#34455f","D":"#526c87","w":"#eee4cf"};
-export const AGE_STAGES = ['infant', 'child', 'teen', 'adult', 'middle', 'elder', 'old'];
-export const lifeStage = (age) => age < 3 ? 'infant' : age < 13 ? 'child' : age < 18 ? 'teen' : age < 45 ? 'adult' : age < 60 ? 'middle' : age < 75 ? 'elder' : 'old';
+export const AGE_STAGES = ['infant', 'toddler', 'child', 'teen', 'adult', 'middle', 'elder', 'old'];
+export const lifeStage = (age) => age < 1 ? 'infant' : age < 3 ? 'toddler' : age < 13 ? 'child' : age < 18 ? 'teen' : age < 45 ? 'adult' : age < 60 ? 'middle' : age < 75 ? 'elder' : 'old';
 // Standing height in stage pixels by age, so every model grows and shrinks like a person: fast as a toddler, a spurt in the teens, a slow settle after 60.
 const HT = [[0, 18], [1, 22], [3, 28], [6, 34], [10, 40], [13, 46], [16, 52], [19, 56], [45, 56], [60, 54], [75, 51], [99, 48]];
 export function heightAt(ageM = 0) {
@@ -27,7 +27,7 @@ export function makeHeroArt(ageM = 0, career = null, tint = '#277d83') {
   let rows = [...CHILD];
   if (life === 'infant') rows = [...rows.slice(0, 11), '......nttttn........', '.....nttttttn.......', '.....nttttttn.......', '......nttttn........', '.......nnnn.........'];
   if (life === 'teen') rows.splice(19, 0, rows[19], rows[19]);
-  if (life !== 'infant' && life !== 'child' && life !== 'teen') {
+  if (life !== 'infant' && life !== 'toddler' && life !== 'child' && life !== 'teen') {
     rows.splice(17, 0, rows[16], rows[16]);
     rows.splice(21, 0, rows[20], rows[20], rows[20]);
   }

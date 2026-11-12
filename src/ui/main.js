@@ -1,11 +1,12 @@
 // Boot, the play loop, input and rendering. Reads core state; changes it only through core functions.
 import * as C from "../core/index.js";
 
-import { initStage, setScene, setHero, trigger } from "../stage.js";
+import { initStage, setScene, setHero, trigger, stage } from "../stage.js";
 import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf } from "./art.js";
-import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { card, planPanel, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { editing, control, replaceView, dialogController } from "./interaction.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
 import { logTab } from "./tabs/log.js";
@@ -32,10 +33,14 @@ const ui = {
   // Older settings inherited automatic choices without an explicit first-play selection.
   speed: cfg0.manualDefaults === 1 && SPEEDS[cfg0.speed] ? cfg0.speed : 1,
   policy: cfg0.manualDefaults === 1 && Object.hasOwn(POLICIES, cfg0.policy) ? cfg0.policy : "stop",
-  fs: cfg0.fs ?? 2, paused: false, tab: "log", onlyImp: false,
+  fs: FONT[cfg0.fs] ? cfg0.fs : 2, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
 const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs, manualDefaults: 1 }));
+const READING_TABS = new Set(["me", "items", "team", "work"]);
+let composing = false, gesture = null;
+const dialog = dialogController($("#modal"), () => [$("#game"), $("#start"), $("#end"), $("#bgm")]);
+const reading = () => READING_TABS.has(ui.tab) || $("#planbox").open;
 let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0;
 
 // ---- Start, load, death
@@ -56,6 +61,7 @@ function begin(life) {
 }
 
 function startScreen() {
+  if ($("#bgm")) document.body.append($("#bgm"));
   const list = slots.list();
   const rows = list.map((x, i) => (x ? `<div class="item"><span>ช่อง ${i + 1}: ${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}</span>
     <span>${x.dead ? "" : btn("load:" + i, "เล่นต่อ", 'class="sm"')}${btn("del:" + i, "ลบ", 'class="sm"')}</span></div>` : "")).join("");
@@ -152,32 +158,37 @@ function banner(text) { const b = $("#banner"); b.textContent = text; b.hidden =
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
 const shown = {};
 function put(sel, html) {
-  if (shown[sel] === html) return;
+  if (shown[sel] === html || (composing && $(sel).contains(document.activeElement))) return;
   shown[sel] = html;
-  $(sel).innerHTML = html;
+  replaceView($(sel), html);
 }
 
 function render() {
   dirty = false;
   document.documentElement.style.setProperty("--fs", FONT[ui.fs]);
-  $("#modal").hidden = !ui.settings || !s;
-  if (!s || s.dead) return;
+  if (!s || s.dead) { dialog.sync(false); return; }
+  if ($("#bgm") && $("#bgm").parentElement !== $(".brand")) $(".brand").append($("#bgm"));
   reveal();
   if (!TABS.some(([k, , ok]) => k === ui.tab && ok(s))) ui.tab = "log";
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
   put("#card", card(s));
+  put("#plan", planPanel(s));
+  $("#planlabel").textContent = "แผนเดือนนี้ · " + (C.focusList(s).find(f => f.id === s.focus)?.n ?? "เลือกแผน");
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
   put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
-  put("#ctrl", controls(ui));
+  put("#ctrl", controls({ ...ui, reading: reading() }));
+  $("#clockstate").textContent = ui.paused ? "หยุดเวลาอยู่" : ui.settings ? "พักเวลา · ตั้งค่า"
+    : reading() ? "พักเวลา · จัดการชีวิตเสร็จแล้วกลับบันทึกเพื่อเดินต่อ"
+    : waiting ? "รอคุณเลือก · เวลาไม่เดินข้ามเหตุการณ์นี้" : "กำลังใช้ชีวิต · เปลี่ยนแผนหรือหยุดเวลาได้";
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
-  if (!view.contains(document.activeElement) || document.activeElement === view) put("#view", TAB_VIEW[ui.tab]());
+  put("#view", TAB_VIEW[ui.tab]());
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
-  $("#modal").hidden = !ui.settings;
-  if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
+  if (ui.settings) put("#modal", `<div>${settingsView(ui, slots.list())}</div>`);
+  dialog.sync(ui.settings);
 }
 
 // The owner's private feedback form (an artifact on claude.ai): experience only, nothing from the game is sent.
@@ -204,10 +215,12 @@ function loop(t) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.25, (t - last) / 1000 || 0); last = t;
   if (bannerT > 0 && (bannerT -= dt) <= 0) $("#banner").hidden = true;
-  if (s && !s.dead && !ui.paused && !ui.settings) {
+  if (ui.result && performance.now() > ui.result.until) { ui.result = null; dirty = true; }
+  if (s && !s.dead && !ui.paused && !ui.settings && !reading() && !editing(document.activeElement) && !gesture?.pressed) {
     acc += dt;
     while (acc >= SPEEDS[ui.speed]) { acc -= SPEEDS[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
   }
+  else acc = 0;
   if (s?.dead && $("#end").hidden && !s.endShown) { s.endShown = true; endScreen(); }
   if (dirty) render();
 }
@@ -258,6 +271,7 @@ function act(a, el) {
     settings: () => { ui.settings = true; ui.exportText = ""; },
     close: () => { ui.settings = false; },
     tab: () => { ui.tab = v; },
+    resume: () => { ui.tab = "log"; $("#planbox").open = false; ui.paused = false; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
     slot: () => toggleSlot(s, v),
@@ -288,20 +302,34 @@ function act(a, el) {
   dirty = true;
 }
 
-// Event options act on pointerdown, so the event panel re-rendering mid-press cannot swallow the choice.
-// Everything else acts on click, so starting a scroll on a phone never fires a button.
-const target = (e) => { const el = e.target.closest("[data-a]"); return el && !el.disabled ? el : null; };
-const FAST = /^choose:/;
+// Remember the event under a press; commit only a completed activation, never a scroll/cancel.
+const target = (e) => {
+  const el = e.target.closest("[data-a]");
+  return el && !el.disabled && (!ui.settings || $("#modal").contains(el)) ? el : null;
+};
+const choiceAction = (a) => /^(choose:|fate$)/.test(a);
 document.addEventListener("pointerdown", (e) => {
   const el = target(e);
-  if (e.button === 0 && el && FAST.test(el.dataset.a)) { el.dataset.done = "1"; act(el.dataset.a, el); }
+  gesture = e.button === 0 && el && choiceAction(el.dataset.a)
+    ? { action: el.dataset.a, event: s?.ev, x: e.clientX, y: e.clientY, pressed: true, cancelled: false } : null;
 });
+document.addEventListener("pointermove", (e) => {
+  if (gesture?.pressed && Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 12) gesture.cancelled = true;
+});
+document.addEventListener("pointerup", () => { if (gesture) gesture.pressed = false; });
+document.addEventListener("pointercancel", () => { if (gesture) { gesture.pressed = false; gesture.cancelled = true; } });
 document.addEventListener("click", (e) => {
-  const el = target(e);
+  const el = target(e), press = gesture;
+  gesture = null;
   if (!el) return;
-  if (el.dataset.done) { delete el.dataset.done; return; }
+  if (e.detail > 0 && choiceAction(el.dataset.a)
+    && (!press || press.cancelled || press.event !== s?.ev || press.action !== el.dataset.a)) return;
   act(el.dataset.a, el);
 });
+document.addEventListener("compositionstart", () => { composing = true; });
+document.addEventListener("compositionend", () => { composing = false; dirty = true; });
+document.addEventListener("focusin", () => { dialog.contain(); });
+$("#planbox").addEventListener("toggle", () => { dirty = true; });
 document.addEventListener("change", (e) => {
   const c = e.target.dataset?.c;
   if (c === "policy") { ui.policy = e.target.value; saveCfg(); }
@@ -311,24 +339,28 @@ document.addEventListener("change", (e) => {
 });
 document.addEventListener("input", (e) => {
   const c = e.target.dataset?.c;
-  if (c === "q") { ui.itemFilter.q = e.target.value; }
+  if (c === "q") { ui.itemFilter.q = e.target.value; dirty = true; }
   if (c === "importText") ui.importText = e.target.value;
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !$("#modal").hidden) return act("close");
-  if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  dialog.key(e);
+  if (!s || s.dead || ui.settings || e.isComposing || e.repeat || control(e.target)) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
-  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8, 16].find((n) => n > ui.speed) ?? 16;
-  else if (e.key === "-") ui.speed = [16, 8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
+  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8].find((n) => n > ui.speed) ?? 8;
+  else if (e.key === "-") ui.speed = [8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
   else if (e.key === "a" || e.key === "A") ui.policy = POLICY_ORDER[(POLICY_ORDER.indexOf(ui.policy) + 1) % 3];
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);
     const pick = vis[+e.key - 1];
-    if (pick && !pick[1].locked) { C.choose(s, pick[0]); fx(); }
+    if (pick && !pick[1].locked) act("choose:" + pick[0]);
   } else return;
   saveCfg(); dirty = true;
 });
 
+const motion = matchMedia("(prefers-reduced-motion: reduce)");
+stage.calm = motion.matches;
+motion.addEventListener("change", () => { stage.calm = motion.matches; });
 initStage($("#cv"), $("#ov"));
 startScreen();
 requestAnimationFrame(loop);

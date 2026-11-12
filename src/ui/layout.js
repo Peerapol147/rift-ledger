@@ -2,6 +2,7 @@
 import * as C from "../core/index.js";
 import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../data/index.js";
 import { esc, money, bar, btn, tag } from "./dom.js";
+import { profileVisual } from "./profile.js";
 import { prepPanel } from "./prep.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
@@ -16,15 +17,14 @@ function roleLine(s) {
 
 export function card(s) {
   const st = C.stageOf(s), life = C.lifespan(s);
-  const stamp = s.hunter ? `<div class="stamp">${RANKS[s.hunter.rank]}</div>` : "";
   const stats = Object.entries(STATS).map(([k, n]) => `<div class="stat"><span>${n}</span><b>${Math.floor(s.st[k])}</b></div>`).join("");
   const alerts = C.alerts(s).map((a) => `<div class="alert">${esc(a.text)}</div>`).join("");
   const goals = C.goalProgress(s).map((g) =>
     `<div class="goal"><span>📌 ${esc(g.label)} <b class="num">${g.cur}/${g.target}</b>${g.done ? " ✓" : ""}</span>${btn("unpin:" + g.key, "×", 'class="sm"')}</div>`).join("");
-  const plans = C.focusList(s).map((f) => btn("focus:" + f.id, esc(f.n), s.focus === f.id ? 'class="on"' : "")).join("");
   const xp = s.hunter ? `<div class="kv"><span>EXP</span><b>${Math.floor(s.hunter.xp)}/${C.xpNeed(s.hunter.lv)}</b></div>${bar("xp", s.hunter.xp, C.xpNeed(s.hunter.lv))}` : "";
   return `
-  <div class="who">${stamp}<div class="dim">${esc(COUNTRIES[s.country].n)} · ${esc(cityOf(s.city).n)}</div>
+  ${profileVisual(s)}
+  <div class="who"><div class="dim">${esc(COUNTRIES[s.country].n)} · ${esc(cityOf(s.city).n)}</div>
     <h2>${esc(s.name)}</h2><div class="role">${roleLine(s)}</div><div class="dim">${esc(C.dateText(s))}</div></div>
   <div class="kv"><span>อายุ</span><b>${C.ageY(s)} ปี</b></div>${bar("age", C.ageY(s), life)}
   <div class="kv"><span>สุขภาพ</span><b>${Math.round(s.hp)}/100</b></div>${bar("hp", s.hp, 100)}
@@ -34,7 +34,13 @@ export function card(s) {
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
   ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
   <div class="stats">${stats}</div>${alerts}${goals}
-  <h3>แผนเดือนนี้</h3><div class="plan">${plans}</div>`;
+  `;
+}
+
+export function planPanel(s) {
+  const plans = C.focusList(s).map((f) => btn("focus:" + f.id, esc(f.n),
+    `class="${s.focus === f.id ? "on" : ""}" aria-pressed="${s.focus === f.id}"`)).join("");
+  return `<p class="dim">เลือกสิ่งที่จะทำในเดือนถัดไป · พักเวลาให้ระหว่างจัดแผน</p><div class="plan">${plans}</div>`;
 }
 
 function badge(v) {
@@ -91,10 +97,10 @@ function opStatus(s) {
 }
 
 export function controls(ui) {
-  const sp = [1, 2, 4, 8, 16].map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
+  const sp = [1, 2, 4, 8].map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
   const pol = Object.entries(POLICIES).map(([k, n]) => `<option value="${k}" ${ui.policy === k ? "selected" : ""}>${n}</option>`).join("");
   return `${btn("pause", ui.paused ? "เล่นต่อ" : "หยุด")}${sp}
-    <select data-c="policy" aria-label="โหมดออโต้">${pol}</select><span class="sp"></span>${btn("settings", "ตั้งค่า")}`;
+    <select data-c="policy" aria-label="โหมดออโต้">${pol}</select><span class="sp"></span>${btn("settings", "ตั้งค่า", 'aria-haspopup="dialog"')}${ui.reading ? btn("resume", "กลับไปใช้ชีวิต", 'class="pri"') : ""}`;
 }
 
 export const TABS = [

@@ -29,7 +29,7 @@ export function itemsTab(s, ui) {
   }).join("") || `<div class="dim">ไม่มีของที่ตรงเงื่อนไข</div>`;
   const kindSel = Object.entries(KINDS).map(([k, n]) => `<option value="${k}" ${f.kind === k || (!f.kind && !k) ? "selected" : ""}>${n}</option>`).join("");
   const sortSel = Object.entries(SORTS).map(([k, n]) => `<option value="${k}" ${f.sort === k ? "selected" : ""}>${n}</option>`).join("");
-  const junk = RARITY.slice(1, 3).map((r, i) => `<option value="${i + 1}">ต่ำกว่า ${r.n}</option>`).join("");
+  const junk = RARITY.slice(1, 3).map((r, i) => `<option value="${i + 1}" ${ui.junk === i + 1 ? "selected" : ""}>ต่ำกว่า ${r.n}</option>`).join("");
   const loads = Object.keys(s.loadouts ?? {}).map((n) => btn("loadUse:" + n, "ใช้ชุด " + esc(n), 'class="sm"')).join("");
   return `<h3>กระเป๋า ${s.items.length}/${C.bagCap(s)}</h3>
     <div class="row"><select data-c="kind">${kindSel}</select><select data-c="sort">${sortSel}</select>
