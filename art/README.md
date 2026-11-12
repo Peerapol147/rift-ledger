@@ -24,3 +24,19 @@ Original code-authored pixel rows in `src/hero-art.js`: round sparse-haired infa
 
 Character animation rebuild: see [animation/README.md](animation/README.md).
 68 original reference-based image_gen strips, both sexes, with prompts/source atlases preserved.
+
+### Story quartet — 2026-11-13
+
+OpenAI image_gen, original existing-game references; two generation/review rounds. First draft
+lost clarity at 56px, especially the pier shadow; refined to stronger cyan edge and simpler prop
+silhouettes. Exact prompts and sources: `monsters/source-atlases/story-quartet.json`.
+ImageMagick crops/resizes/quantizes to 56×56, max14 colors, binary alpha; no procedural monster drawing.
+All four hover, face left, retain transparent margins. Viewed at native size, 4x and in stage combat.
+
+- `beast/waterless-fish`: cracked dusty-teal fish, salt crust, gasping dark gills, dead-white eye.
+- `spirit/pier-shadow`: inverted drowned silhouette, flowing hair/fingers, cyan edge and pale eyes.
+- `spirit/last-passenger`: faceless commuter, briefcase, hanging train strap, fluorescent green edge.
+- `spirit/teacher-still-teaching`: cardigan ghost, chalk and pointer, lecture frozen mid-sentence.
+
+Effect integration uses existing MIT PixelFX claw-swipe/blunt-hit with restrained palette/glow;
+source effects are unchanged. Installed skill and tools are documented in `tools/skills/README.md`.

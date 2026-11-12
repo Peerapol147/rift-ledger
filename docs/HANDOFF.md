@@ -129,3 +129,10 @@ Built:
 7. **Art.** 14 borrowed sprites in `art/requests.json`. The owner may send pictures; process them with
    `tools/skills/create-game-assets`.
 8. Waiting on the owner: the long-life (eras) system, and publishing a public link (itch.io or GitHub Pages).
+
+## PixelFX and story monster quartet
+
+Uploaded MIT PixelFX skill installed at `tools/skills/pixelfx`; render/check tools under
+`vendor/pixelfx`. Four story monsters now have unique original sprites. Review the newest
+Claude brief before adding effects: bounded overlaps, low glow, calm-mode suppression,
+explicit source facing; never replace the game's own characters with library stock actors.

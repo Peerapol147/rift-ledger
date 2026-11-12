@@ -14,3 +14,11 @@ pixel art, no engine) are kept.
 | `itch-publish` | Publishing `play.html` as a web game |
 
 Agents read the matching `SKILL.md` before starting work in that area.
+
+## PixelFX (MIT, separately licensed)
+
+`pixelfx/SKILL.md` installed unchanged from the owner's uploaded `pixelfx-main.zip`, version 0.3.1.
+License: `pixelfx/LICENSE`. This skill is **not** covered by the Apache collection license above.
+For its commands, first `cd vendor/pixelfx`; render/check tools and authoring/catalog docs are installed
+there. Runtime core/effect sources matched the upload byte-for-byte and were retained unchanged.
+Use existing effects with small palette/light changes first; render and inspect before integration.

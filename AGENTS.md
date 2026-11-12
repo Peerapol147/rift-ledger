@@ -26,3 +26,7 @@ Code agent (Claude) owns `src/`, `test/`, `tools/`, `docs/`. **Art agent (Codex)
 
 ## Checks
 - `npm test` — core tests. `node tools/artcheck.mjs` — art contract. `npm run build` — rebuilds `play.html` (code agent does this).
+
+## PixelFX skill
+For effect work, read `tools/skills/pixelfx/SKILL.md` and run its tools from `vendor/pixelfx`.
+Keep original game characters (no stock actor effects); limit transient overlaps and inspect at 1x.
