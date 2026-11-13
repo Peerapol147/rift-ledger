@@ -1,5 +1,6 @@
 // Saves and the cross-life collection book. Pure: takes a storage adapter { get, set, del }. Spec §10 and §13.
 import { ITEMS } from "../data/items.js";
+import { hooks } from "./registry.js";
 const SLOT = (i) => `riftledger.slot.v2.${i}`;
 const BOOK = "riftledger.book.v2";
 const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
@@ -15,6 +16,7 @@ export function deserialize(str) {
   try {
     const s = JSON.parse(str);
     if (!s || s.v !== 2 || REQUIRED.some((k) => !(k in s))) return null;
+    if (Number.isInteger(s.sv) && s.sv > SAVE_SV) return null; // a newer game's save: never downgrade it
     if (typeof s.name !== "string" || typeof s.seed !== "string") return null;
     for (const k of NUMS) s[k] = num(s[k]);
     for (const k of Object.keys(s.st ?? {})) s.st[k] = num(s.st[k]);
@@ -66,8 +68,9 @@ export function deserialize(str) {
 }
 
 // ---- Schema versions (save-systems skill: stamp a version, migrate step by step on load).
-// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: today.
-export const SAVE_SV = 2;
+// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: before lives that
+// remember. sv 3: today (people, relations, stories; spec 2026-11-13-lives-that-remember-design.md).
+export const SAVE_SV = 3;
 const FAC_IDS = ["assoc", "state", "church", "research", "under"];
 const MIGRATIONS = {
   1: (s) => {
@@ -76,6 +79,15 @@ const MIGRATIONS = {
     s.store.guild ??= [];
     s.enemies ??= [];
     s.secrets ??= [];
+  },
+  2: (s) => {
+    s.familyId ??= "fam-" + s.seed;
+    s.lifeId ??= s.familyId + ":" + (s.gen ?? 1);
+    s.narrative ??= { v: 1, stories: {} };
+    s.relations ??= {};
+    s.world.people ??= {};
+    s.world.nextPersonId ??= 1;
+    hooks.migratePeople?.(s);
   },
 };
 export function migrate(s) {

@@ -8,6 +8,8 @@ export const ageY = (s) => Math.floor(s.ageM / 12);
 
 // Calendar position: years since Rift Day and month of year (1–12).
 export const yearsAfterRift = (s) => WORLD.BIRTH_YEAR - WORLD.RIFT_YEAR + Math.floor(((s.mon0 ?? 0) + s.ageM) / 12);
+// Months since January of the birth year of the first life (2051): dates that survive an heir.
+export const worldMonth = (s) => (s.mon0 ?? 0) + s.ageM;
 export const monthOfYear = (s) => (((s.mon0 ?? 0) + s.ageM) % 12) + 1;
 
 import { onNewLife } from "./registry.js";
@@ -34,7 +36,7 @@ export function log(s, tag, text, tone = "") {
 
 export function newLife(seed) {
   seed = String(seed);
-  const s = { v: 2, sv: 2, seed, r: {} }; // sv: schema version, see SAVE_SV in save.js
+  const s = { v: 2, sv: 3, seed, r: {} }; // sv: schema version, see SAVE_SV in save.js
   const R = stream(s, "birth");
   const country = wp(R, Object.entries(COUNTRIES).map(([id, c]) => ({ id, w: c.w }))).id;
   const family = wp(R, FAMILIES.filter((f) => f.country === country));
@@ -67,7 +69,11 @@ export function newLife(seed) {
     items: [],
     equip: {},
     quick: [],
-    world: { roster: [], records: { silent: 47, drowned: 44 }, done: {} },
+    world: { roster: [], records: { silent: 47, drowned: 44 }, done: {}, people: {}, nextPersonId: 1 },
+    familyId: "fam-" + seed,
+    lifeId: "fam-" + seed + ":1",
+    narrative: { v: 1, stories: {} },
+    relations: {},
     ev: null,
     op: null,
     sched: [],
