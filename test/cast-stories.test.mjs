@@ -11,7 +11,10 @@ const SETUP = {
   hong: (s) => { s.country = "th"; s.city = "bkk"; },
   mingyu: (s) => { s.country = "kr"; s.city = "pus"; },
   dohyun: (s) => { s.country = "kr"; s.city = "icn"; },
+  seojin: (s) => { s.country = "kr"; s.city = "sel"; },
 };
+// held every month (a career would replace a job set once at birth)
+const EACH = { seojin: (s) => { if (!s.hunter && C.ageY(s) >= 18) s.job = { id: "press", tier: 1, xp: 0 }; } };
 let turn = 0;
 // first, second and last visible option, and one that varies from scene to scene (a player who is not consistent)
 // and a player who wants romance: kind (first option) but takes the romance option whenever it is offered
@@ -22,6 +25,7 @@ function play(id, seed, pick, each = () => {}) {
   const s = C.newLife(seed); SETUP[id](s);
   if (id === "hong") s.gold = 0;
   for (let n = 0; n < 80000 && !s.dead && C.ageY(s) < 85 && s.narrative.stories[id]?.status !== "done"; n++) {
+    EACH[id]?.(s);
     each(s);
     if (!s.ev) { C.advance(s); continue; }
     if (s.ev.story?.id === id) {
@@ -156,4 +160,44 @@ test("dohyun: reformed sends him to haneul as a friend of the family", () => {
   assert.deepEqual(reform.castAct, { dohyun: "joinGuild:haneul" });
   assert.ok(Object.values(D.nodes).flatMap((n) => n.o).some((o) => o.y?.castAct?.dohyun === "friend"
     && o.y.go), "a road to reformed makes him a friend first");
+});
+
+const hunter = (s, rank) => { s.hunter = { rank, lv: 10, xp: 0, skills: [], cls: "knight" }; return s; };
+
+test("seojin reaches hunters at C or above anywhere, and Korean reporters and porters", () => {
+  const D = C.STORY_DEFS.seojin;
+  assert.equal(D.discover(hunter(adult("sj1", "th", "bkk", 25, "seojin"), 2)), true);
+  assert.equal(D.discover(hunter(adult("sj2", "th", "bkk", 25, "seojin"), 1)), false);
+  const kr = adult("sj3", "kr", "sel", 30, "seojin"); kr.job = { id: "press" }; assert.equal(D.discover(kr), true);
+  const th = adult("sj4", "th", "bkk", 30, "seojin"); th.job = { id: "press" }; assert.equal(D.discover(th), false);
+  const old = hunter(adult("sj5", "th", "bkk", 51, "seojin"), 3); assert.equal(D.discover(old), false);
+});
+
+test("seojin: not while the yoon story runs; once it is done, yes", () => {
+  const D = C.STORY_DEFS.seojin;
+  const s = adult("sj6", "kr", "sel", 30, "seojin"); s.job = { id: "press" };
+  s.narrative.stories.yoon = { status: "active" }; assert.equal(D.discover(s), false);
+  s.narrative.stories.yoon = { status: "done" }; assert.equal(D.discover(s), true);
+});
+
+test("seojin: retired, he is met in the training hall, never at a gate", () => {
+  const s = adult("sj7", "kr", "sel", 30, "seojin"); s.job = { id: "press" };
+  hunter(s, 3);
+  castOf(s, "seojin").retired = true;
+  for (let n = 0; n < 4000 && s.ev?.story?.id !== "seojin"; n++) {
+    if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
+    if (castOf(s, "seojin").diedWorldM != null) break;
+  }
+  assert.equal(s.ev?.story?.id, "seojin");
+  assert.match(s.ev.t, /ห้องฝึก/);
+  assert.doesNotMatch(s.ev.t, /ในเกต|เข้าเกต/);
+});
+
+test("seojin: the student ending is for hunters only", () => {
+  const D = C.STORY_DEFS.seojin;
+  const civ = adult("sj8", "kr", "sel", 30, "seojin");
+  const st = { vars: {}, route: "student", cast: { seojin: castOf(civ, "seojin").id } };
+  const toStudent = Object.values(D.nodes).flatMap((n) => n.o).filter((o) => o.y?.end === "student");
+  assert.ok(toStudent.length > 0);
+  for (const o of toStudent) assert.equal(!!o.show && !o.show(civ, st), true);
 });
