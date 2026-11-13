@@ -154,6 +154,17 @@ CASES["B-two-tabs"] = async (b) => {
     `an older tab cannot save over a newer life (slot ${start} → ${ahead} → ${after} months, A at ${ageA}; "${said}")`];
 };
 
+CASES["B-focus-return"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await page.locator('[data-a="settings"]').first().focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(150);
+  // the toolbar is drawn again while settings is open (the game redraws it when the life moves on)
+  await page.evaluate(() => { const t = document.querySelector('[data-a="settings"]').parentElement; t.innerHTML += ""; });
+  await page.keyboard.press("Escape"); await page.waitForTimeout(150);
+  const on = await page.evaluate(() => document.activeElement?.dataset?.a ?? document.activeElement?.tagName);
+  await ctx.close();
+  return [on === "settings", `closing settings puts focus back on the settings button (on ${on})`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);

@@ -302,7 +302,12 @@ function act(a, el) {
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
     settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
-    close: () => { ui.settings = false; ui.opener?.focus?.(); ui.opener = null; },
+    close: () => {
+      ui.settings = false;
+      // the button that opened settings may have been drawn again meanwhile: go back to the one on screen now
+      const back = ui.opener?.isConnected ? ui.opener : document.querySelector('[data-a="settings"]');
+      back?.focus?.(); ui.opener = null;
+    },
     tab: () => { ui.tab = v; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
