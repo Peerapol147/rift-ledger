@@ -105,7 +105,8 @@ export function recordHolder(s, rosterId, country) {
   if (hunting(own)) return { name: own.name, personId: own.id };
   if (HOLDERS[rosterId]) {
     const next = Object.values(s.world.people)
-      .filter((p) => p.cast && p.country === country && hunting(p) && p.rank >= 5).sort((a, b) => b.rank - a.rank || a.cast.localeCompare(b.cast))[0];
+      .filter((p) => p.cast && p.country === country && hunting(p) && p.rank >= 5)
+      .sort((a, b) => b.rank - a.rank || a.cast.localeCompare(b.cast))[0];
     if (next) return { name: next.name, personId: next.id };
     const other = (s.world.roster ?? []).filter((n) => !n.cast && n.alive && n.country === country)
       .sort((a, b) => b.rank - a.rank)[0];
