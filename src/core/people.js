@@ -17,6 +17,7 @@ export function ensurePerson(s, input, sourceKey) {
     id, name: input.name, country: input.country ?? null, city: input.city ?? null, sex: input.sex ?? null,
     bornWorldM: input.bornWorldM ?? null, diedWorldM: input.diedWorldM ?? null, goneWorldM: null,
     job: input.job ?? null, hunter: input.hunter ?? null, tags: [...(input.tags ?? [])], src: sourceKey,
+    ...(input.marriedBy35 ? { marriedBy35: true } : {}),
   };
   return id;
 }

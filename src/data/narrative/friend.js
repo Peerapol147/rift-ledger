@@ -25,7 +25,9 @@ export const FRIEND = {
         name: list[roll(0, list.length - 1)], country: s.country, city: s.city, sex,
         bornWorldM: (s.mon0 ?? 0) + roll(-12, 12),
         // whether they awaken is settled at birth and never shown before it happens
-        hunter: roll(1, 100) <= 25 ? { rank: roll(0, 3), cls: null } : null, tags: ["friend"] } };
+        hunter: roll(1, 100) <= 25 ? { rank: roll(0, 3), cls: null } : null, tags: ["friend"],
+        // most people are married by their mid-thirties; settled now so it never changes on reload
+        marriedBy35: roll(1, 100) <= 55 } };
     },
   },
   nodes: {
@@ -148,12 +150,13 @@ export const FRIEND = {
       t: (s, st) => `คุณเจอ {cast:friend} ที่งานศพครูประถม ผมเขาเริ่มขาวที่ขมับ เขายังจำได้ว่า${first(s, st)
         .replace("{cast:friend} ", "เขา")}`,
       o: [
-        { l: "ขอคบกันจริงจัง", show: (s, st) => trust(s, st) >= 60 && !(s.c.married > 0), noAuto: true,
+        { l: "นัดกินข้าวกันทุกเดือน", y: go("old", "นัดแรกยาวจนร้านปิด นัดที่สองเขามาสาย", { route: "close",
+          rel: mem("คุณสองคนกลับมานัดกินข้าวกันทุกเดือน", 15) }) },
+        { l: "ขอคบกันจริงจัง", show: (s, st) => trust(s, st) >= 60 && !(s.c.married > 0)
+          && !s.world.people?.[fid(s, st)]?.marriedBy35, noAuto: true,
           y: go("old", "อีกหนึ่งปีต่อมาคุณสองคนจดทะเบียนกันเงียบๆ ที่เขต", { route: "partner", mind: 15,
             c: { married: 1, dating: 1 }, rel: mem("คุณสองคนจดทะเบียนกันหลังเจอกันที่งานศพครู", 20,
               { tag: "partner" }) }) },
-        { l: "นัดกินข้าวกันทุกเดือน", y: go("old", "นัดแรกยาวจนร้านปิด นัดที่สองเขามาสาย", { route: "close",
-          rel: mem("คุณสองคนกลับมานัดกินข้าวกันทุกเดือน", 15) }) },
         { l: "ท้าแข่งอะไรสักอย่างแบบตอนเด็ก", show: (s, st) => st.route === "rival", s: "luk", diff: 10,
           y: go("old", "คุณชนะเกมปาลูกดอกหลังงาน เขาขอแข่งใหม่ปีหน้า", { rel: mem("คุณชนะเขาเกมปาลูกดอกหลังงานศพครู",
             5) }),

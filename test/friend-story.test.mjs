@@ -43,7 +43,7 @@ test("close and drift lives see different later nodes", () => {
   assert.notDeepEqual(close, drift);
   const a = C.newLife("frx"), b = C.newLife("frx");
   play(a, { meet: "ชวนเล่นด้วยกัน", teenFork: "ยกที่ให้เขา" });
-  play(b, { meet: "ส่งลูกบอลคืนแล้วกลับเข้าบ้าน", teenFork: "แยกไปชมรมอื่น", school: "เงียบไว้", ask: "ไม่รับสาย" });
+  play(b, { meet: "ส่งลูกบอลคืนแล้วกลับเข้าบ้าน", teenFork: "แยกไปชมรมอื่น", school: "เงียบไว้", ask: "ไม่รับสาย", old: "ปล่อยให้เป็นความทรงจำ" });
   assert.notEqual(story(a).ending, story(b).ending);
 });
 
@@ -96,4 +96,19 @@ test("an heir gets a different friend", () => {
   const h = C.newHeir(p, "frh-2");
   play(h, {}, (x) => !!story(x));
   assert.notEqual(story(h).cast.friend, story(p).cast.friend);
+});
+
+test("partner never opens when the friend married young", () => {
+  const offered = (married) => {
+    const s = C.newLife("frmar");
+    play(s, {}, (x) => !!story(x));
+    s.ageM = 40 * 12; s.ev = null; s.c.married = 0;
+    Object.assign(story(s), { node: "reunion", due: 0, route: "close" });
+    C.changeRelation(s, story(s).cast.friend, { trust: 90 });
+    friendOf(s).marriedBy35 = married;
+    C.narrativeMonth(s);
+    return s.ev.opts.some((o) => o.l === "ขอคบกันจริงจัง");
+  };
+  assert.equal(offered(false), true);
+  assert.equal(offered(true), false);
 });
