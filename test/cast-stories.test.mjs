@@ -373,3 +373,37 @@ test("review: dohyun's last scene is cold to the one who informed on him", () =>
     assert.doesNotMatch(msg(o.y.m), /ค่าซุป|ร้าน/, o.l); // he is not at a table with you
   }
 });
+
+// ---- Deferred minors from the branch review (owner: fix them)
+const outs = (D) => Object.values(D.nodes).flatMap((n) => n.o).flatMap((o) => [o.y, o.n].filter(Boolean).map((r) => [o, r]));
+
+test("minor: mingyu's patient scene recalls a real memory", () => {
+  const D = C.STORY_DEFS.mingyu, s = adult("mn1", "kr", "pus", 25, "mingyu"), st = stOf(s, D);
+  s.relations[st.cast.mingyu] = { trust: 10, memories: [{ text: "คุณแบกคนเจ็บแปลกหน้าเข้าเต็นท์" }] };
+  assert.match(D.nodes.patient.t(s, st), /คุณแบกคนเจ็บแปลกหน้าเข้าเต็นท์/);
+});
+
+test("minor: mingyu's board scene is passed by once he has left haneul", () => {
+  const D = C.STORY_DEFS.mingyu, s = adult("mn2", "kr", "pus", 25, "mingyu"), st = stOf(s, D);
+  assert.ok(D.nodes.board.skip, "the board scene has a skip");
+  assert.equal(D.nodes.board.skip.when(s, st), false);
+  castOf(s, "mingyu").guild = null;
+  assert.equal(D.nodes.board.skip.when(s, st), true);
+});
+
+test("minor: dohyun's gone scene gives the partner ending only to a partner", () => {
+  const D = C.STORY_DEFS.dohyun, s = adult("mn3", "kr", "icn", 30, "dohyun");
+  const st = stOf(s, D, { route: "reform" }); s.relations[st.cast.dohyun] = { trust: 30, memories: [] };
+  const open = D.nodes.gone.o.filter((o) => !o.show || o.show(s, st));
+  assert.ok(!open.some((o) => o.y.end === "partner"), "a reformed friend mourns as a partner");
+});
+
+test("minor: every road onto dohyun's reform makes him a friend of the family", () => {
+  for (const [, r] of outs(C.STORY_DEFS.dohyun)) if (r.route === "reform") assert.equal(r.castAct?.dohyun, "friend", r.m);
+});
+
+test("minor: seojin, poramet and pim scenes say nothing the state does not hold", () => {
+  assert.ok(!src("seojin").includes("ประกาศจะวางมือ"));
+  assert.ok(!src("poramet").includes("ไม่นิ่งพอจะวาดวงบาเรียแล้ว"));
+  assert.ok(!src("pim").includes("พิงไหล่"));
+});

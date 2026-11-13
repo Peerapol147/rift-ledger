@@ -1,6 +1,6 @@
 // คลินิกหลังเกตแตก: ชเว มินกยู, the haneul healer who runs a free clinic in Busan and goes wherever a gate breaks.
 // For Korean lives in Busan, hurt, or in medicine. Cast stories P2b-1 design §4.1.
-import { who, trust, firstYou as first, latestYou as latest, go, end, mem } from "./castref.js";
+import { who, personOf, trust, firstYou as first, latestYou as latest, go, end, mem } from "./castref.js";
 
 const M = ["mingyu"];
 const medic = (s) => ["doc", "hdoc"].includes(s.job?.id) || s.hunter?.cls === "healer";
@@ -50,6 +50,8 @@ export const MINGYU = {
     },
     board: {
       delay: [12, 36], needCast: M,
+      // the haneul board has nothing to say to a healer who already left the guild
+      skip: { when: (s, st) => personOf(s, st, "mingyu")?.guild !== "haneul", to: "patient" },
       t: (s, st) => "กรรมการกิลด์ฮานึลส่งจดหมายมาว่าคลินิกต้องเก็บค่ารักษาเท่าราคาฮันเตอร์ ไม่อย่างนั้นต้องย้ายออก "
         + `หมอมินกยูอ่านแล้ววางลง เขาพูดถึงตอนที่${latest(s, st, "mingyu", "คุณมาที่คลินิก")} แล้วถามว่าควรทำยังไง`,
       o: [
@@ -71,7 +73,7 @@ export const MINGYU = {
       t: (s, st) => (st.vars.patient
         ? "คนเจ็บที่คุณแบกเข้าเต็นท์ในวันนั้นกลับมาที่คลินิก คราวนี้ไข้ขึ้นสูงจากแผลเก่าที่ติดเชื้อมานาน "
         : "เด็กคนหนึ่งที่คุณเคยเห็นต่อแถวที่คลินิกกลับมาด้วยไข้สูงจากแผลเกตที่ติดเชื้อ ")
-        + "หมอมินกยูอยู่กับเขาทั้งคืน",
+        + `หมอมินกยูอยู่กับเขาทั้งคืน คุณนึกถึงตอนที่${first(s, st, "mingyu", "มาที่คลินิกครั้งแรก")}`,
       o: [
         { l: "เฝ้าไข้ด้วยกันจนเช้า", s: "wil", diff: 12,
           y: go("ward", "ตอนเช้าไข้ลด หมอมินกยูหัวเราะเสียงแหบเป็นครั้งแรกในรอบเดือน", { mind: 4,
