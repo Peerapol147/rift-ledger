@@ -1,5 +1,8 @@
 // Fictional guilds (spec §3.2: no real organisations). perk: safe | elite | shady. cut = share of gate pay.
-const g = (id, n, perk, minRank, cut, t) => ({ id, n, perk, minRank, cut, t });
+// tier: a word on the guild list (legend | major | shadow), not a number in the game (main cast design §4)
+const TIER = { saengnuea: "major", chaophraya: "legend", mekdam: "shadow", haneul: "major", baekho: "legend",
+  geomeun: "shadow" };
+const g = (id, n, perk, minRank, cut, t) => ({ id, n, perk, minRank, cut, t, tier: TIER[id] });
 export const GUILDS = {
   th: [
     g("saengnuea", "กิลด์แสงเหนือ", "safe", 0, 0.15,

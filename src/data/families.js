@@ -30,3 +30,11 @@ export const NAMES = {
     f: ["ซอยอน", "จียู", "ฮายุน", "มินซอ", "ซูอา", "แชวอน", "ยูนา", "ดาอึน", "ซีอู", "เยริน", "นาอึน", "โซฮี"],
   },
 };
+
+// Hunter families of the main cast: listings in the world, not families a player is born into or joins.
+export const HUNTER_FAMILIES = {
+  silawong: { n: "ตระกูลศิลาวงศ์", country: "th",
+    t: "สามรุ่นของผู้สร้างบาเรีย บ้านไม้สักริมเจ้าพระยาที่ไม่เคยถูกเกตแตกเข้าถึง" },
+  yoon: { n: "ตระกูลยุน", country: "kr",
+    t: "ตระกูลนักดาบที่ส่งคนขึ้นหอจมน้ำทุกรุ่น และไม่เคยยอมแพ้ใครต่อหน้ากล้อง" },
+};

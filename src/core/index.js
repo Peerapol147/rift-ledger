@@ -30,3 +30,4 @@ export * from "./spend.js";
 export * from "./kinds.js";
 export * from "./people.js";
 export * from "./narrative.js";
+export * from "./cast.js";

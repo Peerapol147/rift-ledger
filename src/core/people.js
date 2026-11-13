@@ -72,6 +72,7 @@ export function listMember(s, m) {
 }
 
 hooks.migratePeople = (s) => {
+  hooks.addCast?.(s); // first, so the record holders become the cast instead of two extra people
   syncRosterPeople(s);
   for (const m of s.team ?? []) {
     listMember(s, m);
@@ -81,6 +82,7 @@ hooks.migratePeople = (s) => {
 
 hooks.repairPeople = (s) => {
   if (!s.world?.people) return;
+  hooks.addCast?.(s);
   for (const m of s.team ?? []) {
     if (m.personId) continue;
     listMember(s, m);

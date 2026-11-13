@@ -4,9 +4,10 @@
 import { ri } from "./rng.js";
 import { stream, worldMonth, log } from "./state.js";
 import { openEvent, applyOutcome } from "./events.js";
-import { monthly, hooks } from "./registry.js";
+import { lastly, hooks } from "./registry.js";
 import { ensurePerson, personById, personPresent, changeRelation, remember } from "./people.js";
 import { STORY_DEFS } from "../data/narrative/index.js";
+import { applyCastAct, canRomance } from "./cast.js";
 
 export { STORY_DEFS };
 
@@ -63,6 +64,11 @@ function keepPace(s, id, def, st) {
   return true;
 }
 
+// castGone is one node for the whole story, or one per role ({ lalin: "gone", father: "fatherGone" })
+const goneOf = (def, role) => (def.castGone && typeof def.castGone === "object" ? def.castGone[role] : def.castGone);
+const goneNodes = (def) => (def.castGone && typeof def.castGone === "object" ? Object.values(def.castGone)
+  : [def.castGone].filter(Boolean));
+
 export function narrativeMonth(s) {
   if (s.ev || s.op || !s.narrative) return;
   for (const id of Object.keys(STORY_DEFS).sort()) {
@@ -70,19 +76,23 @@ export function narrativeMonth(s) {
     const st = s.narrative.stories[id];
     if (!st) { if (def.discover(s)) startStory(s, id); continue; }
     if (st.status === "done" || !keepPace(s, id, def, st)) continue;
-    if (st.due > worldMonth(s)) continue;
-    let node = def.nodes[st.node];
-    if (node.needCast?.some((r) => !personPresent(s, st.cast[r])) && def.castGone && st.node !== def.castGone) {
+    // someone this scene needs is gone: their own gone scene, this month, not when the story was next due
+    const lost = def.nodes[st.node].needCast?.find((r) => !personPresent(s, st.cast[r]));
+    const goneNode = lost && goneOf(def, lost);
+    if (goneNode && goneNode !== st.node) { // from a gone scene too, if its own speaker is gone
       st.resume = st.node;
-      enterNode(s, id, st, def.castGone);
-      node = def.nodes[def.castGone];
+      enterNode(s, id, st, goneNode);
+      st.due = Math.min(st.due, worldMonth(s));
     }
+    if (st.due > worldMonth(s)) continue;
+    const node = def.nodes[st.node];
     if (node.skip?.when(s, st)) { enterNode(s, id, st, node.skip.to); continue; } // this life passes the scene by
     if (node.when && !node.when(s, st)) continue;
     if (node.beat) { resolveOut(s, id, st, node.beat, true); continue; }
     const fillOut = (o) => o && { ...o, m: o.m == null ? o.m : textOf(s, st, o.m) };
     openEvent(s, { id: `story:${id}:${st.node}`, tag: def.tag ?? "ชีวิต", t: textOf(s, st, node.t), important: true,
-      o: node.o.filter((o) => !o.show || o.show(s, st))
+      o: node.o.filter((o) => (!o.show || o.show(s, st))
+        && (!o.romance || canRomance(s, personById(s, st.cast[o.romance]))))
         .map((o) => ({ ...o, l: textOf(s, st, o.l), y: fillOut(o.y), n: fillOut(o.n) })) });
     s.ev.story = { id, node: st.node };
     return;
@@ -101,6 +111,7 @@ function resolveOut(s, id, st, out, beat = false) {
     changeRelation(s, pid, { trust: r.trust ?? 0, owe: r.owe ?? 0, tag: r.tag });
     if (r.mem) remember(s, pid, { id: `${id}:${st.node}`, text: textOf(s, st, r.mem), worldM: worldMonth(s) });
   }
+  for (const [role, act] of Object.entries(out.castAct ?? {})) applyCastAct(s, personById(s, st.cast[role]), act);
   if (text) { st.lastText = text; st.lastM = worldMonth(s); }
   if (out.end) endStory(s, id, out.end);
   else if (out.go) enterNode(s, id, st, out.go);
@@ -129,9 +140,10 @@ export function followedStory(s) {
 
 // Keys a story may use; anything else is a typo that would do nothing at runtime (P1 review Task D).
 const NODE_KEYS = new Set(["t", "delay", "needCast", "when", "o", "beat", "skip", "reach"]);
-const OPT_KEYS = new Set(["l", "s", "diff", "need", "risk", "nerve", "danger", "d", "y", "n", "show", "noAuto"]);
+const OPT_KEYS = new Set(["l", "s", "diff", "need", "risk", "nerve", "danger", "d", "y", "n", "show", "noAuto",
+  "romance"]);
 const OUT_KEYS = new Set(["m", "fame", "jobXp", "ally", "fac", "gold", "goldLabel", "st", "hp", "mind", "c", "flags",
-  "act", "injury", "next", "cause", "go", "end", "route", "vars", "rel", "goResume"]);
+  "act", "injury", "next", "cause", "go", "end", "route", "vars", "rel", "goResume", "castAct"]);
 const unknown = (obj, keys) => Object.keys(obj ?? {}).filter((k) => !keys.has(k));
 
 // Data checks run by the tests: every way on exists, every check can fail somewhere, every node can be reached,
@@ -141,9 +153,9 @@ export function validateNarrative(defs) {
   for (const [id, d] of Object.entries(defs)) {
     const nodes = d.nodes ?? {}, ends = d.endings ?? {}, roles = new Set(Object.keys(d.cast ?? {}));
     if (!nodes[d.entry]) issues.push(`${id}: entry ${d.entry} missing`);
-    if (d.castGone && !nodes[d.castGone]) issues.push(`${id}: castGone ${d.castGone} missing`);
+    for (const g of goneNodes(d)) if (!nodes[g]) issues.push(`${id}: castGone ${g} missing`);
     if (d.pauseEnd && !ends[d.pauseEnd]) issues.push(`${id}: pauseEnd ${d.pauseEnd} missing`);
-    const reach = new Set([d.entry, d.castGone].filter(Boolean)), seen = new Set();
+    const reach = new Set([d.entry, ...goneNodes(d)].filter(Boolean)), seen = new Set();
     const outsOf = (n) => [...(n.o ?? []).flatMap((o) => [o.y, o.n]), n.beat].filter(Boolean);
     const stack = [...reach];
     while (stack.length) {
@@ -180,6 +192,6 @@ export function validateNarrative(defs) {
   return issues;
 }
 
-// Before the old chapter chains, so a story's month is not taken by them.
-const at = monthly.findIndex((f) => f.name === "storyMonth");
-monthly.splice(at < 0 ? monthly.length : at, 0, narrativeMonth);
+// After the world's own events of the month (calendar, factions, secrets, chapters: owner's pack 02.G puts them
+// first) and before the monthly gate offer, so a waiting story never crowds out the rest of the world.
+lastly.unshift(narrativeMonth);
