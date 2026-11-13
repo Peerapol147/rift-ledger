@@ -1,6 +1,7 @@
 // Saves and the cross-life collection book. Pure: takes a storage adapter { get, set, del }. Spec §10 and §13.
 import { ITEMS } from "../data/items.js";
 import { hooks } from "./registry.js";
+import { newLife } from "./state.js";
 const SLOT = (i) => `riftledger.slot.v2.${i}`;
 const BOOK = "riftledger.book.v2";
 const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
@@ -111,6 +112,20 @@ export function inspect(str) {
   return deserialize(str) ? "ok" : "corrupt";
 }
 
+// A save is playable when every object and list a fresh life has is there with the same shape (UX-14: an import
+// missing `c` or with a broken world wrote over a good slot and then crashed the game).
+export function playable(s) {
+  const fresh = newLife(s.seed);
+  const kind = (v) => (Array.isArray(v) ? "list" : v && typeof v === "object" ? "object" : "other");
+  for (const [k, v] of Object.entries(fresh)) {
+    if (kind(v) !== "other" && kind(s[k]) !== kind(v)) return false;
+  }
+  for (const [k, v] of Object.entries(fresh.world)) {
+    if (kind(v) !== "other" && kind(s.world?.[k]) !== kind(v)) return false;
+  }
+  return true;
+}
+
 export function slots(store, n = 3) {
   const BAK = (i) => SLOT(i) + ".bak";
   // ok | empty | corrupt | unsupported (a newer game's save in front or behind: never loaded, never written over)
@@ -144,10 +159,17 @@ export function slots(store, n = 3) {
       if (inspect(a) === "unsupported" || inspect(a) === "ok") return a;
       return inspect(b) === "unsupported" || inspect(b) === "ok" ? b : a;
     },
+    // never breaks a slot: checked whole, refused with a reason, and the life it replaces stays as the backup
     importStr(i, str) {
-      if (status(i) === "unsupported" || !deserialize(str)) return false;
-      store.set(SLOT(i), str);
-      return true;
+      if (status(i) === "unsupported") return { ok: false, reason: "ช่องนี้ถูกล็อก" };
+      if (inspect(str) === "unsupported") return { ok: false, reason: "เซฟจากเกมเวอร์ชันใหม่กว่า" };
+      const s = deserialize(str);
+      if (!s || !playable(s)) return { ok: false, reason: "ข้อความเซฟไม่ครบ" };
+      const prev = store.get(SLOT(i));
+      const failed = { ok: false, reason: "บันทึกไม่สำเร็จ" };
+      if (prev && deserialize(prev) && store.set(BAK(i), prev) === false) return failed;
+      if (store.set(SLOT(i), str) === false) return { ok: false, reason: "บันทึกไม่สำเร็จ" };
+      return { ok: true, reason: "" };
     },
   };
 }

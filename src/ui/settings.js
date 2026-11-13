@@ -30,7 +30,7 @@ export function settingsView(ui, slotList) {
     <h4>ออโต้</h4><div class="row">${pol}</div>
     <h4>ขนาดตัวอักษร</h4><div class="row">${fs}</div>
     <h4>เซฟ (บันทึกอัตโนมัติทุกปีลงช่องที่เล่นอยู่)</h4>${slots}
-    <div class="row"><input data-c="importText" placeholder="วางข้อความเซฟที่ส่งออกไว้" style="flex:1">${btn("import", "นำเข้าช่อง 3", 'class="sm"')}</div>
+    <div class="row"><input data-c="importText" placeholder="วางข้อความเซฟที่ส่งออกไว้" style="flex:1" value="${esc(ui.importText ?? "")}"></div><div class="row">${[0, 1, 2].map((i) => btn("import:" + i, `นำเข้าช่อง ${i + 1}`, 'class="sm"')).join("")}</div>
     ${ui.exportText ? `<textarea readonly style="width:100%;height:80px;margin-top:6px">${esc(ui.exportText)}</textarea>` : ""}
     <h4>คำศัพท์</h4>${GLOSSARY.map(([k, d]) => `<div><b>${k}</b> <span class="dim">${d}</span></div>`).join("")}
     <div class="row">${btn("close", "ปิด", 'class="pri"')}${btn("quit", "กลับหน้าแรก")}</div></div>`;

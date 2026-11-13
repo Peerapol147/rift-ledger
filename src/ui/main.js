@@ -5,6 +5,7 @@ import { initStage, setScene, setHero, trigger, stage } from "../stage.js";
 import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf, isNight } from "./art.js";
+import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
 import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
@@ -17,14 +18,13 @@ import { worldTab } from "./tabs/world.js";
 import { bookTab } from "./tabs/book.js";
 
 const CFG = "riftledger.cfg.v2";
-const SPEEDS = { 1: 0.8, 2: 0.4, 4: 0.17, 8: 0.05 };
 const POLICY_ORDER = Object.keys(POLICIES);
 const slots = C.slots(store), book = C.collection(store);
 
-const loadCfg = () => { try { return JSON.parse(store.get(CFG) ?? "{}"); } catch { return {}; } };
+const loadCfg = () => { try { return cleanCfg(JSON.parse(store.get(CFG) ?? "{}")); } catch { return cleanCfg(null); } };
 const cfg0 = loadCfg();
 const ui = {
-  speed: cfg0.speed ?? 2, policy: cfg0.policy ?? "important", fs: cfg0.fs ?? 2, paused: false, tab: "log", onlyImp: false,
+  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
 const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
@@ -59,7 +59,7 @@ function startScreen() {
     <details class="howto"${book.get().lives ? "" : " open"}><summary>เล่นยังไง</summary>
       <p>ทุกเดือนเลือก <b>แผนเดือนนี้</b> ทางซ้าย เช่น เรียน ทำงาน ฝึกฝน หรือล่าเกตเมื่อตื่นพลังแล้ว</p>
       <p>เมื่อมีเรื่องเข้ามา เลือกทางในช่องเหตุการณ์ ตัวเลข % คือโอกาสสำเร็จตามค่าสถานะของคุณ</p>
-      <p>ออโต้เลือกเรื่องเล็กให้ และหยุดรอคุณทุกเรื่องที่มีผลต่อชีวิต ปรับได้ที่ช่องข้างปุ่มความเร็ว</p>
+      <p>ตอนเริ่ม เกมหยุดรอคุณเลือกเองทุกเรื่อง ถ้าอยากให้เร็วขึ้น เปิดออโต้ได้ที่ช่องข้างปุ่มความเร็ว ให้เลือกเรื่องเล็กแทนคุณ</p>
       <p>ชีวิตจบได้หลายแบบ สิ่งที่ได้เห็นจะถูกจดในสมุดสะสมและเปิดทางให้ชีวิตถัดไป</p>
     </details>
     ${rows ? `<h3>เซฟ</h3>${rows}` : ""}<p style="margin-top:12px">${feedbackLink}</p><p class="dim" style="margin-top:6px">ชีวิตที่ผ่านมา ${book.get().lives}</p></div>`;
@@ -95,7 +95,7 @@ function showEnd(record) {
     book.setLegacy(C.legacyOf(s));
     book.addTitle(d.role);
     for (const [kind, id] of C.lifeRecord(s)) book.addSeen(kind, id);
-    if (ui.slot >= 0) slots.save(ui.slot, s);
+    autosave();
   }
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
@@ -123,7 +123,7 @@ function fx() {
   else if (now.lv > prev.lv) trigger({ n: "levelup" });
   if (s.lastFight) { trigger({ n: "fight", a: { ...s.lastFight, wfx: "melee/claw-swipe" } }); delete s.lastFight; }
   else if (now.gold - prev.gold > 500) trigger({ n: "coin" });
-  if (now.year > prev.year && ui.slot >= 0) slots.save(ui.slot, s);
+  if (now.year > prev.year) autosave();
   prev = now;
 }
 
@@ -141,6 +141,14 @@ function reveal() {
   }
 }
 
+// Every save the player did not ask for: says so once if it fails, instead of losing progress in silence.
+let saveFailing = false;
+function autosave() {
+  if (!s || ui.slot < 0) return;
+  const ok = slots.save(ui.slot, s);
+  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ");
+  saveFailing = !ok;
+}
 function banner(text) { const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; }
 
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
@@ -148,7 +156,11 @@ const shown = {};
 function put(sel, html) {
   if (shown[sel] === html) return;
   shown[sel] = html;
-  $(sel).innerHTML = html;
+  // a redraw must not take keyboard focus away from the control the player is on
+  const box = $(sel), a = document.activeElement, key = box.contains(a) && a !== box
+    && (a.dataset.a ? `[data-a="${a.dataset.a}"]` : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
+  box.innerHTML = html;
+  if (key && document.activeElement === document.body) box.querySelector(key)?.focus({ preventScroll: true });
 }
 
 function render() {
@@ -165,14 +177,26 @@ function render() {
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
-  if (!view.contains(document.activeElement) || document.activeElement === view) put("#view", TAB_VIEW[ui.tab]());
+  const typing = view.contains(document.activeElement) && document.activeElement.matches("input,textarea,select");
+  if (!typing) put("#view", TAB_VIEW[ui.tab]());
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
   stage.night = isNight(s.ev?.t);
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
-  $("#modal").hidden = !ui.settings;
-  if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
+  const m = $("#modal");
+  m.hidden = !ui.settings;
+  if (ui.settings) {
+    m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "ตั้งค่า");
+    const html = `<div>${settingsView(ui, slots.list())}</div>`;
+    if (m.dataset.html !== html) {
+      const a = document.activeElement, key = m.contains(a) && (a.dataset.a ? `[data-a="${a.dataset.a}"]`
+        : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
+      m.innerHTML = html; m.dataset.html = html;
+      if (key && document.activeElement === document.body) m.querySelector(key)?.focus({ preventScroll: true });
+    }
+    if (ui.focusModal) { m.querySelector("button")?.focus(); ui.focusModal = false; }
+  } else delete m.dataset.html;
 }
 
 // The owner's private feedback form (an artifact on claude.ai): experience only, nothing from the game is sent.
@@ -201,7 +225,7 @@ function loop(t) {
   if (bannerT > 0 && (bannerT -= dt) <= 0) $("#banner").hidden = true;
   if (s && !s.dead && !ui.paused && !ui.settings) {
     acc += dt;
-    while (acc >= SPEEDS[ui.speed]) { acc -= SPEEDS[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
+    while (acc >= STEP_S[ui.speed]) { acc -= STEP_S[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
   }
   if (s?.dead && $("#end").hidden && !s.endShown) { s.endShown = true; endScreen(); }
   if (dirty) render();
@@ -240,22 +264,37 @@ function act(a, el) {
       if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน");
       ui.slot = +v; banner("บันทึกแล้ว");
     },
-    del: () => { slots.del(+v); if (!s || s.dead) startScreen(); },
+    del: () => {
+      const x = slots.list()[+v];
+      if (!confirm(`ลบเซฟช่อง ${+v + 1}${x?.name ? ` (${x.name})` : ""} จริงไหม? ลบแล้วกู้คืนไม่ได้`)) return;
+      slots.del(+v);
+      if (s && !s.dead && ui.slot === +v) { ui.slot = -1; banner("ชีวิตนี้จะไม่บันทึกจนกว่าจะเลือกช่องใหม่ในตั้งค่า"); }
+      if (!s || s.dead) startScreen();
+    },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
-    import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
-    quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
+    import: () => {
+      const i = +v, x = slots.list()[i];
+      if (x && !x.locked && !confirm(`ช่อง ${i + 1} มีชีวิตของ ${x.name} อยู่ นำเข้าทับไหม? ชีวิตเดิมจะเก็บเป็นเซฟสำรอง`)) return;
+      const r = slots.importStr(i, ui.importText);
+      if (r.ok && s && !s.dead && ui.slot === i) {
+        ui.slot = -1; // the imported life now owns this slot; the running one must not save over it
+        return banner(`นำเข้าลงช่อง ${i + 1} แล้ว ชีวิตที่เล่นอยู่จะไม่บันทึกจนกว่าจะเลือกช่องใหม่`);
+      }
+      banner(r.ok ? `นำเข้าลงช่อง ${i + 1} แล้ว` : `นำเข้าไม่ได้: ${r.reason}`);
+    },
+    quit: () => { if (s && !s.dead) autosave(); s = null; ui.settings = false; startScreen(); },
     choose: () => { const n0 = s.log.length; C.choose(s, +v); showResult(n0); fx(); },
     fate: () => { const n0 = s.log.length; if (C.chooseByFate(s)) { showResult(n0); fx(); } },
     pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),
     focus2: () => C.setFocus2(s, v === "none" ? null : v),
-    speed: () => { ui.speed = +v; ui.paused = false; saveCfg(); },
+    speed: () => { if (SPEEDS.includes(+v)) ui.speed = +v; ui.paused = false; saveCfg(); },
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
-    settings: () => { ui.settings = true; ui.exportText = ""; },
-    close: () => { ui.settings = false; },
+    settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
+    close: () => { ui.settings = false; ui.opener?.focus?.(); ui.opener = null; },
     tab: () => { ui.tab = v; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
@@ -293,7 +332,9 @@ const target = (e) => { const el = e.target.closest("[data-a]"); return el && !e
 const FAST = /^choose:/;
 document.addEventListener("pointerdown", (e) => {
   const el = target(e);
-  if (e.button === 0 && el && FAST.test(el.dataset.a)) { el.dataset.done = "1"; act(el.dataset.a, el); }
+  if (e.pointerType === "mouse" && e.button === 0 && el && FAST.test(el.dataset.a)) {
+    el.dataset.done = "1"; act(el.dataset.a, el);
+  }
 });
 document.addEventListener("click", (e) => {
   const el = target(e);
@@ -314,11 +355,31 @@ document.addEventListener("input", (e) => {
   if (c === "importText") ui.importText = e.target.value;
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !$("#modal").hidden) return act("close");
+  const modal = $("#modal");
+  if (!modal.hidden) {
+    if (e.key === "Escape") return act("close");
+    if (e.key === "Tab") { // focus stays inside the dialog
+      const f = [...modal.querySelectorAll("button,input,select,textarea,a[href]")].filter((x) => !x.disabled);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f.at(-1).focus(); }
+      else if (!e.shiftKey && (i < 0 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+    }
+    return; // no game shortcuts while the dialog is open
+  }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
+  if (e.key === " " && e.target.matches("button[data-a]")) {
+    e.preventDefault();
+    if (e.repeat || e.target.disabled) return; // holding Space acts once, like a real button press
+    e.target.dataset.done = "1"; // some browsers still send a click on key up: the click handler skips it
+    act(e.target.dataset.a, e.target);
+    return;
+  }
+  if (e.key === " " && e.target.matches("button,a")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
-  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8, 16].find((n) => n > ui.speed) ?? 16;
-  else if (e.key === "-") ui.speed = [16, 8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
+  else if (e.key === "+" || e.key === "=") ui.speed = SPEEDS.find((n) => n > ui.speed) ?? SPEEDS.at(-1);
+  else if (e.key === "-") ui.speed = [...SPEEDS].reverse().find((n) => n < ui.speed) ?? SPEEDS[0];
   else if (e.key === "a" || e.key === "A") ui.policy = POLICY_ORDER[(POLICY_ORDER.indexOf(ui.policy) + 1) % 3];
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);
