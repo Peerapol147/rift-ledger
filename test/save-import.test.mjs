@@ -49,3 +49,11 @@ test("a failed write reports it", () => {
   const sl = C.slots(mem(true));
   assert.deepEqual(sl.importStr(2, good()), { ok: false, reason: "บันทึกไม่สำเร็จ" });
 });
+
+test("a save with a null where a life has an object is rejected", () => {
+  for (const k of ["c", "st", "flags"]) {
+    const st = mem(), sl = C.slots(st), bad = JSON.parse(good()); bad[k] = null;
+    assert.equal(sl.importStr(2, JSON.stringify(bad)).ok, false, k);
+    assert.equal(st.get(KEY), null);
+  }
+});

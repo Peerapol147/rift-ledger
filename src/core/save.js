@@ -118,7 +118,7 @@ export function playable(s) {
   const fresh = newLife(s.seed);
   const kind = (v) => (Array.isArray(v) ? "list" : v && typeof v === "object" ? "object" : "other");
   for (const [k, v] of Object.entries(fresh)) {
-    if (kind(v) !== "other" && kind(s[k]) !== kind(v) && !(v === null || s[k] === null)) return false;
+    if (kind(v) !== "other" && kind(s[k]) !== kind(v)) return false;
   }
   for (const [k, v] of Object.entries(fresh.world)) {
     if (kind(v) !== "other" && kind(s.world?.[k]) !== kind(v)) return false;

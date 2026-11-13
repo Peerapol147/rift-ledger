@@ -160,7 +160,7 @@ function put(sel, html) {
   const box = $(sel), a = document.activeElement, key = box.contains(a) && a !== box
     && (a.dataset.a ? `[data-a="${a.dataset.a}"]` : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
   box.innerHTML = html;
-  if (key) box.querySelector(key)?.focus();
+  if (key && document.activeElement === document.body) box.querySelector(key)?.focus({ preventScroll: true });
 }
 
 function render() {
@@ -193,7 +193,7 @@ function render() {
       const a = document.activeElement, key = m.contains(a) && (a.dataset.a ? `[data-a="${a.dataset.a}"]`
         : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
       m.innerHTML = html; m.dataset.html = html;
-      if (key) m.querySelector(key)?.focus();
+      if (key && document.activeElement === document.body) m.querySelector(key)?.focus({ preventScroll: true });
     }
     if (ui.focusModal) { m.querySelector("button")?.focus(); ui.focusModal = false; }
   } else delete m.dataset.html;
@@ -276,6 +276,10 @@ function act(a, el) {
       const i = +v, x = slots.list()[i];
       if (x && !x.locked && !confirm(`ช่อง ${i + 1} มีชีวิตของ ${x.name} อยู่ นำเข้าทับไหม? ชีวิตเดิมจะเก็บเป็นเซฟสำรอง`)) return;
       const r = slots.importStr(i, ui.importText);
+      if (r.ok && s && !s.dead && ui.slot === i) {
+        ui.slot = -1; // the imported life now owns this slot; the running one must not save over it
+        return banner(`นำเข้าลงช่อง ${i + 1} แล้ว ชีวิตที่เล่นอยู่จะไม่บันทึกจนกว่าจะเลือกช่องใหม่`);
+      }
       banner(r.ok ? `นำเข้าลงช่อง ${i + 1} แล้ว` : `นำเข้าไม่ได้: ${r.reason}`);
     },
     quit: () => { if (s && !s.dead) autosave(); s = null; ui.settings = false; startScreen(); },
@@ -366,7 +370,11 @@ document.addEventListener("keydown", (e) => {
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
   // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
   if (e.key === " " && e.target.matches("button[data-a]")) {
-    e.preventDefault(); if (!e.target.disabled) act(e.target.dataset.a, e.target); return;
+    e.preventDefault();
+    if (e.repeat || e.target.disabled) return; // holding Space acts once, like a real button press
+    e.target.dataset.done = "1"; // some browsers still send a click on key up: the click handler skips it
+    act(e.target.dataset.a, e.target);
+    return;
   }
   if (e.key === " " && e.target.matches("button,a")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }

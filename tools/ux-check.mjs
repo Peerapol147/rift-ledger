@@ -199,6 +199,45 @@ CASES["UX-10"] = async (b) => {
   return [small.every((n) => n === 0), `buttons under 44px at 390/320: ${small.join(" / ")}`];
 };
 
+CASES["R-scroll"] = async (b) => {
+  const { ctx, page } = await loaded(b, adult.s, { w: 390, h: 844, mobile: true });
+  await page.locator('[data-a="pause"]').first().click(); // running again
+  const btn = page.locator('#card [data-a^="focus:"]').last();
+  await btn.scrollIntoViewIfNeeded(); await btn.tap(); await page.waitForTimeout(200);
+  await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(2500);
+  const y = await page.evaluate(() => scrollY);
+  await ctx.close();
+  return [y < 50, `the page stays where the player scrolled (scrollY ${y})`];
+};
+
+CASES["R-import-playing"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  page.on("dialog", (d) => d.accept());
+  const other = C.newLife("ux-imported"); other.name = "นำเข้ามา";
+  await settings(page);
+  await page.locator('#modal [data-c="importText"]').fill(C.serialize(other));
+  await page.locator('#modal [data-a="import:0"]').click(); await page.waitForTimeout(150);
+  await page.locator('#modal [data-a="quit"]').click(); await page.waitForTimeout(200);
+  const name = await page.evaluate((k) => JSON.parse(localStorage.getItem(k)).name, SLOT0);
+  await ctx.close();
+  return [name === "นำเข้ามา", "a life imported into the slot being played is not written over"];
+};
+
+CASES["R-space-hold"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await page.locator('[data-a="pause"]').first().focus();
+  const press = async (repeat) => {
+    await page.evaluate((r) => document.activeElement.dispatchEvent(new KeyboardEvent("keydown",
+      { key: " ", repeat: r, bubbles: true, cancelable: true })), repeat);
+    await page.waitForTimeout(80);
+    return page.locator('[data-a="pause"]').first().innerText();
+  };
+  const first = await press(false);
+  const held = [await press(true), await press(true), await press(true)];
+  await ctx.close();
+  return [held.every((l) => l === first), `holding Space acts once (${first} then ${held.join(", ")})`];
+};
+
 const browser = await chromium.launch();
 let fail = 0;
 for (const [id, run] of Object.entries(CASES)) {
