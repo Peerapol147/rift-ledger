@@ -43,4 +43,6 @@ Files: tools/hunter-ui-check.mjs, tools/ux-check.mjs selector updates only where
 - [x] Run existing UX tests via local HTTP/system Chromium when file access is unavailable.
 - [x] Fix demonstrated failures and rerun affected checks and whole suite.
 - [x] Fresh independent review, then one verified fix pass for important findings.
-- [ ] Commit functional UI, generated play.html and ZIP; push isolated feature branch and attempt PR. Do not merge or deploy.
+- [x] Commit functional UI, generated play.html and ZIP; push isolated feature branch and attempt PR. Do not merge or deploy.
+
+Integration result: feature branch pushed; GitHub GraphQL returned Forbidden when creating the PR. No merge/deployment performed.

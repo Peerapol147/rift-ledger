@@ -50,3 +50,7 @@ Moreจะปิดเมื่อสลับผ่านbreakpointdesktop/mobi
 ตัวเลือกที่ตัดสินระหว่างทำ:ใช้ข้อมูลจริงแทนตัวเลขในmockup;คงsprite/animation;ใช้detailsเฉพาะMoreบนมือถือและtabsจริงบนdesktop;ใช้embeddedimgบนหน้าเริ่มแทนCSSvariabledataURLขนาดใหญ่;ย้ายปุ่มเพลงDOMเดิมแทนสร้างAudioใหม่. ต้นทุนคือภาพเพิ่มขนาดZIPประมาณ3.5MB และแบบถูกปรับตามข้อมูล/วัยจริงของเกม
 
 ไม่ได้แก้ปัญหาexportเซฟเดิมนอกขอบเขตvisualtaskนี้ ไม่อ้างผลสมดุลจากsimulationใหม่เพราะไม่ได้เปลี่ยนcore. ยังไม่มีการmergeหรือdeployจากงานนี้
+
+## GitHub
+
+โค้ดอยู่บนbranch `codex/hunter-ui-2026-11-14` ยังไม่เข้าmain. Pushสำเร็จ แต่การสร้างPRผ่านGitHubAPIถูกปฏิเสธด้วยForbidden;เปิดPRได้ที่ https://github.com/Peerapol147/rift-ledger/pull/new/codex/hunter-ui-2026-11-14
