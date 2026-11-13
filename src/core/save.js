@@ -1,5 +1,6 @@
 // Saves and the cross-life collection book. Pure: takes a storage adapter { get, set, del }. Spec §10 and §13.
 import { ITEMS } from "../data/items.js";
+import { hooks } from "./registry.js";
 const SLOT = (i) => `riftledger.slot.v2.${i}`;
 const BOOK = "riftledger.book.v2";
 const REQUIRED = ["seed", "name", "ageM", "st", "log", "world", "r"];
@@ -15,6 +16,7 @@ export function deserialize(str) {
   try {
     const s = JSON.parse(str);
     if (!s || s.v !== 2 || REQUIRED.some((k) => !(k in s))) return null;
+    if (Number.isInteger(s.sv) && s.sv > SAVE_SV) return null; // a newer game's save: never downgrade it
     if (typeof s.name !== "string" || typeof s.seed !== "string") return null;
     for (const k of NUMS) s[k] = num(s[k]);
     for (const k of Object.keys(s.st ?? {})) s.st[k] = num(s.st[k]);
@@ -66,8 +68,9 @@ export function deserialize(str) {
 }
 
 // ---- Schema versions (save-systems skill: stamp a version, migrate step by step on load).
-// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: today.
-export const SAVE_SV = 2;
+// sv 1: saves from before Phases 5–8 (no factions, stores, guild locker or enemies list). sv 2: before lives that
+// remember. sv 3: today (people, relations, stories; spec 2026-11-13-lives-that-remember-design.md).
+export const SAVE_SV = 3;
 const FAC_IDS = ["assoc", "state", "church", "research", "under"];
 const MIGRATIONS = {
   1: (s) => {
@@ -77,33 +80,72 @@ const MIGRATIONS = {
     s.enemies ??= [];
     s.secrets ??= [];
   },
+  2: (s) => {
+    s.familyId ??= "fam-" + s.seed;
+    s.lifeId ??= s.familyId + ":" + (s.gen ?? 1);
+    s.narrative ??= { v: 1, stories: {} };
+    s.relations ??= {};
+    s.world.people ??= {};
+    s.world.nextPersonId ??= 1;
+    hooks.migratePeople?.(s);
+  },
 };
 export function migrate(s) {
   let v = Number.isInteger(s.sv) && s.sv > 0 ? s.sv : 1;
   while (v < SAVE_SV) { MIGRATIONS[v]?.(s); v++; }
   s.sv = SAVE_SV;
+  // Idempotent repair on every load: members who joined without a place on the list (before the P1 review fix)
+  // get one; the source key makes a second load find the same person.
+  hooks.repairPeople?.(s);
   return s;
+}
+
+// What a stored string is: a save this game can play, one from a newer game (kept untouched), or unreadable.
+export function inspect(str) {
+  if (!str) return "empty";
+  let raw;
+  try { raw = JSON.parse(str); } catch { return "corrupt"; }
+  if (raw && typeof raw === "object" && (raw.v > 2 || (Number.isInteger(raw.sv) && raw.sv > SAVE_SV))) {
+    return "unsupported";
+  }
+  return deserialize(str) ? "ok" : "corrupt";
 }
 
 export function slots(store, n = 3) {
   const BAK = (i) => SLOT(i) + ".bak";
+  // ok | empty | corrupt | unsupported (a newer game's save in front or behind: never loaded, never written over)
+  const status = (i) => {
+    const a = inspect(store.get(SLOT(i))), b = inspect(store.get(BAK(i)));
+    if (a === "unsupported" || b === "unsupported") return "unsupported"; // in front or behind: hands off
+    if (a === "ok" || b === "ok") return "ok";
+    return a === "empty" && b === "empty" ? "empty" : "corrupt";
+  };
   // a slot that no longer reads (cut short, hand-edited) falls back to the save before it
-  const load = (i) => deserialize(store.get(SLOT(i)) ?? "") ?? deserialize(store.get(BAK(i)) ?? "");
+  const load = (i) => (status(i) === "ok"
+    ? deserialize(store.get(SLOT(i)) ?? "") ?? deserialize(store.get(BAK(i)) ?? "") : null);
   return {
     list: () => Array.from({ length: n }, (_, i) => {
+      if (status(i) === "unsupported") return { locked: true };
       const s = load(i);
       return s && { name: s.name, ageM: s.ageM, dead: !!s.dead };
     }),
+    status,
     load,
     save: (i, s) => {
+      if (status(i) === "unsupported") return false;
       const prev = store.get(SLOT(i));
       if (prev && deserialize(prev)) store.set(BAK(i), prev);
-      store.set(SLOT(i), serialize(s));
+      return store.set(SLOT(i), serialize(s)) !== false;
     },
     del: (i) => { store.del(SLOT(i)); store.del(BAK(i)); },
-    exportStr: (i) => store.get(SLOT(i)),
+    // the save worth keeping: for a locked slot, the newer one that locked it
+    exportStr: (i) => {
+      const a = store.get(SLOT(i)), b = store.get(BAK(i));
+      if (inspect(a) === "unsupported" || inspect(a) === "ok") return a;
+      return inspect(b) === "unsupported" || inspect(b) === "ok" ? b : a;
+    },
     importStr(i, str) {
-      if (!deserialize(str)) return false;
+      if (status(i) === "unsupported" || !deserialize(str)) return false;
       store.set(SLOT(i), str);
       return true;
     },

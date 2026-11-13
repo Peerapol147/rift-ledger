@@ -1,7 +1,8 @@
 // The player's team: hired NPC hunters with rank, class, role, loyalty and wounds. Spec §8.
 import { addEnemy } from "./legacy.js";
 import { pk, ri, ch } from "./rng.js";
-import { stream, log } from "./state.js";
+import { stream, log, worldMonth } from "./state.js";
+import { listMember, setPersonStatus } from "./people.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { monthly, books, gearHooks, afterOpHooks, hooks } from "./registry.js";
@@ -38,10 +39,17 @@ export function recruitOffers(s) {
   return list;
 }
 
+// The one way a member joins the team: on the list of people too (P1 review R2).
+export function addTeamMember(s, m) {
+  s.team.push(m);
+  listMember(s, m);
+  return m;
+}
+
 export function hire(s, m) {
   if (s.party || s.team.filter((x) => x.alive).length >= teamMax(s) || s.gold < feeOf(m)) return false;
   addLedger(s, "ค่าจ้างลูกทีมแรกเข้า", -feeOf(m));
-  s.team.push(m);
+  addTeamMember(s, m);
   if (s.recruits) s.recruits.list = s.recruits.list.filter((x) => x !== m);
   log(s, "ทีม", `${m.n} (${CLASSES[m.cls].n}) เข้าร่วมทีมของคุณ`, "imp");
   return true;
@@ -51,6 +59,7 @@ export function dismiss(s, id) {
   const m = s.team.find((x) => x.id === id);
   if (!m) return;
   s.team = s.team.filter((x) => x !== m);
+  if (m.personId) setPersonStatus(s, m.personId, { goneWorldM: worldMonth(s) });
   log(s, "ทีม", `${m.n} ออกจากทีม`, "");
 }
 
@@ -74,6 +83,7 @@ export function loseAlly(s, boss) {
   if (!m) return null;
   if (boss) {
     m.alive = false;
+    if (m.personId) setPersonStatus(s, m.personId, { diedWorldM: worldMonth(s) });
     log(s, "ทีม", `${m.n} ไม่ได้กลับออกมาจากเกต`, "bad");
     for (const x of present(s)) x.loyalty = clampL(x.loyalty - 8);
   } else {
@@ -126,7 +136,7 @@ hooks.act.loyalAlly = (s) => {
   const m = member(s, stream(s, "recruit"), Math.max(0, s.hunter.rank - 1));
   m.loyalty = 100;
   m.sworn = true;
-  s.team.push(m);
+  addTeamMember(s, m);
   log(s, "ทีม", `${m.n} ขอเข้าทีมของคุณ และสาบานว่าจะไม่ทิ้งคุณ`, "leg");
 };
 hooks.act.allyLeave = (s) => { const m = evMember(s); if (m) dismiss(s, m.id); };

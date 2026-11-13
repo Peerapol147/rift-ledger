@@ -30,6 +30,7 @@ export const HUNTER_EVENTS = [
     tag: "ฮันเตอร์",
     age: [18, 30],
     hunter: true,
+    activeHunter: true,
     once: true,
     important: true,
     t: "สอบใบอนุญาตฮันเตอร์ ภาคปฏิบัติคือการเข้าเกตแรงก์ F กับผู้คุมสอบ",
@@ -49,6 +50,7 @@ export const HUNTER_EVENTS = [
     tag: "ทีม",
     age: [18, 35],
     hunter: true,
+    activeHunter: true,
     once: true,
     t: "ปาร์ตี้ชั่วคราวในกระดานสมาคมขาดคนหนึ่งตำแหน่ง",
     o: [
@@ -63,6 +65,7 @@ export const HUNTER_EVENTS = [
     tag: "ฮันเตอร์",
     age: [18, 45],
     hunter: true,
+    activeHunter: true,
     once: true,
     if: { rank: 3 },
     t: "เพื่อนสนิทแนะนำว่าอย่าเพิ่งเปิดเผยพลังจริง คนที่โดดเด่นเร็วมักถูกจับตา",

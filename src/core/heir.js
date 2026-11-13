@@ -40,6 +40,9 @@ export function newHeir(P, seed) {
   const y = yearsAfterRift(s), m = monthOfYear(s);
   for (const e of CALENDAR) if (e.year < y || (e.year === y && e.month <= m)) s.world.done[e.id] = 1;
   s.gen = (P.gen ?? 1) + 1;
+  // the family goes on; stories and relations are this life's own (spec lives-that-remember §5.7)
+  s.familyId = P.familyId ?? "fam-" + P.seed;
+  s.lifeId = s.familyId + ":" + s.gen;
   const L = legacyOf(P), rel = heirWord(P);
   s.heir = {
     of: P.name, rel, gold: estateAfterTax(Math.max(0, P.gold - (P.debt ?? 0))),

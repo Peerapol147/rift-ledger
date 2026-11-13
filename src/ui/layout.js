@@ -4,6 +4,7 @@ import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../dat
 import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
 import { planTitle } from "./art.js";
+import { storyLine } from "./people.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
 const STAGE_TITLE = { kid: "เด็ก", teen: "วัยรุ่น", adult: "ผู้ใหญ่", old: "ผู้สูงวัย" };
@@ -69,7 +70,7 @@ export function eventPanel(s, waitingAuto, result) {
   // phones show the character card below everything, so the essentials ride here (CSS shows it only there)
   const m = `<div class="mstat">อายุ <b>${C.ageY(s)}</b> สุขภาพ <b>${Math.round(s.hp)}</b> จิต <b>${Math.round(s.mind)}</b>`
     + ` เงิน <b>${money(s.gold)}</b></div>`;
-  return m + res + eventCard(s, waitingAuto);
+  return m + res + storyLine(s) + eventCard(s, waitingAuto);
 }
 
 function eventCard(s, waitingAuto) {

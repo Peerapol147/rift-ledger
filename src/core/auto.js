@@ -29,6 +29,8 @@ function dangerous(s, opt, v) {
 export function autoDecide(s, policy) {
   const ev = s.ev;
   if (!ev || policy === "stop" || ev.noAuto) return -1;
+  // a story choice that changes the road, makes a promise or spends business money is the player's own
+  if (ev.opts?.some((o) => o.noAuto && optionView(s, o).visible)) return -1;
   if (ev.op && s.op?.def.boss) return -1; // the player always fights bosses by hand
   const repeatVisit = ev.importantOnce && (s.c["ev:" + ev.id] ?? 0) > 0;
   if (policy === "important" && !repeatVisit && (ev.important || (!ROUTINE.has(ev.id) && matters(ev)))) return -1;

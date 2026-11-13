@@ -10,6 +10,24 @@ It contains 13 reproduced issues, 2 design recommendations, portable browser dia
 and acceptance criteria. Prioritize data loss and accidental decisions. This is research,
 not implemented fixes; preserve the owner’s saves and existing game rules.
 
+## Lives that remember — P1 done (2026-11-13)
+Design `docs/superpowers/specs/2026-11-13-lives-that-remember-design.md`, plan
+`docs/superpowers/plans/2026-11-13-lives-that-remember-p1.md`, owner's pack `docs/reference/rift-ledger-handoff-pack.md`.
+- Save schema 3 (`worldMonth`, `familyId`/`lifeId`), one list of people (`src/core/people.js`), branching story engine
+  (`src/core/narrative.js`: nodes, routes, `show`, `skip`, beats, pause/close, cast bound once, `castGone`, validator).
+- Stories (`src/data/narrative/`): `office` (the insurance career, recurring claimant, six endings; old saves finish the
+  legacy chain) and `friend` (every life from birth: the neighbour child, nine scenes, four endings).
+- UI: "เรื่องที่ติดตาม" line above the event, "คนที่รู้จัก" in ตัวฉัน.
+- P1 review (Codex, `docs/handoffs/2026-11-13-p1-review/`) fixed: newer-version save slots are locked (never loaded
+  from an old backup, never written over, export the newer save); every way a teammate joins goes through
+  `addTeamMember` (old saves repaired on load); gate-work scenes need active hunting (`activeHunter`), team scenes a team
+  (`teamed`), school scenes a school-age child (`childAge`), workplace scenes a job; reporting the thief really pauses
+  hunting; the story validator rejects unknown keys; a stale story scene pays and rolls nothing. Life checker rules
+  now read the life and the option text. Cohort: `node tools/story-cohort.mjs 100`.
+- Next (P2): life arcs + story focus/queue + relationship requests, and the owner's fixed guild/family cast (S-ranks
+  who are the same every seed). P3 gate variety: PR #34's seven scenes are material, but it needs 4+ templates per theme
+  picked by the real team, and its observatory boss is the tower's secret top-floor boss.
+
 ## The owner
 - Thai-speaking and not a programmer. Reply in Thai, plainly, with no jargon.
 - Give a recommendation, not a menu. Push back with reasons when a request would hurt the game.

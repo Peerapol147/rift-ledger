@@ -26,6 +26,7 @@ export function val(s, key) {
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
   if (key === "employed") return s.job ? 1 : 0;
+  if (key === "jobTier") return s.job ? s.job.tier : -1;
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
   if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
@@ -96,6 +97,17 @@ export function eligible(s, ev) {
   if (ev.who && !ev.who.some((id) => s.job?.id === id || s.hunter?.cls === id)) return false;
   if (ev.hunter === true && !s.hunter) return false;
   if (ev.hunter === false && s.hunter) return false;
+  // a child of school age: years since the first child was born
+  if (ev.childAge) {
+    const born = s.c["at:kids"];
+    if (born == null || !(s.c.kids > 0)) return false;
+    const y = (s.ageM - born) / 12;
+    if (y < ev.childAge[0] || y > ev.childAge[1]) return false;
+  }
+  // in a team now: a party, or a teammate still alive
+  if (ev.teamed && !(s.party || (s.team ?? []).some((m) => m.alive))) return false;
+  // hunting now: awakened, not retired, not on a break (same rule as hunter.js canHunt)
+  if (ev.activeHunter && !(s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0))) return false;
   if (ev.once && s.c["ev:" + ev.id]) return false;
   for (const [k, min] of Object.entries(ev.if ?? {})) if (val(s, k) < min) return false;
   for (const [k, max] of Object.entries(ev.max ?? {})) if (val(s, k) > max) return false;
@@ -129,6 +141,8 @@ export function choose(s, i) {
   if (!opt) return;
   const view = optionView(s, opt);
   if (!view.visible || view.locked) return;
+  // a story scene that has moved on since this event opened pays nothing and rolls nothing; it just closes
+  if (ev.story && hooks.storyStale?.(s, ev)) { s.ev = null; return; }
   countUnseen(s, ev.opts);
   const ok = view.odds == null || ch(stream(s, "ev"), view.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};
@@ -138,6 +152,7 @@ export function choose(s, i) {
   const from = ev.fromPlan ? ` · มาจากแผน ${ev.fromPlan}` : "";
   log(s, ev.tag, `${ev.t} → ${opt.l}${tail}${from}`, ok ? "imp" : "bad");
   applyOutcome(s, out, opt.l, !!opt.risk);
+  if (ev.story) hooks.storyResolve?.(s, ev, out);
 }
 
 // Options the player could not see or could not pick, counted for the death summary (never named).
@@ -191,6 +206,7 @@ export function eventKind(s) {
   if (head === "sq" && resolvers.questLen) return { tier: "story", part: part(Number(b), resolvers.questLen(a)) };
   if (/^(fachi|facbad|heir)/.test(head)) return { tier: "rare" };
   if (head.startsWith("cal")) return { tier: "world" };
+  if (head === "story") return { tier: "story" }; // a branching story: no part count, it has no fixed length
   const len = a != null && /^\d+$/.test(a) ? resolvers.storyLen?.(head) : 0;
   if (len) return { tier: "story", part: part(Number(a), len) };
   return { tier: s.ev.important ? "uncommon" : "common" };

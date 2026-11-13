@@ -49,7 +49,9 @@ function begin(life) {
 
 function startScreen() {
   const list = slots.list();
-  const rows = list.map((x, i) => (x ? `<div class="item"><span>ช่อง ${i + 1}: ${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}</span>
+  const rows = list.map((x, i) => (x?.locked ? `<div class="item"><span>ช่อง ${i + 1}: `
+    + `<span class="dim">เซฟจากเกมเวอร์ชันใหม่กว่า เปิดในตั้งค่าเพื่อส่งออกได้</span></span></div>`
+    : x ? `<div class="item"><span>ช่อง ${i + 1}: ${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}</span>
     <span>${x.dead ? "" : btn("load:" + i, "เล่นต่อ", 'class="sm"')}${btn("del:" + i, "ลบ", 'class="sm"')}</span></div>` : "")).join("");
   $("#start").innerHTML = `<div class="st-card"><div class="dim">ปีที่ 21 หลังวันฟ้าแตก</div><h1>บันทึกหลังรอยแยก</h1>
     <p class="lede">เกิดในโลกที่เกตและหอคอยเปิดมาแล้วยี่สิบเอ็ดปี ใช้ชีวิตตั้งแต่เกิดจนวันสุดท้าย จะตื่นพลังหรือไม่ก็ได้</p>
@@ -234,7 +236,10 @@ function act(a, el) {
       begin(life);
       if (life.dead) showEnd(false); // a finished life: show its end, do not count it again
     },
-    save: () => { slots.save(+v, s); ui.slot = +v; banner("บันทึกแล้ว"); },
+    save: () => {
+      if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน");
+      ui.slot = +v; banner("บันทึกแล้ว");
+    },
     del: () => { slots.del(+v); if (!s || s.dead) startScreen(); },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),

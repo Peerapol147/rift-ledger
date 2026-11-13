@@ -4,6 +4,7 @@ import { addEnemy } from "./legacy.js";
 import { ri, pk, ch } from "./rng.js";
 import { stream, log, stageOf } from "./state.js";
 import { canHunt } from "./hunter.js";
+import { addTeamMember } from "./team.js";
 import { openEvent } from "./events.js";
 import { addLedger } from "./money.js";
 import { monthly, gearHooks, afterOpHooks, hooks } from "./registry.js";
@@ -66,8 +67,8 @@ export function leaveParty(s, how) {
   if (!p) return;
   s.party = null;
   const r = Math.max(0, p.leader.rank - 1);
-  if (how === "split" && p.trust >= 60) s.team.push(follower(s, r, 65));
-  if (how === "inherit") for (let i = 0; i < 2; i++) s.team.push(follower(s, r, 75));
+  if (how === "split" && p.trust >= 60) addTeamMember(s, follower(s, r, 65));
+  if (how === "inherit") for (let i = 0; i < 2; i++) addTeamMember(s, follower(s, r, 75));
   if (how === "betray") {
     addLedger(s, "เงินที่ขโมยจากทีมเดิม", 6000 + p.leader.rank * 3000);
     s.fame = Math.max(0, s.fame - 10);

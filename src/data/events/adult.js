@@ -78,6 +78,7 @@ export const ADULT_EVENTS = [
     age: [22, 45],
     once: true,
     if: { dating: 1 },
+    max: { married: 0 }, // a partner from the friend story already has a wedding behind them
     t: "คนที่คุณคบมาหลายปีถามว่าเราจะเอายังไงกับอนาคต",
     o: [
       { l: "ขอแต่งงาน", need: { gold: 5000 },

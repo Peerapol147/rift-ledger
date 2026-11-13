@@ -1,0 +1,34 @@
+{
+  "futureSave": {
+    "loadedVersion": 3,
+    "loadedGold": 100,
+    "afterSaveVersion": 3,
+    "originalNewerBytesPreserved": false
+  },
+  "swornAlly": {
+    "personId": null,
+    "afterReload": null
+  },
+  "inheritedTeam": [
+    null,
+    null
+  ],
+  "retiredEvents": [
+    "k2LootSplit",
+    "k2Rookie",
+    "k2Freeze",
+    "k2BodyCam",
+    "k2PotionThief",
+    "k2Standby"
+  ],
+  "fabricatedHistory": true,
+  "potionBan": {
+    "canHunt": true,
+    "until": null
+  },
+  "newbornSchool": {
+    "monthsSinceBirth": 1,
+    "eligible": true
+  },
+  "joblessBossScene": true
+}
