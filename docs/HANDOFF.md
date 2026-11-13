@@ -3,6 +3,13 @@
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
 `docs/superpowers/specs/2026-11-11-rift-ledger-redesign-design.md`.
 
+## Owner-requested UX research — 13 November 2026 (Bangkok)
+
+Read [the actionable UX feedback](feedback/ux-2026-11-13/REPORT.md) before the next UI work.
+It contains 13 reproduced issues, 2 design recommendations, portable browser diagnostics,
+and acceptance criteria. Prioritize data loss and accidental decisions. This is research,
+not implemented fixes; preserve the owner’s saves and existing game rules.
+
 ## The owner
 - Thai-speaking and not a programmer. Reply in Thai, plainly, with no jargon.
 - Give a recommendation, not a menu. Push back with reasons when a request would hurt the game.

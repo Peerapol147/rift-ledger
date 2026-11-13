@@ -1,0 +1,164 @@
+{
+  "fixture": {
+    "seed": "ux-click-audit",
+    "event": "infNight",
+    "age": 3
+  },
+  "reports": [
+    {
+      "test": "mouse_core_flow",
+      "tabs": [
+        "tab:me",
+        "tab:world",
+        "tab:book",
+        "tab:log"
+      ],
+      "plan": "chores",
+      "exportedBytes": 2542,
+      "reloadVisible": true
+    },
+    {
+      "test": "space_on_settings_button",
+      "modalVisible": false,
+      "pauseLabel": "หยุด",
+      "overflow": false,
+      "active": "<button data-a=\"settings\">ตั้งค่า</button>",
+      "modalRole": null,
+      "modalAria": null,
+      "minButtonHeight": 28
+    },
+    {
+      "test": "modal_focus_and_hidden_choice",
+      "beforeEvent": "infNight",
+      "beforeText": "คืนหนึ่งไฟดับทั้งเมือง ข้างนอกมีแสงสีม่วงกะพริบเป็นจังหวะ",
+      "afterEvent": null,
+      "modalStillVisible": true,
+      "modalOpen": {
+        "overflow": false,
+        "active": "<button data-a=\"settings\">ตั้งค่า</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "tabFocus": {
+        "overflow": false,
+        "active": "<button class=\"opt \" data-a=\"choose:0\">\n      <span><kbd>1</kbd>ร้องไห้จนแม่ตื่น</span><span></span></button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      }
+    },
+    {
+      "test": "import_field_after_font_change",
+      "typed": "audit-save-code",
+      "visibleValue": ""
+    },
+    {
+      "test": "touch_cancel_choice",
+      "beforeEvent": "infNight",
+      "afterEvent": null,
+      "changedBeforeFingerLift": true
+    },
+    {
+      "test": "failed_save_feedback",
+      "banner": "บันทึกแล้ว",
+      "slot1": null
+    },
+    {
+      "test": "delete_save_confirmation",
+      "dialogs": 0,
+      "slotDeleted": true
+    },
+    {
+      "test": "layout",
+      "width": 1440,
+      "height": 900,
+      "layout": {
+        "overflow": false,
+        "active": "<button data-a=\"pause\">หยุด</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "tabMetrics": {
+        "client": 1104,
+        "scroll": 1104
+      },
+      "modal": {
+        "overflow": false,
+        "active": "<button data-a=\"settings\">ตั้งค่า</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "close": {
+        "x": 485,
+        "y": 788.359375,
+        "width": 42.328125,
+        "height": 37.25
+      },
+      "font": "15px"
+    },
+    {
+      "test": "layout",
+      "width": 390,
+      "height": 844,
+      "layout": {
+        "overflow": false,
+        "active": "<button data-a=\"pause\">หยุด</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "tabMetrics": {
+        "client": 390,
+        "scroll": 478
+      },
+      "modal": {
+        "overflow": false,
+        "active": "<button data-a=\"settings\">ตั้งค่า</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "close": {
+        "x": 41,
+        "y": 1030.8125,
+        "width": 42.328125,
+        "height": 37.25
+      },
+      "font": "15px"
+    },
+    {
+      "test": "layout",
+      "width": 320,
+      "height": 568,
+      "layout": {
+        "overflow": false,
+        "active": "<button data-a=\"pause\">หยุด</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "tabMetrics": {
+        "client": 320,
+        "scroll": 478
+      },
+      "modal": {
+        "overflow": false,
+        "active": "<button data-a=\"settings\">ตั้งค่า</button>",
+        "modalRole": null,
+        "modalAria": null,
+        "minButtonHeight": 28
+      },
+      "close": {
+        "x": 41,
+        "y": 1144.828125,
+        "width": 42.328125,
+        "height": 37.25
+      },
+      "font": "15px"
+    }
+  ],
+  "errors": []
+}
