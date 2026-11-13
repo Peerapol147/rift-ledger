@@ -12,6 +12,7 @@ const SETUP = {
   mingyu: (s) => { s.country = "kr"; s.city = "pus"; },
   dohyun: (s) => { s.country = "kr"; s.city = "icn"; },
   seojin: (s) => { s.country = "kr"; s.city = "sel"; },
+  poramet: (s) => { s.country = "th"; s.city = "bkk"; },
 };
 // held every month (a career would replace a job set once at birth)
 const EACH = { seojin: (s) => { if (!s.hunter && C.ageY(s) >= 18) s.job = { id: "press", tier: 1, xp: 0 }; } };
@@ -91,11 +92,12 @@ test("thongbai's story starts for Thai lives only", () => {
 const castOf = (s, id) => Object.values(s.world.people).find((p) => p.cast === id);
 // a life of that age in a world where the cast member it is about is still alive (background deaths are seeded)
 const adult = (seed, country, city, years = 25, alive = null) => {
-  for (let i = 0; ; i++) {
+  for (let i = 0; i < 200; i++) {
     const s = C.newLife(i ? `${seed}-${i}` : seed); s.country = country; s.city = city; s.ageM = years * 12;
     C.updatePeople(s);
     if (!alive || castOf(s, alive).diedWorldM == null) return s;
   }
+  throw new Error(`${alive} is dead at ${years} in every world tried`);
 };
 
 test("mingyu reaches Korean lives in Busan, and Korean lives hurt or in medicine anywhere", () => {
@@ -200,4 +202,49 @@ test("seojin: the student ending is for hunters only", () => {
   const toStudent = Object.values(D.nodes).flatMap((n) => n.o).filter((o) => o.y?.end === "student");
   assert.ok(toStudent.length > 0);
   for (const o of toStudent) assert.equal(!!o.show && !o.show(civ, st), true);
+});
+
+test("poramet reaches Bangkok lives 18–55, after the silawong story if they had it", () => {
+  const D = C.STORY_DEFS.poramet;
+  const s = adult("pr1", "th", "bkk", 25, "poramet"); assert.equal(D.discover(s), true);
+  s.narrative.stories.silawong = { status: "active" }; assert.equal(D.discover(s), false);
+  s.narrative.stories.silawong = { status: "done" }; assert.equal(D.discover(s), true);
+  assert.equal(D.discover(adult("pr2", "th", "cnx", 25, "poramet")), false);
+  const late = adult("pr3", "th", "bkk", 25, "poramet"); late.ageM = 56 * 12; // he lives; the window has closed
+  assert.equal(D.discover(late), false);
+  assert.equal(D.discover(adult("pr4", "kr", "sel", 25, "poramet")), false);
+  const dead = adult("pr5", "th", "bkk", 25, "poramet");
+  C.setPersonStatus(dead, castOf(dead, "poramet").id, { diedWorldM: C.worldMonth(dead) });
+  assert.equal(D.discover(dead), false);
+});
+
+test("poramet: the successor ending is for barrier makers only", () => {
+  const D = C.STORY_DEFS.poramet;
+  const s = adult("pr6", "th", "bkk", 30, "poramet"); hunter(s, 3);
+  const st = { vars: {}, route: "apprentice", cast: { poramet: castOf(s, "poramet").id } };
+  const toSucc = Object.values(D.nodes).flatMap((n) => n.o).filter((o) => o.y?.end === "successor");
+  assert.ok(toSucc.length > 0);
+  for (const o of toSucc) assert.equal(!!o.show && !o.show(s, st), true, "a knight is offered the family technique");
+  s.hunter.cls = "barrier";
+  assert.ok(toSucc.some((o) => o.show(s, st)), "a barrier maker is never offered it");
+});
+
+test("poramet: retired, he teaches at home or inspects the posts, never in a gate", () => {
+  const s = adult("pr7", "th", "bkk", 25, "poramet"); hunter(s, 3);
+  castOf(s, "poramet").retired = true;
+  for (let n = 0; n < 4000 && s.ev?.story?.id !== "poramet"; n++) {
+    if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
+    if (castOf(s, "poramet").diedWorldM != null) break;
+  }
+  assert.equal(s.ev?.story?.id, "poramet");
+  assert.match(s.ev.t, /เกษียณ/);
+  assert.doesNotMatch(s.ev.t, /ในเกต|เข้าเกต/);
+});
+
+test("silawong: the father once set the silent-tower record", () => {
+  const s = adult("pr8", "th", "bkk", 12, "poramet");
+  const st = { vars: {}, cast: { lalin: castOf(s, "lalin").id, father: castOf(s, "poramet").id } };
+  const text = C.STORY_DEFS.silawong.nodes.father.t(s, st);
+  assert.match(text, /เคยตั้งสถิติหอเงียบ/);
+  assert.doesNotMatch(text, /เจ้าของสถิติหอเงียบ/);
 });
