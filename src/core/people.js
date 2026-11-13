@@ -49,7 +49,8 @@ export function remember(s, id, mem) {
   if (r.memories.length > 24) r.memories.splice(0, r.memories.length - 24);
   return true;
 }
-export const trustWord = (t) => (t >= 60 ? "ไว้ใจคุณมาก" : t >= 20 ? "ไว้ใจคุณ" : t > -20 ? "รู้จักกัน" : "ไม่ไว้ใจคุณ");
+export const trustWord = (t) => (t >= 60 ? "ไว้ใจคุณมาก" : t >= 20 ? "ไว้ใจคุณ"
+  : t > -20 ? "รู้จักกัน" : "ไม่ไว้ใจคุณ");
 
 // The world's notable hunters, listed once each; a roster death is a death in the list.
 export function syncRosterPeople(s) {
