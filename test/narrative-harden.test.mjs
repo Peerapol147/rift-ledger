@@ -50,3 +50,14 @@ test("moving city or changing job does not recast the claimant", () => {
   s.job = { id: "office", tier: 0, xp: 0 }; C.narrativeMonth(s);
   assert.equal(s.narrative.stories.office.cast.claimant, p);
 });
+
+test("fate on a stale story scene rolls nothing", () => {
+  C.STORY_DEFS[ID] = def();
+  const s = C.newLife("hd3"); s.ageM = 30 * 12;
+  C.narrativeMonth(s); C.narrativeMonth(s);
+  s.narrative.stories[ID].node = "b";
+  const r = JSON.stringify(s.r);
+  C.chooseByFate(s);
+  assert.equal(JSON.stringify(s.r), r);
+  assert.equal(s.ev, null);
+});

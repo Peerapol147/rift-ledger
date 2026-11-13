@@ -191,6 +191,7 @@ export function applyOutcome(s, out, label = "เหตุการณ์", leth
 // "Let fate choose": a seeded pick among the options you can take right now.
 export function chooseByFate(s) {
   if (!s.ev || s.ev.op) return false;
+  if (s.ev.story && hooks.storyStale?.(s, s.ev)) { s.ev = null; return false; } // nothing to roll for
   const open = s.ev.opts.map((o, i) => ({ i, v: optionView(s, o) })).filter((x) => x.v.visible && !x.v.locked);
   if (!open.length) return false;
   choose(s, open[Math.floor(rnd(stream(s, "fate")) * open.length)].i);
