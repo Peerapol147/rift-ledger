@@ -1,3 +1,5 @@
+> **ห้องใหม่: อ่าน `docs/HANDOFF-NEXT.md` ก่อน** ไฟล์นี้เป็นประวัติ
+
 # Handoff for the next session
 
 Read `CLAUDE.md`, `AGENTS.md` and this file before working. The binding design is
