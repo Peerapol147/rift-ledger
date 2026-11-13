@@ -71,6 +71,10 @@ Built:
    Reuses registered monsters and existing art; no new sprite requests. Existing theme IDs remain valid for saves.
    `test/gates.test.mjs` checks rank coverage, creature references, unique scenes, seeded offers and operation wiring.
    Validation on current main: 248 tests pass; artcheck/linelen/build pass; 200-life playtest finds no bugs.
+   Sim: 1,000 lives × seeds a,b,c,d,e for each of careful/normal/reckless (15,000 total), all exit 0;
+   data and determinism pass. Hunter deaths before 50: 1.5% / 2.3% / 18.7%; F–E income checks pass.
+   Warnings to track: careful mind 80 (target 40–75); reckless early deaths 18.7% (target 20–30%) and
+   civilian old-age deaths 78.8% (target ≥85%). No balance constants changed in this content pass.
    Rebuilt both `play.html` and the download ZIP. Next agreed item: heir childhood repetition (item 5).
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.
