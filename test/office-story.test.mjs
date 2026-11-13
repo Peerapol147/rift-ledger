@@ -113,7 +113,15 @@ test("leaving office work pauses, and 36 months away closes as transfer", () => 
   assert.equal(story(s).status, "paused");
   s.job = { id: "office", tier: 1, xp: 0 }; s.ageM += 12; C.narrativeMonth(s);
   assert.notEqual(story(s).status, "paused");
-  s.ev = null; s.job = null; C.narrativeMonth(s); s.ageM += 37; C.narrativeMonth(s);
+  // another story's scene may take the month first (one scene a month, stories in id order): answer it, run again
+  const settle = (want) => {
+    for (let i = 0; i < 3 && story(s).status !== want; i++) {
+      if (s.ev) C.choose(s, Math.max(0, firstOpen(s)));
+      C.narrativeMonth(s);
+    }
+  };
+  s.ev = null; s.job = null; settle("paused");
+  s.ageM += 37; settle("done");
   assert.deepEqual([story(s).status, story(s).ending], ["done", "transfer"]);
 });
 
