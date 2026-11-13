@@ -64,7 +64,18 @@ Built:
    thin ages (infancy, 17–20, 50s, 62–75, 70+) and adds a 20-year payoff chain (time capsule). Playtest prints
    choices a year by stage (child 2.1, teen 2.8, adult 3.6, old 2.6); the longest median silence went 3→2 years,
    distinct events per life 81→108. Save now keeps the `good` log tone.
-4. **Gate scenes repeat.** `src/data/gates.js` has only 3 maps; add more, tied to rank.
+4. ~~Gate scenes repeat~~ done: `src/data/gates.js` now has 10 themes and 20 distinct decisions.
+   Rank pools: F market/sewer/subway; E adds quarry/house; D subway/house/quarry/reservoir;
+   C house/reservoir/foundry; B foundry/hospital; A hospital/skybridge/observatory; S skybridge/observatory.
+   New scenes offer a retreat and skill/class/team alternatives; higher ranks have harder checks and hazards.
+   Reuses registered monsters and existing art; no new sprite requests. Existing theme IDs remain valid for saves.
+   `test/gates.test.mjs` checks rank coverage, creature references, unique scenes, seeded offers and operation wiring.
+   Validation on current main: 248 tests pass; artcheck/linelen/build pass; 200-life playtest finds no bugs.
+   Sim: 1,000 lives × seeds a,b,c,d,e for each of careful/normal/reckless (15,000 total), all exit 0;
+   data and determinism pass. Hunter deaths before 50: 1.5% / 2.3% / 18.7%; F–E income checks pass.
+   Warnings to track: careful mind 80 (target 40–75); reckless early deaths 18.7% (target 20–30%) and
+   civilian old-age deaths 78.8% (target ≥85%). No balance constants changed in this content pass.
+   Rebuilt both `play.html` and the download ZIP. Next agreed item: heir childhood repetition (item 5).
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.
 7. **Art.** 14 borrowed sprites in `art/requests.json`. The owner may send pictures; process them with
