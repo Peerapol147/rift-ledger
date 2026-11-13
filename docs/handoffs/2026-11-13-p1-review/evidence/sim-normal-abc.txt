@@ -1,0 +1,16 @@
+
+1000 lives × 3 seed sets (a,b,c) · policy normal · 104.5s
+PASS  awaken 23–27%                              25.2 [22.8–27.2]%
+start rank F/E/D/C/B/A/S all samples 38/20/17/10/10/4/1
+PASS  rank roll on 20k draws (±2)                40.2/19.9/14.7/10.1/9.0/5.0/1.1
+PASS  hunter death <50 (1–20%)                   4.3 [3.3–5.3]%
+PASS  civilians die of old age ≥85%              98.1 [97.5–98.6]%
+PASS  income/yr C+ > civ ≳ F–E (≤+5%)            12804 [12651–12935] > 5259 [5252–5273] ≳ 5345 [5077–5525]
+PASS  hunters with room who reach ceiling 35–55% 52.6 [46.2–56.0]%
+PASS  determinism                                same
+PASS  lives that find a secret quest ≥30%        58.0 [56.6–59.3]%
+phoenix tokens 274 · secret quests finished 2017
+deaths {"อายุขัย":2848,"โรคร้ายที่ไม่ได้รักษา":125,"พ่ายแก่ ราชาลานจอด":16,"บาดเจ็บสาหัส":11}
+median age 76 [76–77] · median floor 0 [0–0]
+PASS  mind at 25–55 (median of lives) 40–75      74 [73–75]
+money at death 108000 [106180–109974] · own a home 99.7 [99.5–99.8]%

@@ -28,3 +28,7 @@ requesting-code-review: มีผู้ตรวจอิสระตรวจ e
 verification-before-completion: รันคำสั่งบน snapshot ที่ตรวจจริง ผลใน REVIEW แยก passed กับยังไม่ได้รัน
 
 ผลตรวจนี้เป็น snapshot ที่ SHA ข้างต้น หาก Claude push เพิ่ม ให้ตรวจ delta ใหม่ก่อนอ้างว่าแก้แล้ว ไม่ถือข้อเสนอทั้งหมดเป็นคำสั่งอนุมัติ merge หรือเผยแพร่เกม
+
+## ผลรันที่แนบ
+
+[Unit tests](evidence/unit-tests.txt) · [Playtest](evidence/playtest.txt) · [Lifecheck](evidence/lifecheck.txt) · [Sim normal a,b,c](evidence/sim-normal-abc.txt)
