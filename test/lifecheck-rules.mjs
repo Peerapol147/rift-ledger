@@ -8,8 +8,21 @@ import { ALL_EVENTS } from "../src/data/events/index.js";
 const RANDOM = new Map(ALL_EVENTS.filter((e) => !e.k).map((e) => [String(e.id), e]));
 const BAD_TEXT = [/[A-Z]แตก/, /[ก-๙][A-Z][a-z]{2,}/, /undefined|NaN|\{[a-z]+\}/];
 
+// A story scene whose cast member is dead (P2b-1): the dead never speak, whatever the engine does.
+export function storyMisfit(s) {
+  const at = s.ev?.story;
+  if (!at) return "";
+  const st = s.narrative.stories[at.id];
+  for (const role of C.STORY_DEFS[at.id]?.nodes[at.node]?.needCast ?? []) {
+    if (s.world.people?.[st?.cast?.[role]]?.diedWorldM != null) return `${at.id}/${at.node}: ${role} speaks after death`;
+  }
+  return "";
+}
+
 // What is wrong with opening this event in this life right now, or "".
 function misfit(s, id) {
+  const dead = storyMisfit(s);
+  if (dead) return dead;
   const a = C.ageY(s);
   if (id === "hunterBreakCall" && (a > 60 || s.flags.stoppedHunting)) return `hunterBreakCall at ${a}`;
   if (id === "adultLove" && !s.c.dating) return "adultLove with no one met";

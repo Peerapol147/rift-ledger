@@ -146,7 +146,14 @@ Sims, 1000 lives × seeds a–e, run on main at 6823ac6 (2026-11-13):
 | normal | 4.0% | 98.2% | 72 [72–73] | 107344 | 76 |
 | reckless | 25.5% | WARN 78.9% | 36 [36–37] | 211810 | 73 |
 
-The two WARNs are known (handoff §3), not regressions. Cohort of cast-story starts: filled in Task 1 Step 5.
+The two WARNs are known (handoff §3), not regressions.
+
+Cast-story starts, `node tools/cast-story-cohort.mjs 100` before any story (Task 1):
+
+- th gen 1: ≥ 1 story 100% · thongbai 100% · silawong 34% · yoon 23% (hunters 92%) · hong 71%
+- kr gen 1: ≥ 1 story 100% · yoon 100%
+- heirs (th 87, kr 70): **0% start any cast story** — the old cast is dead or past every entry window by then.
+- Every first-generation life is born in world month 0, so it is always lalin's and harin's peer.
 
 ## Results
 
