@@ -30,13 +30,14 @@ const cardText = (page) => page.locator("#card").innerText();
 CASES["UX-11"] = async (b) => {
   const { ctx, page } = await open(b, { init: { "riftledger.cfg.v2": { speed: 2, policy: "skip", fs: 2 } } });
   await newLife(page);
-  await page.locator('[data-a="speed:16"]').click();
-  await page.waitForTimeout(300);
-  const before = await cardText(page);
-  await page.waitForTimeout(2500);
-  const after = await cardText(page);
+  await page.locator('[data-a="pause"]').first().click();
+  const age = async () => Number((await cardText(page)).match(/อายุ\s*(\d+)/)?.[1] ?? -1);
+  const before = await age();
+  await page.locator('[data-a="speed:16"]').click(); // also resumes
+  await page.waitForTimeout(1500);
+  const after = await age();
   await ctx.close();
-  return [before !== after, "16× moves the life on"];
+  return [after > before, `16× moves the life on (age ${before} → ${after})`];
 };
 
 CASES["UX-12"] = async (b) => {

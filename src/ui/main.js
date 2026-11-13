@@ -156,7 +156,11 @@ const shown = {};
 function put(sel, html) {
   if (shown[sel] === html) return;
   shown[sel] = html;
-  $(sel).innerHTML = html;
+  // a redraw must not take keyboard focus away from the control the player is on
+  const box = $(sel), a = document.activeElement, key = box.contains(a) && a !== box
+    && (a.dataset.a ? `[data-a="${a.dataset.a}"]` : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
+  box.innerHTML = html;
+  if (key) box.querySelector(key)?.focus();
 }
 
 function render() {
@@ -360,7 +364,11 @@ document.addEventListener("keydown", (e) => {
     return; // no game shortcuts while the dialog is open
   }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
-  if (e.key === " " && e.target.matches("button,a,[data-a]")) return; // Space presses the focused button
+  // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
+  if (e.key === " " && e.target.matches("button[data-a]")) {
+    e.preventDefault(); if (!e.target.disabled) act(e.target.dataset.a, e.target); return;
+  }
+  if (e.key === " " && e.target.matches("button,a")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
   else if (e.key === "+" || e.key === "=") ui.speed = SPEEDS.find((n) => n > ui.speed) ?? SPEEDS.at(-1);
   else if (e.key === "-") ui.speed = [...SPEEDS].reverse().find((n) => n < ui.speed) ?? SPEEDS[0];
