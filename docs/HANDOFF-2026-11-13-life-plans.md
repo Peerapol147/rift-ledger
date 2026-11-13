@@ -15,6 +15,9 @@
 
 ## 1. เกมต้นแบบ (ใช้อ้างอิงเท่านั้น)
 
+**ไม่ต้องเปิดไฟล์ Xian อีก:** ทุกกลไกที่มีประโยชน์ ตัวเลข และลำดับที่ควรทำ สรุปไว้ใน `docs/reference/way-of-xian-notes.md` แล้ว
+อ่านไฟล์นั้นแทน ข้างล่างนี้ใช้เฉพาะกรณีจำเป็นต้องดูต้นฉบับจริง (ห้องอื่นอาจโหลดไม่ได้ถ้า environment ไม่อนุญาตโดเมนของ Drive)
+
 - ไฟล์ HAR ของ `way-of-xian.wox-game.workers.dev` อยู่ใน Google Drive ไฟล์ id `1tS-70GnLPQvZaN-X7dFIjRy5s-XrPAhC`
   (ลิงก์แบบ "ทุกคนที่มีลิงก์") environment นี้อนุญาต `drive.google.com` และ `drive.usercontent.google.com` แล้ว
 - ดาวน์โหลด: `curl -sSL -o file.7z "https://drive.usercontent.google.com/download?id=1tS-70GnLPQvZaN-X7dFIjRy5s-XrPAhC&export=download&confirm=t"`
