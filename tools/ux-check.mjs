@@ -165,6 +165,60 @@ CASES["B-focus-return"] = async (b) => {
   return [on === "settings", `closing settings puts focus back on the settings button (on ${on})`];
 };
 
+const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+const old = (() => { // a long life: about 300 log lines
+  const s = C.newLife("ux-old");
+  for (let i = 0; i < 80000 && !s.dead && C.ageY(s) < 62; i++) { if (s.ev) C.choose(s, firstOpen(s)); else C.advance(s); }
+  for (let i = 0; i < 400 && !s.ev; i++) C.advance(s);
+  return s;
+})();
+
+CASES["B-log-phone"] = async (b) => {
+  const { ctx, page } = await loaded(b, old, { w: 390, h: 844, mobile: true });
+  const r = await page.evaluate(() => {
+    const c = document.querySelector('[data-a^="choose:"]') ?? document.querySelector('[data-a^="focus:"]');
+    return { top: c ? Math.round(c.getBoundingClientRect().top + scrollY) : -1, h: document.documentElement.scrollHeight };
+  });
+  const side = await sideways(page);
+  await ctx.close();
+  return [r.top >= 0 && r.top <= 844 * 1.5 && side <= 0,
+    `a long life on a phone: choices at ${r.top}px of a ${r.h}px page, sideways ${side}px`];
+};
+
+CASES["B-big-font"] = async (b) => {
+  const { ctx, page } = await loaded(b, old, { w: 320, h: 568, mobile: true, init: { [CFGK]: { ...STOP, fs: 3 } } });
+  const side = await sideways(page);
+  await settings(page);
+  // reachable by a finger: on screen already, or inside a box the player can scroll (script scrolling ignores
+  // overflow:hidden, so the box's own style decides)
+  const last = await page.evaluate(() => {
+    const l = [...document.querySelectorAll("#modal button")].at(-1), r = l.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= innerHeight) return true;
+    for (let e = l.parentElement; e; e = e.parentElement) {
+      const cs = getComputedStyle(e), root = e === document.documentElement || e === document.body;
+      if (e.scrollHeight > e.clientHeight + 1 && (/(auto|scroll)/.test(cs.overflowY) || (root && cs.overflowY !== "hidden"))) {
+        return true;
+      }
+      if (cs.position === "fixed") return false; // the page scrolling cannot move a fixed box
+    }
+    return false;
+  });
+  await ctx.close();
+  return [side <= 0 && last, `biggest text at 320 px: sideways ${side}px, last settings button reachable ${last}`];
+};
+
+CASES["B-landscape"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant, { w: 844, h: 390, mobile: true });
+  const ok = await page.evaluate(() => {
+    const c = document.querySelector('[data-a^="choose:"]'); if (!c) return false;
+    c.scrollIntoView({ block: "nearest" }); const r = c.getBoundingClientRect();
+    return r.top >= 0 && r.bottom <= innerHeight;
+  });
+  const side = await sideways(page);
+  await ctx.close();
+  return [ok && side <= 0, `a phone held sideways: a choice can be reached ${ok}, sideways ${side}px`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);
