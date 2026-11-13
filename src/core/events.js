@@ -97,6 +97,15 @@ export function eligible(s, ev) {
   if (ev.who && !ev.who.some((id) => s.job?.id === id || s.hunter?.cls === id)) return false;
   if (ev.hunter === true && !s.hunter) return false;
   if (ev.hunter === false && s.hunter) return false;
+  // a child of school age: years since the first child was born
+  if (ev.childAge) {
+    const born = s.c["at:kids"];
+    if (born == null || !(s.c.kids > 0)) return false;
+    const y = (s.ageM - born) / 12;
+    if (y < ev.childAge[0] || y > ev.childAge[1]) return false;
+  }
+  // in a team now: a party, or a teammate still alive
+  if (ev.teamed && !(s.party || (s.team ?? []).some((m) => m.alive))) return false;
   // hunting now: awakened, not retired, not on a break (same rule as hunter.js canHunt)
   if (ev.activeHunter && !(s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0))) return false;
   if (ev.once && s.c["ev:" + ev.id]) return false;

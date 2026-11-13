@@ -14,11 +14,18 @@ function misfit(s, id) {
   if (id === "hunterBreakCall" && (a > 60 || s.flags.stoppedHunting)) return `hunterBreakCall at ${a}`;
   if (id === "adultLove" && !s.c.dating) return "adultLove with no one met";
   // Rules read from the life, not from a list of ids (P1 review: catch the kind of mistake, not two events).
-  const ev = RANDOM.get(id), t = String(s.ev?.t ?? "");
-  if (ev?.activeHunter && !C.canHunt(s)) return `${id}: gate work while not hunting`;
-  if (ev && /หัวหน้า(?!ปาร์ตี้|ทีม|หน่วย|กิลด์)/.test(t) && !s.job && !s.party && !s.hunter) return `${id}: a boss with no job`;
+  const ev = RANDOM.get(id);
+  if (!ev) return "";
+  const text = [s.ev?.t, ...(s.ev?.opts ?? []).flatMap((o) => [o.l, o.y?.m, o.n?.m])].map(String).join(" ");
+  const gateDay = ev.hunter === true && ["ทีม", "ฮันเตอร์", "กิลด์"].includes(ev.tag) && /เกต/.test(text);
+  if ((ev.activeHunter || (gateDay && !ev.retiredOk)) && !C.canHunt(s)) return `${id}: gate work while not hunting`;
+  if (/หัวหน้า(?!ปาร์ตี้|ทีม|หน่วย|กิลด์)|เพื่อนร่วมงาน|ที่ทำงาน/.test(text) && !ev.dayWork && !s.job && !s.hunter && !s.party) {
+    return `${id}: a workplace with no job`;
+  }
   const kidAge = s.c["at:kids"] != null ? (s.ageM - s.c["at:kids"]) / 12 : -1;
-  if (ev && /ลูก[^ ]*กลับจากโรงเรียน|ลูกกลับจากโรงเรียน/.test(t) && kidAge < 5) return `${id}: a child from school at ${kidAge}`;
+  if (/ลูก[^ ]*กลับจากโรงเรียน|ลูกกลับจากโรงเรียน/.test(text) && (kidAge < 5 || kidAge > 18)) {
+    return `${id}: a child from school at ${kidAge.toFixed(1)}`;
+  }
   return "";
 }
 

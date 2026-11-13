@@ -116,7 +116,7 @@ export function slots(store, n = 3) {
   // ok | empty | corrupt | unsupported (a newer game's save in front or behind: never loaded, never written over)
   const status = (i) => {
     const a = inspect(store.get(SLOT(i))), b = inspect(store.get(BAK(i)));
-    if (a === "unsupported" || (a !== "ok" && b === "unsupported")) return "unsupported";
+    if (a === "unsupported" || b === "unsupported") return "unsupported"; // in front or behind: hands off
     if (a === "ok" || b === "ok") return "ok";
     return a === "empty" && b === "empty" ? "empty" : "corrupt";
   };
@@ -138,7 +138,12 @@ export function slots(store, n = 3) {
       return store.set(SLOT(i), serialize(s)) !== false;
     },
     del: (i) => { store.del(SLOT(i)); store.del(BAK(i)); },
-    exportStr: (i) => store.get(SLOT(i)),
+    // the save worth keeping: for a locked slot, the newer one that locked it
+    exportStr: (i) => {
+      const a = store.get(SLOT(i)), b = store.get(BAK(i));
+      if (inspect(a) === "unsupported" || inspect(a) === "ok") return a;
+      return inspect(b) === "unsupported" || inspect(b) === "ok" ? b : a;
+    },
     importStr(i, str) {
       if (status(i) === "unsupported" || !deserialize(str)) return false;
       store.set(SLOT(i), str);
