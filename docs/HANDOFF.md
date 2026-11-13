@@ -70,7 +70,8 @@ Built:
    New scenes offer a retreat and skill/class/team alternatives; higher ranks have harder checks and hazards.
    Reuses registered monsters and existing art; no new sprite requests. Existing theme IDs remain valid for saves.
    `test/gates.test.mjs` checks rank coverage, creature references, unique scenes, seeded offers and operation wiring.
-   Next agreed item: heir childhood repetition (item 5).
+   Validation on current main: 248 tests pass; artcheck/linelen/build pass; 200-life playtest finds no bugs.
+   Rebuilt both `play.html` and the download ZIP. Next agreed item: heir childhood repetition (item 5).
 5. **Heir childhood repeats the parent's.** Weight down events the family line has already seen.
 6. **Career-chain finales assume the hero.** Make finales depend on rank, fame and debt.
 7. **Art.** 14 borrowed sprites in `art/requests.json`. The owner may send pictures; process them with
