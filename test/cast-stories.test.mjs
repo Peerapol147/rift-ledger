@@ -13,9 +13,20 @@ const SETUP = {
   dohyun: (s) => { s.country = "kr"; s.city = "icn"; },
   seojin: (s) => { s.country = "kr"; s.city = "sel"; },
   poramet: (s) => { s.country = "th"; s.city = "bkk"; },
+  pim: (s) => heirOf(s.seed),
 };
 // held every month (a career would replace a job set once at birth)
 const EACH = { seojin: (s) => { if (!s.hunter && C.ageY(s) >= 18) s.job = { id: "press", tier: 1, xp: 0 }; } };
+// a Bangkok parent who died at 40 with a child: the heir is born that month, pim is then 14
+function heirOf(seed, tie = null) {
+  const P = C.newLife(seed + "-p"); P.country = "th"; P.city = "bkk"; P.ageM = 40 * 12; C.updatePeople(P);
+  P.c.kids = 1; P.dead = { cause: "อายุขัย", ageY: 40 };
+  const h = C.newHeir(P, seed);
+  if (tie) for (const p of Object.values(h.world.people)) if (p.cast === "pim" || p.cast === "lalin") {
+    p.ties = { ...p.ties, [h.familyId]: tie };
+  }
+  return h;
+}
 let turn = 0;
 // first, second and last visible option, and one that varies from scene to scene (a player who is not consistent)
 // and a player who wants romance: kind (first option) but takes the romance option whenever it is offered
@@ -23,7 +34,7 @@ const pickers = [(n) => 0, (n) => Math.min(1, n - 1), (n) => n - 1, (n) => (turn
   (n, open) => Math.max(0, open.findIndex(([, , o]) => o.romance))];
 
 function play(id, seed, pick, each = () => {}) {
-  const s = C.newLife(seed); SETUP[id](s);
+  let s = C.newLife(seed); s = SETUP[id](s) ?? s; // a setup may hand back another life (an heir)
   if (id === "hong") s.gold = 0;
   for (let n = 0; n < 80000 && !s.dead && C.ageY(s) < 85 && s.narrative.stories[id]?.status !== "done"; n++) {
     EACH[id]?.(s);
@@ -247,4 +258,34 @@ test("silawong: the father once set the silent-tower record", () => {
   const text = C.STORY_DEFS.silawong.nodes.father.t(s, st);
   assert.match(text, /เคยตั้งสถิติหอเงียบ/);
   assert.doesNotMatch(text, /เจ้าของสถิติหอเงียบ/);
+});
+
+const grow = (s, years) => { s.ageM = years * 12; C.updatePeople(s); return s; };
+
+test("pim reaches heirs in Bangkok aged 12–40 while she lives", () => {
+  const D = C.STORY_DEFS.pim;
+  let i = 0, h;
+  do h = grow(heirOf(`pm1-${i++}`), 20); while (castOf(h, "pim").diedWorldM != null);
+  assert.equal(D.discover(h), true);
+  h.city = "cnx"; assert.equal(D.discover(h), false); h.city = "bkk";
+  h.gen = 1; assert.equal(D.discover(h), false); h.gen = 2;
+  const late = grow(heirOf(h.seed), 20); late.ageM = 41 * 12; assert.equal(D.discover(late), false);
+  C.setPersonStatus(h, castOf(h, "pim").id, { diedWorldM: C.worldMonth(h) });
+  assert.equal(D.discover(h), false);
+});
+
+test("pim greets by the family's old tie, and an old grudge can end as rivals", () => {
+  const D = C.STORY_DEFS.pim;
+  const plain = grow(heirOf("pm2"), 20), foe = grow(heirOf("pm2", "enemy"), 20);
+  const st = (s) => ({ vars: {}, route: null, cast: { pim: castOf(s, "pim").id, lalin: castOf(s, "lalin").id } });
+  assert.notEqual(D.nodes[D.entry].t(foe, st(foe)), D.nodes[D.entry].t(plain, st(plain)));
+  const toRivals = Object.values(D.nodes).flatMap((n) => n.o).filter((o) => o.y?.end === "rivals" || o.n?.end === "rivals");
+  assert.ok(toRivals.some((o) => !o.show || o.show(foe, st(foe))), "an old enemy can end as rivals");
+});
+
+test("pim: no romance in her story", () => {
+  for (const n of Object.values(C.STORY_DEFS.pim.nodes)) for (const o of n.o) {
+    assert.equal(o.romance, undefined);
+    for (const r of [o.y, o.n]) assert.notEqual(r?.castAct?.pim, "partner");
+  }
 });
