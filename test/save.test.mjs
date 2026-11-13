@@ -26,8 +26,8 @@ test("slots save, list, load, delete; import rejects invalid", () => {
   const str = sl.exportStr(0);
   sl.del(0);
   assert.equal(sl.load(0), null);
-  assert.equal(sl.importStr(1, str), true);
-  assert.equal(sl.importStr(2, "nope"), false);
+  assert.equal(sl.importStr(1, str).ok, true);
+  assert.equal(sl.importStr(2, "nope").ok, false);
   st.set("riftledger.slot.v2.2", "xx");
   assert.equal(sl.load(2), null);
 });

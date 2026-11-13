@@ -268,7 +268,12 @@ function act(a, el) {
       if (!s || s.dead) startScreen();
     },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
-    import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
+    import: () => {
+      const i = +v, x = slots.list()[i];
+      if (x && !x.locked && !confirm(`ช่อง ${i + 1} มีชีวิตของ ${x.name} อยู่ นำเข้าทับไหม? ชีวิตเดิมจะเก็บเป็นเซฟสำรอง`)) return;
+      const r = slots.importStr(i, ui.importText);
+      banner(r.ok ? `นำเข้าลงช่อง ${i + 1} แล้ว` : `นำเข้าไม่ได้: ${r.reason}`);
+    },
     quit: () => { if (s && !s.dead) autosave(); s = null; ui.settings = false; startScreen(); },
     choose: () => { const n0 = s.log.length; C.choose(s, +v); showResult(n0); fx(); },
     fate: () => { const n0 = s.log.length; if (C.chooseByFate(s)) { showResult(n0); fx(); } },

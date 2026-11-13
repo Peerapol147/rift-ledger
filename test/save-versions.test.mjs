@@ -54,7 +54,7 @@ test("export gives the newer save's own bytes", () => {
 test("import does not write over a newer save", () => {
   const st = mem(), sl = C.slots(st), primary = newer();
   st.set(KEY, primary);
-  assert.equal(sl.importStr(0, C.serialize(life(3))), false);
+  assert.equal(sl.importStr(0, C.serialize(life(3))).ok, false);
   assert.equal(st.get(KEY), primary);
 });
 

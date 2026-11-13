@@ -158,6 +158,20 @@ CASES["UX-13"] = async (b) => {
   return [!back, "a deleted save does not come back on quit"];
 };
 
+CASES["UX-14"] = async (b) => {
+  const { ctx, page, errors } = await loaded(b, infant);
+  page.on("dialog", (d) => d.accept());
+  const before = await page.evaluate((k) => localStorage.getItem(k), SLOT0);
+  const broken = JSON.parse(C.serialize(infant)); delete broken.c;
+  await settings(page);
+  await page.locator('#modal [data-c="importText"]').fill(JSON.stringify(broken));
+  await page.locator('#modal [data-a="import:0"]').click(); await page.waitForTimeout(200);
+  const after = await page.evaluate((k) => localStorage.getItem(k), SLOT0);
+  const msg = await page.locator("#banner").innerText().catch(() => "");
+  await ctx.close();
+  return [after === before && !errors.length && /ไม่ครบ/.test(msg), "a broken import changes nothing and says why"];
+};
+
 const browser = await chromium.launch();
 let fail = 0;
 for (const [id, run] of Object.entries(CASES)) {
