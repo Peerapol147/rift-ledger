@@ -31,8 +31,9 @@ test("stop policy always waits; prefers higher odds and avoids mind loss", () =>
 });
 
 // The owner asked for more choices in their own hands (fun pass): a life now asks about 1–2 times a year;
-// a third option on every event (life plans pass) adds checks, so the ceiling is 200.
-test("important policy finishes a civilian life with 40–200 stops", () => {
+// a third option on every event (life plans pass) adds checks, and the branching stories (lives that remember)
+// add about ten road-choosing scenes a life that the player decides, so the ceiling is 230.
+test("important policy finishes a civilian life with 40–230 stops", () => {
   for (let i = 0; ; i++) {
     const s = newLife("civ" + i);
     let stops = 0;
@@ -44,7 +45,7 @@ test("important policy finishes a civilian life with 40–200 stops", () => {
     }
     if (s.hunter) continue;
     assert.ok(s.dead);
-    assert.ok(stops >= 40 && stops <= 200, `stops ${stops}`);
+    assert.ok(stops >= 40 && stops <= 230, `stops ${stops}`);
     return;
   }
 });
