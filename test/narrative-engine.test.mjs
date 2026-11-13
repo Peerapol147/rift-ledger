@@ -151,3 +151,14 @@ test("job tier can be needed", () => {
   s.job = null;
   assert.equal(C.val(s, "jobTier"), -1);
 });
+
+test("a node can step aside to another node for some lives", () => {
+  const d = def();
+  d.nodes.left.skip = { to: "right", when: (s, st) => st.route === "L" };
+  C.STORY_DEFS[ID] = d;
+  const s = life("ne14"); openNext(s); pick(s, "ไปทางซ้าย");
+  openNext(s);
+  assert.equal(s.ev.story.node, "right");
+  const bad = def(); bad.nodes.left.skip = { to: "nope", when: () => true };
+  assert.match(C.validateNarrative({ [ID]: bad }).join(), /nope/);
+});

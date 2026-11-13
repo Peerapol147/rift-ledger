@@ -24,7 +24,8 @@ function enterNode(s, id, st, node) {
 function bindCast(s, def, st) {
   for (const [role, spec] of Object.entries(def.cast ?? {})) {
     if (st.cast[role]) continue;
-    const got = spec(s, st);
+    // data cannot import the RNG, so a cast spec gets a roll on this story's own stream
+    const got = spec(s, st, (a, b) => ri(stream(s, "story:" + def.id), a, b));
     if (got) st.cast[role] = got.id ?? ensurePerson(s, got.input, got.key);
   }
 }
@@ -76,6 +77,7 @@ export function narrativeMonth(s) {
       enterNode(s, id, st, def.castGone);
       node = def.nodes[def.castGone];
     }
+    if (node.skip?.when(s, st)) { enterNode(s, id, st, node.skip.to); continue; } // this life passes the scene by
     if (node.when && !node.when(s, st)) continue;
     if (node.beat) { resolveOut(s, id, st, node.beat, true); continue; }
     const fillOut = (o) => o && { ...o, m: o.m == null ? o.m : textOf(s, st, o.m) };
@@ -137,11 +139,13 @@ export function validateNarrative(defs) {
       if (seen.has(k) || !nodes[k]) continue;
       seen.add(k);
       for (const out of outsOf(nodes[k])) if (out.go && !seen.has(out.go)) stack.push(out.go);
+      if (nodes[k].skip) stack.push(nodes[k].skip.to);
       if (nodes[k].reach) stack.push(...nodes[k].reach);
     }
     for (const [k, n] of Object.entries(nodes)) {
       if (!seen.has(k)) issues.push(`${id}: ${k} unreachable`);
       for (const o of n.o ?? []) if ((o.s || o.risk) && !o.n) issues.push(`${id}.${k}: "${o.l}" has a check but no n`);
+      if (n.skip && !nodes[n.skip.to]) issues.push(`${id}.${k}: skip to ${n.skip.to}`);
       for (const out of outsOf(n)) {
         if (out.go && !nodes[out.go]) issues.push(`${id}.${k}: go ${out.go}`);
         if (out.end && !ends[out.end]) issues.push(`${id}.${k}: end ${out.end}`);
