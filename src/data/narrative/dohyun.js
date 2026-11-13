@@ -1,6 +1,6 @@
 // เส้นทางท่าเรือ: คัง โดฮยอน, the geomeun trapper who smuggles through Incheon's port. The Korean answer to hong.
 // For Korean hunters, traders and porters, and anyone living in Incheon. Cast stories P2b-1 design §4.2.
-import { who, trust, first, latest, go, end, mem, hunts } from "./castref.js";
+import { who, trust, firstYou as first, latestYou as latest, go, end, mem, hunts } from "./castref.js";
 
 const D = ["dohyun"];
 const trade = (s) => ["shop", "appraise", "porter"].includes(s.job?.id);
@@ -109,8 +109,11 @@ export const DOHYUN = {
     },
     choice: {
       delay: [12, 48], needCast: D,
-      t: (s, st) => `หลายปีผ่านไป โดฮยอนนัดคุณที่ร้านซุปปลาร้านเดิม เขายังเล่าเรื่องวันที่`
-        + `${first(s, st, "dohyun", "เจอกันที่ท่าเรือ")}เหมือนเป็นเรื่องตลก แล้วถามว่าจากนี้คุณจะยืนตรงไหน`,
+      t: (s, st) => (st.route === "informer"
+        ? "หลายปีผ่านไป คุณเดินสวนกับโดฮยอนหน้าร้านซุปปลาริมท่า เขาหยุดมองคุณนานโดยไม่ยิ้ม "
+          + `คุณนึกถึงตอนที่${latest(s, st, "dohyun", "เคยรู้จักเขา")}`
+        : "หลายปีผ่านไป โดฮยอนนัดคุณที่ร้านซุปปลาร้านเดิม เขายังเล่าเรื่องวันที่"
+          + `${first(s, st, "dohyun", "เจอกันที่ท่าเรือ")}เหมือนเป็นเรื่องตลก แล้วถามว่าจากนี้คุณจะยืนตรงไหน`),
       o: [
         { l: "เป็นหุ้นส่วนท่าเรือกับเขา", show: (s, st) => st.route === "partner", noAuto: true,
           y: end("partner", "รถตู้คันใหม่ของท่าเรือมีชื่อบริษัทที่คุณสองคนตั้งด้วยกัน", { gold: 5000,
@@ -120,7 +123,8 @@ export const DOHYUN = {
           y: end("reformed", "เขาใส่เสื้อกิลด์ใหม่แล้วบ่นว่าคับไหล่ ตอนออกจากห้องสัมภาษณ์เขาไม่ได้ยิ้มแบบเดิมแล้ว",
             { mind: 6, castAct: { dohyun: "joinGuild:haneul" } }),
           n: end("rivals", "ฮานึลไม่รับคนมีแฟ้มคดี เขาหัวเราะแล้วบอกว่าก็รู้อยู่แล้ว", { mind: -2 }) },
-        { l: "บอกว่าคุณจะไม่ยุ่งกับเขาอีก", y: end("rivals", "เขาจ่ายค่าซุปให้คุณเป็นครั้งแรก แล้วเดินออกไปก่อน") },
+        { l: "บอกว่าคุณจะไม่ยุ่งกับเขาอีก", y: end("rivals", (s, st) => (st.route === "informer"
+          ? "เขาพยักหน้าครั้งเดียว แล้วเดินกลับไปทางท่าเรือ" : "เขาจ่ายค่าซุปให้คุณเป็นครั้งแรก แล้วเดินออกไปก่อน")) },
         { l: "เดินออกไปโดยไม่ตอบ", show: (s, st) => st.route === "informer",
           y: end("informer", "ข่าวท้องถิ่นลงว่าเส้นทางลักลอบที่ท่าเรืออินชอนปิดไปแล้ว โดยไม่มีชื่อใคร",
             { fac: { state: 3 } }) },

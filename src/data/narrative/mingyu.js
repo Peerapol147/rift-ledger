@@ -1,6 +1,6 @@
 // คลินิกหลังเกตแตก: ชเว มินกยู, the haneul healer who runs a free clinic in Busan and goes wherever a gate breaks.
 // For Korean lives in Busan, hurt, or in medicine. Cast stories P2b-1 design §4.1.
-import { who, trust, first, latest, go, end, mem } from "./castref.js";
+import { who, trust, firstYou as first, latestYou as latest, go, end, mem } from "./castref.js";
 
 const M = ["mingyu"];
 const medic = (s) => ["doc", "hdoc"].includes(s.job?.id) || s.hunter?.cls === "healer";
@@ -25,7 +25,7 @@ export const MINGYU = {
           n: go("shift", "คุณล้มกลางทาง อาสาสองคนวิ่งมาช่วยหามต่อ หมอมินกยูทำแผลที่เข่าให้คุณด้วย",
             { vars: { patient: 1 }, rel: mem("mingyu", "คุณล้มขณะแบกคนเจ็บมาที่เต็นท์ของหมอมินกยู", 10) }) },
         { l: "ให้เขาดูแผลของคุณเอง", y: go("shift", "เขาทำแผลเร็วจนคุณยังไม่ทันได้ร้อง",
-          { rel: mem("mingyu", "หมอมินกยูทำแผลให้คุณฟรีในเต็นท์ริมถนน", 10) }) },
+          { rel: mem("mingyu", "คุณได้หมอมินกยูทำแผลให้ฟรีในเต็นท์ริมถนน", 10) }) },
         { l: "ยืนดูอยู่ห่างๆ", y: go("shift", "แถวยาวขึ้นเรื่อยๆ จนฟ้ามืด เต็นท์ยังเปิดไฟอยู่",
           { rel: mem("mingyu", "คุณยืนดูเต็นท์ของหมอมินกยูอยู่ห่างๆ ในคืนหลังเกตแตก", 0) }) },
       ],

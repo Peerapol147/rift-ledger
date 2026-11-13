@@ -185,8 +185,8 @@ const hunter = (s, rank) => { s.hunter = { rank, lv: 10, xp: 0, skills: [], cls:
 
 test("seojin reaches hunters at C or above anywhere, and Korean reporters and porters", () => {
   const D = C.STORY_DEFS.seojin;
-  assert.equal(D.discover(hunter(adult("sj1", "th", "bkk", 25, "seojin"), 2)), true);
-  assert.equal(D.discover(hunter(adult("sj2", "th", "bkk", 25, "seojin"), 1)), false);
+  assert.equal(D.discover(hunter(adult("sj1", "th", "bkk", 25, "seojin"), 3)), true); // C
+  assert.equal(D.discover(hunter(adult("sj2", "th", "bkk", 25, "seojin"), 2)), false); // D
   const kr = adult("sj3", "kr", "sel", 30, "seojin"); kr.job = { id: "press" }; assert.equal(D.discover(kr), true);
   const th = adult("sj4", "th", "bkk", 30, "seojin"); th.job = { id: "press" }; assert.equal(D.discover(th), false);
   const old = hunter(adult("sj5", "th", "bkk", 51, "seojin"), 3); assert.equal(D.discover(old), false);
@@ -293,5 +293,83 @@ test("pim: no romance in her story", () => {
   for (const n of Object.values(C.STORY_DEFS.pim.nodes)) for (const o of n.o) {
     assert.equal(o.romance, undefined);
     for (const r of [o.y, o.n]) assert.notEqual(r?.castAct?.pim, "partner");
+  }
+});
+
+// ---- Whole-branch review fixes (P2b-1 final review)
+import { readFileSync } from "node:fs";
+const NEW = ["mingyu", "dohyun", "seojin", "poramet", "pim"];
+const src = (id) => readFileSync(new URL(`../src/data/narrative/${id}.js`, import.meta.url), "utf8");
+const stOf = (s, D, extra = {}) => ({ vars: {}, route: null, ...extra,
+  cast: Object.fromEntries(Object.keys(D.cast).map((r) => [r, D.cast[r](s)?.id])) });
+
+test("review: every memory in the new stories is in the player's voice", () => {
+  for (const id of NEW) for (const m of src(id).matchAll(/mem\("[a-z]+", *\n? *"([^"]+)"/g)) {
+    assert.match(m[1], /^คุณ/, `${id}: ${m[1]}`);
+  }
+});
+
+test("review: poramet never recalls the silawong story's own words in the player's voice", () => {
+  const D = C.STORY_DEFS.poramet, s = adult("rv1", "th", "bkk", 25, "poramet"), st = stOf(s, D);
+  s.relations[st.cast.poramet] = { trust: 15, memories: [{ text: "เด็กคนนี้ไม่หลบตา" }] };
+  for (const node of ["post", "test", "family", "lesson", "gone"]) {
+    assert.doesNotMatch(D.nodes[node].t(s, st), /เด็กคนนี้ไม่หลบตา/, node);
+  }
+});
+
+test("review: seojin's record scenes never say he still holds it", () => {
+  for (const bad of ["สถิติยังอยู่", "ไม่ถึงสถิติ", "แซงสถิติของเขา"]) assert.ok(!src("seojin").includes(bad), bad);
+  const D = C.STORY_DEFS.seojin, s = adult("rv2", "kr", "sel", 30, "seojin");
+  assert.match(D.nodes.record.t(s, stOf(s, D)), /เคยตั้ง/);
+});
+
+test("review: seojin is for hunters who still hunt, and a porter is never written as a reporter", () => {
+  const D = C.STORY_DEFS.seojin;
+  const ex = hunter(adult("rv3", "kr", "sel", 30, "seojin"), 4); ex.flags.stoppedHunting = true;
+  assert.equal(D.discover(ex), false);
+  const p = adult("rv4", "kr", "sel", 30, "seojin"); p.job = { id: "porter" };
+  assert.equal(D.discover(p), true);
+  const st = stOf(p, D, { vars: { secret: 1 } });
+  for (const node of ["meet", "test", "loss"]) {
+    const n = D.nodes[node];
+    const label = (o) => (typeof o.l === "function" ? o.l(p, st) : o.l);
+    const words = [n.t(p, st), ...n.o.filter((o) => !o.show || o.show(p, st)).map(label)].join(" ");
+    assert.doesNotMatch(words, /สัมภาษณ์|ลงข่าว|เขียนถึง|นักข่าว/, node);
+  }
+});
+
+test("review: seojin never asks about a secret he never told", () => {
+  const D = C.STORY_DEFS.seojin, s = adult("rv5", "kr", "sel", 30, "seojin"); s.job = { id: "press" };
+  const st = stOf(s, D);
+  assert.doesNotMatch(D.nodes.test.t(s, st), /เก็บไว้หรือยัง/);
+  const open = D.nodes.test.o.filter((o) => !o.show || o.show(s, st));
+  assert.ok(open.length >= 2, open.map((o) => o.l).join(" | "));
+});
+
+test("review: pim never assumes a family link the heir does not have", () => {
+  const D = C.STORY_DEFS.pim, h = grow(heirOf("rv6"), 20), st = stOf(h, D);
+  const visit = [D.nodes.visit.t(h, st), ...D.nodes.visit.o.map((o) => (typeof o.l === "function" ? o.l(h, st) : o.l))]
+    .join(" ");
+  assert.doesNotMatch(visit, /ครอบครัว/);
+  assert.doesNotMatch(D.nodes.letters.t(h, st), /ครอบครัวของคุณ/);
+  const tied = grow(heirOf("rv6", "friend"), 20);
+  assert.match(D.nodes.letters.t(tied, stOf(tied, D)), /ครอบครัวของคุณ/);
+});
+
+test("review: poramet meets a civilian through a volunteer crew, not a firm they may not work for", () => {
+  const D = C.STORY_DEFS.poramet, s = adult("rv7", "th", "bkk", 25, "poramet"), st = stOf(s, D);
+  castOf(s, "poramet").retired = false;
+  assert.doesNotMatch(D.nodes.post.t(s, st), /บริษัทของคุณ/);
+  assert.match(D.nodes.post.t(s, st), /อาสา/);
+});
+
+test("review: dohyun's last scene is cold to the one who informed on him", () => {
+  const D = C.STORY_DEFS.dohyun, s = adult("rv8", "kr", "icn", 30, "dohyun");
+  const warm = D.nodes.choice.t(s, stOf(s, D)), cold = D.nodes.choice.t(s, stOf(s, D, { route: "informer" }));
+  assert.notEqual(cold, warm);
+  assert.doesNotMatch(cold, /เรื่องตลก|นัดคุณ/);
+  const st = stOf(s, D, { route: "informer" }), msg = (m) => (typeof m === "function" ? m(s, st) : m);
+  for (const o of D.nodes.choice.o.filter((x) => !x.show || x.show(s, st))) {
+    assert.doesNotMatch(msg(o.y.m), /ค่าซุป|ร้าน/, o.l); // he is not at a table with you
   }
 });
