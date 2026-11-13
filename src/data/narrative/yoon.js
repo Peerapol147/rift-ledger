@@ -7,10 +7,13 @@ const peer = (s) => {
   const h = Object.values(s.world.people ?? {}).find((p) => p.cast === "harin");
   return !!h && Math.abs(h.bornWorldM - (s.mon0 ?? 0)) <= 60;
 };
+const uncleAlive = (s, st) => personOf(s, st, "uncle")?.diedWorldM == null;
 export const YOON = {
-  id: "yoon", title: "ดาบตระกูลยุน", tag: "ความสัมพันธ์", entry: "meet", castGone: "gone",
-  discover: (s) => (s.country === "kr" && peer(s) && s.ageM >= 13 * 12 && s.ageM <= 18 * 12)
-    || (!!s.hunter && s.ageM >= 18 * 12 && s.ageM <= 30 * 12 && peer(s)),
+  id: "yoon", title: "ดาบตระกูลยุน", tag: "ความสัมพันธ์", entry: "meet", castGone: { harin: "gone",
+    uncle: "uncleGone" },
+  discover: (s) => ((s.country === "kr" && peer(s) && s.ageM >= 13 * 12 && s.ageM <= 18 * 12)
+    || (!!s.hunter && s.ageM >= 18 * 12 && s.ageM <= 30 * 12 && peer(s)))
+    && Object.values(s.world.people ?? {}).some((p) => p.cast === "harin" && p.diedWorldM == null),
   cast: { harin: who("harin"), uncle: who("seojin") },
   nodes: {
     meet: {
@@ -54,7 +57,7 @@ export const YOON = {
       ],
     },
     uncle: {
-      delay: [12, 36], needCast: H,
+      delay: [12, 36], needCast: ["harin", "uncle"],
       t: "ยุน ซอจิน หัวหน้ากิลด์แพ็กโฮและอาของฮาริน ขอพบคุณ เขาบอกว่าตระกูลยุนไม่คบคนที่ไม่รู้จักแพ้",
       o: [
         { l: "บอกว่าคุณแพ้มาแล้วหลายครั้ง", s: "wil", diff: 12,
@@ -94,7 +97,8 @@ export const YOON = {
     },
     ending: {
       delay: [24, 96], needCast: H, when: (s) => age(s) >= 24,
-      t: (s, st) => `ยุน ฮารินขึ้นเป็นแรงก์ที่ทุกคนจับตา เธอนัดคุณที่ร้านเดิมใกล้สนามซ้อม `
+      t: (s, st) => `${personOf(s, st, "harin")?.rank >= 4 ? "ยุน ฮารินขึ้นเป็นแรงก์ที่ทุกคนจับตา"
+        : "ยุน ฮารินยังไต่แรงก์อย่างช้าๆ ไม่ยอมใช้ชื่อตระกูลช่วย"} เธอนัดคุณที่ร้านเดิมใกล้สนามซ้อม `
         + `แล้วพูดถึงวันที่${latest(s, st, "harin", "เจอกัน")}`,
       o: [
         { l: "ท้าเธอประลองอีกครั้ง", show: (s, st) => st.route === "rival",
@@ -108,12 +112,24 @@ export const YOON = {
           { castAct: { harin: "enemy" } }) },
       ],
     },
+    uncleGone: {
+      delay: [0, 1], needCast: H,
+      t: (s, st) => `ยุน ซอจิน หัวหน้ากิลด์แพ็กโฮไม่อยู่แล้ว ฮารินส่งข้อความมาตอนตีสาม `
+        + `เธอเล่าว่าอาเคยถามถึงคุณหลังวันที่${latest(s, st, "harin", "เจอกัน")}`,
+      o: [
+        { l: "บินไปอยู่ข้างเธอที่โซล", y: { m: "คุณยืนแถวหลังของพิธี เธอหันมามองหนึ่งครั้ง", go: "carry",
+          rel: { harin: { trust: 15, mem: "คุณบินไปอยู่ข้างฮารินวันที่อาของเธอจากไป" } } } },
+        { l: "ส่งข้อความกลับไปยาวๆ", y: { m: "เธออ่านแล้วตอบมาคำเดียวว่าขอบคุณ", go: "carry",
+          rel: { harin: { trust: 5 } } } },
+      ],
+    },
     gone: {
       delay: [0, 1],
       t: (s, st) => `ข่าวด่วน ยุน ฮารินไม่ได้กลับออกมาจากเกต คุณนึกถึงวันที่${first(s, st, "harin", "เจอเธอครั้งแรก")}`,
       o: [
         { l: "บินไปร่วมพิธีที่โซล", show: (s, st) => trust(s, st, "harin") >= 20,
-          y: end("friends", "ยุน ซอจินวางดาบไม้ของเธอไว้บนโลง แล้วยื่นอีกเล่มให้คุณ", { mind: -8 }) },
+          y: end("friends", (s, st) => (uncleAlive(s, st) ? "ยุน ซอจินวางดาบไม้ของเธอไว้บนโลง แล้วยื่นอีกเล่มให้คุณ"
+            : "ญาติคนหนึ่งของตระกูลยุนวางดาบไม้ของเธอไว้บนโลง แล้วยื่นอีกเล่มให้คุณ"), { mind: -8 }) },
         { l: "ดูพิธีผ่านไลฟ์", y: end("rivals", "ภาพตัดไปที่ดาบไม้บนโลงนานกว่าที่ควร", { mind: -3 }) },
       ],
     },

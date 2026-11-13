@@ -64,6 +64,11 @@ function keepPace(s, id, def, st) {
   return true;
 }
 
+// castGone is one node for the whole story, or one per role ({ lalin: "gone", father: "fatherGone" })
+const goneOf = (def, role) => (def.castGone && typeof def.castGone === "object" ? def.castGone[role] : def.castGone);
+const goneNodes = (def) => (def.castGone && typeof def.castGone === "object" ? Object.values(def.castGone)
+  : [def.castGone].filter(Boolean));
+
 export function narrativeMonth(s) {
   if (s.ev || s.op || !s.narrative) return;
   for (const id of Object.keys(STORY_DEFS).sort()) {
@@ -71,13 +76,16 @@ export function narrativeMonth(s) {
     const st = s.narrative.stories[id];
     if (!st) { if (def.discover(s)) startStory(s, id); continue; }
     if (st.status === "done" || !keepPace(s, id, def, st)) continue;
-    if (st.due > worldMonth(s)) continue;
-    let node = def.nodes[st.node];
-    if (node.needCast?.some((r) => !personPresent(s, st.cast[r])) && def.castGone && st.node !== def.castGone) {
+    // someone this scene needs is gone: their own gone scene, this month, not when the story was next due
+    const lost = def.nodes[st.node].needCast?.find((r) => !personPresent(s, st.cast[r]));
+    const goneNode = lost && goneOf(def, lost);
+    if (goneNode && goneNode !== st.node) { // from a gone scene too, if its own speaker is gone
       st.resume = st.node;
-      enterNode(s, id, st, def.castGone);
-      node = def.nodes[def.castGone];
+      enterNode(s, id, st, goneNode);
+      st.due = Math.min(st.due, worldMonth(s));
     }
+    if (st.due > worldMonth(s)) continue;
+    const node = def.nodes[st.node];
     if (node.skip?.when(s, st)) { enterNode(s, id, st, node.skip.to); continue; } // this life passes the scene by
     if (node.when && !node.when(s, st)) continue;
     if (node.beat) { resolveOut(s, id, st, node.beat, true); continue; }
@@ -145,9 +153,9 @@ export function validateNarrative(defs) {
   for (const [id, d] of Object.entries(defs)) {
     const nodes = d.nodes ?? {}, ends = d.endings ?? {}, roles = new Set(Object.keys(d.cast ?? {}));
     if (!nodes[d.entry]) issues.push(`${id}: entry ${d.entry} missing`);
-    if (d.castGone && !nodes[d.castGone]) issues.push(`${id}: castGone ${d.castGone} missing`);
+    for (const g of goneNodes(d)) if (!nodes[g]) issues.push(`${id}: castGone ${g} missing`);
     if (d.pauseEnd && !ends[d.pauseEnd]) issues.push(`${id}: pauseEnd ${d.pauseEnd} missing`);
-    const reach = new Set([d.entry, d.castGone].filter(Boolean)), seen = new Set();
+    const reach = new Set([d.entry, ...goneNodes(d)].filter(Boolean)), seen = new Set();
     const outsOf = (n) => [...(n.o ?? []).flatMap((o) => [o.y, o.n]), n.beat].filter(Boolean);
     const stack = [...reach];
     while (stack.length) {

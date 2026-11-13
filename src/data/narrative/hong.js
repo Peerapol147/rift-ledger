@@ -6,7 +6,9 @@ export const HONG = {
   id: "hong", title: "เจ๊หงส์", tag: "เงิน", entry: "offer", castGone: "gone",
   discover: (s) => s.country === "th" && s.ageM >= 18 * 12 && s.ageM <= 60 * 12
     // short of money, in the trade, or a hunter with loot to sell (spec §12.3)
-    && (s.gold < 5000 || ["shop", "appraise"].includes(s.job?.id) || !!s.hunter),
+    && (s.gold < 5000 || ["shop", "appraise"].includes(s.job?.id) || !!s.hunter)
+    && Object.values(s.world.people ?? {}).some((p) => p.cast === "hong" && p.diedWorldM == null),
+  active: (s) => s.country === "th", pauseMax: 120, pauseEnd: "clean",
   cast: { hong: who("hong") },
   nodes: {
     offer: {
@@ -62,7 +64,7 @@ export const HONG = {
           "พรุ่งนี้ร้านเปิดตามปกติ มีป้ายใหม่ว่ารับซื้อทุกอย่างเหมือนเดิม") },
         { l: "ให้การเพิ่มกับตำรวจ", show: (s, st) => st.route === "informer", noAuto: true,
           y: end("informer", "เจ๊หงส์ถูกพาตัวไป เธอหันมายิ้มให้คุณก่อนขึ้นรถ ยิ้มแบบที่คุณไม่อยากเห็นอีก",
-            { fac: { state: 5 }, castAct: { hong: "enemy" } }) },
+            { fac: { state: 5 }, castAct: { hong: "retire" } }) },
       ],
     },
     gone: {

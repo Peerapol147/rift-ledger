@@ -54,14 +54,14 @@ born at 0); rank letters F..S as in `RANKS`:
 
 | id | name | born (year) | start rank → ceiling | class | home | role |
 |---|---|---|---|---|---|---|
-| poramet | ปรเมศวร์ ศิลาวงศ์ | −24 | S → S | Barrier Maker | สายน้ำเจ้าพระยา head, bkk | strict mentor; holds the หอเงียบ record |
+| poramet | ปรเมศวร์ ศิลาวงศ์ | −40 | S → S | Barrier Maker | สายน้ำเจ้าพระยา head, bkk | strict mentor; holds the หอเงียบ record |
 | lalin | ลลิล ศิลาวงศ์ | +1 | F (awakens 18) → A | Healer | ศิลาวงศ์, bkk | peer; romanceable |
-| seojin | ยุน ซอจิน | −20 | S → S | Magic Swordsman | แพ็กโฮ head, sel | national rival; holds the หอจมน้ำ record |
+| seojin | ยุน ซอจิน | −36 | S → S | Magic Swordsman | แพ็กโฮ head, sel | national rival; holds the หอจมน้ำ record |
 | harin | ยุน ฮาริน | −1 | F (awakens 18) → A | Swordsman | ตระกูลยุน, sel | peer rival who may become a friend; romanceable |
-| thongbai | ครูทองใบ | −32 | B (retired) | Knight | แสงเหนือ rescue chief, bkk | mentor to civilians and hunters |
-| mingyu | ชเว มินกยู | −10 | A → A | Healer | ฮานึล, pus | ally; runs the free clinic after gate breaks |
-| hong | เจ๊หงส์ | −18 | C → C | Appraiser | เมฆดำ, bkk | fixer of the black market |
-| dohyun | คัง โดฮยอน | −6 | B → A | Trapper | กอมึน, icn | smuggler rival |
+| thongbai | ครูทองใบ | −50 | B (retired) | Knight | แสงเหนือ rescue chief, bkk | mentor to civilians and hunters |
+| mingyu | ชเว มินกยู | −28 | A → A | Healer | ฮานึล, pus | ally; runs the free clinic after gate breaks |
+| hong | เจ๊หงส์ | −34 | C → C | Appraiser | เมฆดำ, bkk | fixer of the black market |
+| dohyun | คัง โดฮยอน | −22 | B → A | Trapper | กอมึน, icn | smuggler rival |
 | pim | พิมพ์ ศิลาวงศ์ | +26 | F (awakens 18) → S | Barrier Maker | ศิลาวงศ์, bkk | next generation (lalin's niece); romanceable for heirs |
 
 - Each is created in `s.world.people` at world start with `src: "cast:<id>"`, `tags: ["cast", role…]`, and a fixed
@@ -155,3 +155,12 @@ numbers; file split (`src/data/cast.js` for the table, `src/data/narrative/<id>.
 6. **Families are not joinable guilds.** ศิลาวงศ์ and ตระกูลยุน are world-only listings. Tier is a label on guilds only.
    Guild change ±1 tier applies to guild members; family members join a guild when they awaken (seeded: their
    country's legendary or major guild).
+
+## 13. After the whole-branch review (all **(call)**)
+
+- Every hunter at world start is an adult (births above moved earlier); no gate deaths before 18.
+- A story can name a gone scene per person (`castGone: { role: node }`); it opens the month the person dies.
+- Stories run after the world's monthly events (front of `lastly`); romance needs trust 60 and is listed after
+  friendship; a cast spouse's death is a family event that ends the marriage.
+- Old saves: milestones (awakening, retirement, death) catch up by age; only the last year's news is logged.
+- Thai-only stories pause abroad (close after 10 years away); stories start only with a living cast member.

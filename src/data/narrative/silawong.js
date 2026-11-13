@@ -8,9 +8,14 @@ const peerOfLalin = (s) => {
   return !!l && Math.abs(l.bornWorldM - (s.mon0 ?? 0)) <= 60;
 };
 const sheHunts = (s, st) => !!personOf(s, st, "lalin")?.hunter;
+const fatherAlive = (s, st) => personOf(s, st, "father")?.diedWorldM == null;
+const lalinAge = (s, st) => Math.floor(((s.mon0 ?? 0) + s.ageM - (personOf(s, st, "lalin")?.bornWorldM ?? 0)) / 12);
 export const SILAWONG = {
-  id: "silawong", title: "บ้านศิลาวงศ์", tag: "ความสัมพันธ์", entry: "class", castGone: "gone",
-  discover: (s) => s.country === "th" && s.city === "bkk" && s.ageM >= 6 * 12 && s.ageM <= 12 * 12 && peerOfLalin(s),
+  id: "silawong", title: "บ้านศิลาวงศ์", tag: "ความสัมพันธ์", entry: "class", castGone: { lalin: "gone",
+    father: "fatherGone" },
+  discover: (s) => s.country === "th" && s.city === "bkk" && s.ageM >= 6 * 12 && s.ageM <= 12 * 12 && peerOfLalin(s)
+    && Object.values(s.world.people ?? {}).some((p) => p.cast === "lalin" && p.diedWorldM == null),
+  active: (s) => s.country === "th", pauseMax: 120, pauseEnd: "apart",
   cast: { lalin: who("lalin"), father: who("poramet") },
   nodes: {
     class: {
@@ -45,7 +50,8 @@ export const SILAWONG = {
       ],
     },
     screening: {
-      delay: [12, 36], needCast: L, when: (s) => age(s) >= 18 && (s.c["ev:ms18"] ?? 0) > 0,
+      // both screened: the player at eighteen, and Lalin at hers (she can be younger)
+      delay: [12, 36], needCast: L, when: (s, st) => age(s) >= 18 && (s.c["ev:ms18"] ?? 0) > 0 && lalinAge(s, st) >= 18,
       t: (s, st) => (hunts(s) && sheHunts(s, st)
         ? "คุณกับลลิลตื่นพลังทั้งคู่ เธอเป็นฮีลเลอร์อย่างที่ทุกคนเดา พ่อของเธอส่งดอกไม้มาให้คุณด้วยหนึ่งช่อ"
         : sheHunts(s, st)
@@ -62,7 +68,7 @@ export const SILAWONG = {
       ],
     },
     barrier: {
-      delay: [24, 72], needCast: L,
+      delay: [24, 72], needCast: LF,
       t: "บาเรียของปรเมศวร์ที่ครอบเขตริมน้ำร้าวเป็นครั้งแรกในรอบสามสิบปี ลลิลโทรหาคุณ เสียงเธอสั่น",
       o: [
         { l: "ไปช่วยเขาค้ำบาเรีย", show: (s) => hunts(s), s: "str", diff: 14, noAuto: true,
@@ -85,9 +91,22 @@ export const SILAWONG = {
           y: end("colleagues", "เธอยิ้มเหมือนรู้อยู่แล้ว และนัดกินข้าวกับคุณทุกเดือนไปอีกหลายปี",
             { mind: 5, castAct: { lalin: "friend" } }) },
         { l: "บอกว่าคุณอยากอยู่กับเธอ", romance: "lalin", noAuto: true,
-          y: end("together", "ปีต่อมางานแต่งจัดที่ท่าน้ำหลังบ้าน ปรเมศวร์ยืนอยู่แถวหลังสุดและไม่ได้ทำหน้าดุ", {
+          y: end("together", (s, st) => (fatherAlive(s, st)
+            ? "ปีต่อมางานแต่งจัดที่ท่าน้ำหลังบ้าน ปรเมศวร์ยืนอยู่แถวหลังสุดและไม่ได้ทำหน้าดุ"
+            : "ปีต่อมางานแต่งจัดที่ท่าน้ำหลังบ้าน เก้าอี้แถวหน้าว่างไว้หนึ่งตัวให้พ่อของเธอ"), {
             mind: 15, castAct: { lalin: "partner" } }) },
         { l: "ตอบเลี่ยงแล้วเปลี่ยนเรื่อง", y: end("apart", "เธอไม่ได้ถามอีก และค่อยๆ ห่างไปเอง") },
+      ],
+    },
+    fatherGone: {
+      delay: [0, 1], needCast: L,
+      t: (s, st) => `ปรเมศวร์ ศิลาวงศ์ไม่อยู่แล้ว ลลิลโทรมาหาคุณ เสียงเธอเรียบเกินไป `
+        + `เธอบอกว่ายังจำวันที่${first(s, st, "lalin", "คุณมาบ้านครั้งแรก")}ได้ พ่อพูดถึงคุณในวันนั้น`,
+      o: [
+        { l: "ไปอยู่กับเธอที่บ้านริมน้ำ", y: { m: "คุณสองคนนั่งบนท่าน้ำจนเช้า ไม่มีใครเปิดไฟไล่อีกแล้ว",
+          go: "choice", rel: { lalin: { trust: 15, mem: "คุณไปอยู่กับลลิลคืนที่พ่อของเธอจากไป" } } } },
+        { l: "ส่งดอกไม้และข้อความ", y: { m: "เธอตอบกลับมาสามวันต่อมา สั้นแต่ไม่โกรธ", go: "choice",
+          rel: { lalin: { trust: 5 } } } },
       ],
     },
     gone: {
@@ -95,7 +114,8 @@ export const SILAWONG = {
       t: (s, st) => `ข่าวมาถึงคุณ ลลิล ศิลาวงศ์ไม่อยู่แล้ว คุณนึกถึงวันที่${first(s, st, "lalin", "เจอกันครั้งแรก")}`,
       o: [
         { l: "ไปงานศพที่บ้านริมน้ำ", show: (s, st) => trust(s, st, "lalin") >= 20,
-          y: end("colleagues", "ปรเมศวร์ยืนข้างโลงทั้งคืน เขาพยักหน้าให้คุณหนึ่งครั้ง", { mind: -8 }) },
+          y: end("colleagues", (s, st) => (fatherAlive(s, st) ? "ปรเมศวร์ยืนข้างโลงทั้งคืน เขาพยักหน้าให้คุณหนึ่งครั้ง"
+            : "บ้านริมน้ำเงียบกว่าที่เคย ไม่เหลือใครในตระกูลมายืนรับแขก"), { mind: -8 }) },
         { l: "จุดธูปที่บ้าน", y: end("apart", "ควันลอยไปทางแม่น้ำ", { mind: -3 }) },
       ],
     },

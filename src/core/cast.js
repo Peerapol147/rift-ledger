@@ -40,30 +40,44 @@ const trustOf = (s, id) => s.relations?.[id]?.trust ?? 0; // read only: no empty
 const PROMOTE = 0.2, SPITE = 0.35, HURT = 0.08, MOVE = 0.03;
 const GATE_DEATH = (rank) => (rank >= 6 ? 0.003 : 0.01);
 
-function news(s, text, p) { log(s, "ข่าวโลก", text, ""); if (p) p.heard = true; } // a name in the news is known
+// A name in the news is known. Catching up years at once (an old save, a long gap) stays quiet: only this year's
+// news is written into the log.
+function news(s, text, p, m) {
+  if (m == null || worldMonth(s) - m < 12) log(s, "ข่าวโลก", text, "");
+  if (p) p.heard = true;
+}
 function syncRoster(s, p) {
   const n = s.world.roster?.find((x) => x.personId === p.id);
-  if (n) Object.assign(n, { rank: p.rank, alive: p.diedWorldM == null });
+  if (n) Object.assign(n, { rank: p.rank, alive: p.diedWorldM == null, retired: !!p.retired });
 }
 function die(s, p, m, cause) {
   p.diedWorldM = m; p.diedCause = cause;
   syncRoster(s, p);
   const age = Math.floor((m - p.bornWorldM) / 12);
-  news(s, cause === "gate" ? `${p.name} ไม่ได้กลับออกมาจากเกต` : `${p.name} จากไปอย่างสงบในวัย ${age} ปี`, p);
+  news(s, cause === "gate" ? `${p.name} ไม่ได้กลับออกมาจากเกต` : `${p.name} จากไปอย่างสงบในวัย ${age} ปี`, p, m);
+  if (p.partnerOf === s.lifeId) { // your husband or wife: not a line in the news
+    s.c.married = 0;
+    s.mind = Math.max(0, s.mind - 25);
+    log(s, "ครอบครัว", cause === "gate" ? `${p.name} คู่ชีวิตของคุณ ไม่ได้กลับออกมาจากเกต บ้านเงียบลงทั้งหลัง`
+      : `${p.name} คู่ชีวิตของคุณ จากไปอย่างสงบ คุณจับมือเธอไว้จนถึงเช้า`, "bad");
+  }
 }
 
 function step(s, p, m) {
   const d = CAST[p.cast], R = stream(s, "cast:" + p.cast), age = m - p.bornWorldM;
   p.retireAtY ??= 55 + ri(R, 0, 10);
   p.lifeMaxY ??= 70 + ri(R, 0, 20);
-  if (age === p.lifeMaxY * 12) return die(s, p, m, "age");
-  if (d.awakenAt && !p.hunter && age === d.awakenAt * 12) {
+  // milestones use >= so a world that catches up (an old save) still reaches them
+  if (age >= p.lifeMaxY * 12) return die(s, p, m, "age");
+  if (d.awakenAt && !p.hunter && age >= d.awakenAt * 12) {
     p.hunter = { rank: 0, cls: p.cls }; p.rank = 0;
     const homes = (GUILDS[p.country] ?? []).filter((g) => g.tier !== "shadow");
     p.guild = homes[ri(R, 0, homes.length - 1)]?.id ?? null;
   }
   if (!p.hunter || p.retired) return;
-  if (age === p.retireAtY * 12) { p.retired = true; news(s, `${p.name} ประกาศเกษียณจากการล่า`, p); return; }
+  if (age >= p.retireAtY * 12) {
+    p.retired = true; syncRoster(s, p); news(s, `${p.name} ประกาศเกษียณจากการล่า`, p, m); return;
+  }
   if (age >= 18 * 12 && (age - 18 * 12) % 24 === 0) {
     const t = trustOf(s, p.id);
     const up = rnd(R), hurt = rnd(R), move = rnd(R), pick = rnd(R); // always four draws: same stream either way
@@ -78,7 +92,7 @@ function step(s, p, m) {
       if (near.length) p.guild = near[Math.floor(pick * near.length)].id;
     }
   }
-  if (age > 0 && age % 12 === 0) {
+  if (age >= 18 * 12 && age % 12 === 0) { // gate deaths: adults only
     const roll = rnd(R);
     let chance = GATE_DEATH(p.rank);
     if (p.city === s.city && trustOf(s, p.id) >= 40) chance /= 2; // you were there, you warned them
@@ -93,6 +107,7 @@ export function updatePeople(s) {
   for (const p of cast) {
     for (let m = (p.doneWM ?? now) + 1; m <= now && p.diedWorldM == null; m++) step(s, p, m);
     p.doneWM = Math.max(p.doneWM ?? now, now);
+    syncRoster(s, p); // the news reads the roster: keep it true to the person, however they changed
   }
 }
 monthly.unshift(updatePeople); // first in the month; it never opens an event

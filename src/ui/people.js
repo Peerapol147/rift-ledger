@@ -21,7 +21,8 @@ export function peopleView(s) {
     .map(([id, r]) => {
       const p = C.personById(s, id), role = p.tags.map((t) => ROLE[t]).find(Boolean) ?? "คนรู้จัก";
       const gone = p.diedWorldM != null ? " · จากไปแล้ว" : "";
-      const tie = TIE[p.ties?.[s.familyId]] ? ` · ${TIE[p.ties[s.familyId]]}` : "";
+      // this life's own spouse is "your partner"; the family words are for what earlier lives were to them
+      const tie = p.partnerOf === s.lifeId ? " · คู่ชีวิตของคุณ" : "";
       return `<div class="item person"><span><b>${esc(p.name)}</b> · ${role}${gone}${tie}`
         + `<small>${esc(C.trustWord(r.trust))} · ${esc(r.memories.at(-1).text)}</small></span></div>`;
     }).join("")

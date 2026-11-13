@@ -60,7 +60,8 @@ for (const id of Object.keys(SETUP)) {
         st.killed = true;
       }
       if (st?.killed && s.ev?.story?.id === id) {
-        if (s.ev.story.node === C.STORY_DEFS[id].castGone) gone = true;
+        const g = C.STORY_DEFS[id].castGone; // one node, or one per person
+        if ((typeof g === "object" ? Object.values(g) : [g]).includes(s.ev.story.node)) gone = true;
         else assert.fail(`met alive at ${s.ev.story.node}`);
       }
     });

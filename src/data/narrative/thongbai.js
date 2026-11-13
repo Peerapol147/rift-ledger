@@ -4,7 +4,9 @@ import { who, trust, first, go, end, mem, hunts } from "./castref.js";
 const T = ["thongbai"];
 export const THONGBAI = {
   id: "thongbai", title: "ครูกู้ภัย", tag: "ชีวิต", entry: "drill", castGone: "gone",
-  discover: (s) => s.country === "th" && s.ageM >= 12 * 12 && s.ageM <= 40 * 12,
+  discover: (s) => s.country === "th" && s.ageM >= 12 * 12 && s.ageM <= 40 * 12
+    && Object.values(s.world.people ?? {}).some((p) => p.cast === "thongbai" && p.diedWorldM == null),
+  active: (s) => s.country === "th", pauseMax: 120, pauseEnd: "stranger", // abroad, his drills are far away
   cast: { thongbai: who("thongbai") },
   nodes: {
     drill: {
