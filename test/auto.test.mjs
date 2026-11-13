@@ -30,8 +30,9 @@ test("stop policy always waits; prefers higher odds and avoids mind loss", () =>
   assert.equal(autoDecide(s, "important"), 1);
 });
 
-// The owner asked for more choices in their own hands (fun pass): a life now asks about 1–2 times a year.
-test("important policy finishes a civilian life with 40–160 stops", () => {
+// The owner asked for more choices in their own hands (fun pass): a life now asks about 1–2 times a year;
+// a third option on every event (life plans pass) adds checks, so the ceiling is 200.
+test("important policy finishes a civilian life with 40–200 stops", () => {
   for (let i = 0; ; i++) {
     const s = newLife("civ" + i);
     let stops = 0;
@@ -43,7 +44,7 @@ test("important policy finishes a civilian life with 40–160 stops", () => {
     }
     if (s.hunter) continue;
     assert.ok(s.dead);
-    assert.ok(stops >= 40 && stops <= 160, `stops ${stops}`);
+    assert.ok(stops >= 40 && stops <= 200, `stops ${stops}`);
     return;
   }
 });

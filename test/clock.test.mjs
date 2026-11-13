@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { newLife, tick, ageY, die, openEvent, choose, stageOf } from "../src/core/index.js";
 import { playUntil, playAll } from "./helpers.mjs";
+import { randomPool } from "../src/core/clock.js";
 
 test("milestone opens at exact age", () => {
   const s = playUntil(newLife("m"), (x) => x.ev?.id === "ms6");
@@ -50,4 +51,19 @@ test("whole life is deterministic", () => {
 test("focus plans follow stage", () => {
   const s = newLife("f");
   assert.equal(stageOf(s), "kid");
+});
+
+test("a random event that declares no cap comes once in a life", () => {
+  const s = newLife("cap1");
+  s.ageM = 30 * 12;
+  assert.ok(randomPool(s).some((e) => e.id === "adultGym"), "fresh: in the pool");
+  s.c["ev:adultGym"] = 1; s.c["last:adultGym"] = 0;
+  assert.ok(!randomPool(s).some((e) => e.id === "adultGym"), "after once: out for good");
+});
+
+test("an old save where an event already ran three times plays on", () => {
+  const s = newLife("cap3");
+  s.ageM = 30 * 12; s.c["ev:adultGym"] = 3;
+  assert.doesNotThrow(() => playAll(s));
+  assert.ok(s.dead);
 });

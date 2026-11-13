@@ -2,6 +2,7 @@
 import sewerHound from "../art/monsters/beast/sewer-hound.png";
 import acidSnail from "../art/monsters/beast/acid-snail.png";
 import flyingFish from "../art/monsters/beast/flying-fish.png";
+import waterlessFish from "../art/monsters/beast/waterless-fish.png";
 import signalBat from "../art/monsters/beast/signal-bat.png";
 import glassFrog from "../art/monsters/beast/glass-frog.png";
 import wireEater from "../art/monsters/construct/wire-eater.png";
@@ -22,9 +23,36 @@ import deathManager from "../art/monsters/boss/death-manager.png";
 import cableDragon from "../art/monsters/boss/cable-dragon.png";
 import thingOnTopFloor from "../art/monsters/boss/thing-on-top-floor.png";
 import riftMother from "../art/monsters/boss/rift-mother.png";
+import shipEatingVine from "../art/monsters/beast/ship-eating-vine.png";
+import containerCrab from "../art/monsters/beast/container-crab.png";
+import skyLureBird from "../art/monsters/beast/sky-lure-bird.png";
+import pierShadow from "../art/monsters/spirit/pier-shadow.png";
+import lastPassenger from "../art/monsters/spirit/last-passenger.png";
+import offbeatReflection from "../art/monsters/spirit/offbeat-reflection.png";
+import teacherStillTeaching from "../art/monsters/spirit/teacher-still-teaching.png";
+import youFromTheOtherSide from "../art/monsters/spirit/you-from-the-other-side.png";
+import eveningAnchor from "../art/monsters/boss/evening-anchor.png";
+import lastMayor from "../art/monsters/boss/last-mayor.png";
+import dryLighthouseKeeper from "../art/monsters/boss/dry-lighthouse-keeper.png";
+import lastTideQueen from "../art/monsters/boss/last-tide-queen.png";
+import saltGeneral from "../art/monsters/boss/salt-general.png";
 import { MONSTERS, monsterOf, tintOf } from "./data/monsters.js";
 
 const ART = {
+  "beast/ship-eating-vine": shipEatingVine,
+  "beast/container-crab": containerCrab,
+  "beast/sky-lure-bird": skyLureBird,
+  "spirit/pier-shadow": pierShadow,
+  "spirit/last-passenger": lastPassenger,
+  "spirit/offbeat-reflection": offbeatReflection,
+  "spirit/teacher-still-teaching": teacherStillTeaching,
+  "spirit/you-from-the-other-side": youFromTheOtherSide,
+  "boss/evening-anchor": eveningAnchor,
+  "boss/last-mayor": lastMayor,
+  "boss/dry-lighthouse-keeper": dryLighthouseKeeper,
+  "boss/last-tide-queen": lastTideQueen,
+  "boss/salt-general": saltGeneral,
+  "beast/waterless-fish": waterlessFish,
   "beast/sewer-hound": sewerHound, "beast/acid-snail": acidSnail, "beast/flying-fish": flyingFish, "beast/signal-bat": signalBat, "beast/glass-frog": glassFrog,
   "construct/wire-eater": wireEater, "construct/concrete-humanoid": concreteHumanoid, "construct/streetlight-spider": streetlightSpider, "construct/driverless-machine": driverlessMachine, "construct/rail-centipede": railCentipede,
   "spirit/floating-eyes": floatingEyes, "spirit/old-house-owner": oldHouseOwner,

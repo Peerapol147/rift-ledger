@@ -218,6 +218,21 @@ const ART = {
     for (const [x, d] of [[2, 1], [248, -1], [384, 1]]) { front.t(x, 88, 11, 56, "#0f0820"); front.t(x + d * 12, 108, 7, 36, "#0f0820"); front.l(x, 88, x - 6, 143, "#ff5fd2"); front.l(x + d * 12, 108, x + d * 12 + 4, 143, "#9a3ac0"); }
   },
   // Outdoor scenes already have full weather art, so only a foreground frame is added.
+  room(far, mid, near, front) {
+    far.r(0, 0, LW, 128, "#c9b28e"); far.r(0, 96, LW, 32, "#b39a74"); far.r(0, 94, LW, 2, "#8a7356");
+    for (let x = 0; x < LW; x += 16) far.r(x, 0, 1, 94, "#bfa682");
+    for (const x of [40, 296]) {
+      far.r(x, 22, 64, 48, "#6a5440"); far.r(x + 3, 25, 58, 42, "#2c3550"); far.e(x + 44, 38, 5, 5, "#b48ce0");
+      far.g(x + 6, 46, 6, 2, 9, 8, 4, 3, "#ffe3a0", 0.7, x); far.r(x + 31, 25, 2, 42, "#6a5440"); far.r(x + 3, 45, 58, 2, "#6a5440");
+      far.r(x - 6, 18, 8, 56, "#a8494a"); far.r(x + 62, 18, 8, 56, "#a8494a"); far.r(x - 8, 16, 80, 3, "#5a4636");
+    }
+    for (const x of [170, 426]) { mid.r(x, 54, 46, 4, "#7a5a40"); mid.r(x + 4, 42, 8, 12, "#d8604a"); mid.r(x + 14, 46, 6, 8, "#4a7ab0");
+      mid.r(x + 24, 40, 10, 14, "#e8d8a0"); mid.r(x + 36, 48, 6, 6, "#7ab07a"); }
+    for (const x of [136, 392]) { mid.r(x, 100, 60, 3, "#8a6a4a"); for (let i = 0; i < 60; i += 6) mid.r(x + i, 103, 2, 21, "#8a6a4a");
+      mid.r(x, 124, 60, 4, "#6a5038"); mid.r(x + 4, 110, 52, 14, "#f0e4f4"); mid.r(x + 40, 106, 10, 6, "#f8f0d8"); }
+    near.r(0, 128, LW, 16, "#9a7a58"); for (let x = 0; x < LW; x += 24) near.r(x, 128, 1, 16, "#86684a");
+    for (const x of [60, 316]) { front.e(x + 30, 138, 34, 5, "#7a4a6a"); front.e(x + 30, 138, 26, 3, "#9a6a8a"); }
+  },
   home(far, mid, near, front) {
     for (const x0 of [-4, 232, 372]) { for (let i = 0; i < 4; i++) { front.r(x0 + i * 8, 118, 5, 26, "#3a2c24"); front.t(x0 + i * 8 + 2, 114, 2, 4, "#3a2c24"); front.r(x0 + i * 8, 118, 1, 26, "#7a6048"); } front.r(x0 - 2, 124, 34, 3, "#2c211b"); front.r(x0 - 2, 136, 34, 3, "#2c211b"); }
     for (let x = 34; x < 226; x += 30) { front.l(x, 143, x - 2, 138, "#2f5a3a"); front.l(x + 2, 143, x + 4, 137, "#3f7a4a"); }

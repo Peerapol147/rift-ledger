@@ -24,6 +24,7 @@ const SCENES = {
   clinic: { a: "#cfe8e6", b: "#f2f6f0", city: "#8fb5b3", win: "#ffffff", g: "#9aa9a6", amb: "rays", bricks: 1 }, market: { a: "#3b2a4a", b: "#f0a05a", city: "#4a3340", win: "#ffd27a", g: "#4d3b34", amb: "fireflies" },
   wall: { a: "#1b2735", b: "#6d8296", city: "#2a3745", win: "#8fe8ff", g: "#323c46", amb: "rain", bricks: 1 }, ruins: { a: "#1a1410", b: "#6e5a3c", city: "#2a2118", win: "#d6b46a", g: "#2d251c", amb: "fog", bricks: 1 },
   frost: { a: "#0d1b2e", b: "#a9d4e8", city: "#27405a", win: "#e8fbff", g: "#4a6178", amb: "fog" }, ember: { a: "#240808", b: "#ff6a2c", city: "#2e0f0c", win: "#ffb347", g: "#33140f", amb: "fireflies", bricks: 1 },
+  room: { a: "#c9b28e", b: "#e8d4b0", city: "#b39a74", win: "#ffe3a0", g: "#9a7a58", amb: "", bricks: 1 },
   arena: { a: "#1a0f1f", b: "#7a2a3a", city: "#241526", win: "#ff8a8a", g: "#3a2430", amb: "", bricks: 1 },
 };
 const SPR = { hero: ["....hhhh....", "...hhhhhh...", "...hssssh...", "...sdssds...", "...ssssss...", "....ssss....", "..cccccccc..", ".cscccccsc..", ".cs.cccc.sc.", ".ss.cccc.ss.", "....dddd....", "....dddd....", "...dd..dd...", "...dd..dd...", "...nn..nn..."], kid: ["........nnn.........","......nnhhhnn.......",".....nhhhhHhhn......","....nhHHhhhhhhhn....","....nhhhhhhhhhhn....","...nhhhhsSSshhhn....","....nhhssSSSshn.....","....nsssnSsnssn.....",".....nsSSSSSsn......","......nssSssn.......",".......nssnn........",".....nncttcann......","....ncCcttcacn......","...ncCCcttcacn......","...ncCcntncabn......","...nssnctncbbn......","...nSsnccncbbn......","....nnnccnnnn.......","......nddDdn........","......nddDdn........","......ndnndn........",".....nddnnddn.......",".....nwwnnwwn.......",".....nnnnnnnn......."],
@@ -235,6 +236,8 @@ function drawFrame(now) {
   // big ones punch, and it always settles; a fresh random offset every frame only buzzes. Calm mode (settings) keeps the picture still.
   let sx = 0, sy = 0; if (shake > 0) { shake = Math.max(0, shake - real * 1.9); const k = stage.calm ? 0 : shake * shake; sx = Math.round(7 * k * Math.sin(t * 61)); sy = Math.round(4 * k * Math.sin(t * 47 + 1.3)); }
   ctx.putImageData(img, sx, sy);
+  if (stage.night) { ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "#3a4478"; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "source-over"; }
   if (trip) { const u = trip.t / (TRIP / 2), d = Math.max(0, 1 - Math.abs(u - 1) * 2.2); if (d > 0) { ctx.fillStyle = `rgba(6,6,12,${d.toFixed(2)})`; ctx.fillRect(0, 0, W, H); } }
 }
 export function initStage(canvas, ov) { canvas.width = W; canvas.height = H; ctx = canvas.getContext("2d"); frame = createFrame(W, H); img = new ImageData(W, H); bg = new Uint32Array(W * H); base = new Uint32Array(W * H); overlay = ov; stage.renderDisabled = false; setScene("home"); requestAnimationFrame(frameLoop); }

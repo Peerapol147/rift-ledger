@@ -43,7 +43,7 @@ export function recordFloor(s, tower, floor, byPlayer) {
   if (floor <= s.world.records[tower]) return false;
   s.world.records[tower] = floor;
   const who = byPlayer ? s.name : "ฮันเตอร์คนหนึ่ง";
-  news(s, `${who} ทำลายสถิติ ${TOWERS[tower].n} ขึ้นถึงชั้น ${floor}`);
+  news(s, `${who} ทำลายสถิติ ${TOWERS[tower].short} ขึ้นถึงชั้น ${floor}`);
   if (byPlayer) s.c.records = (s.c.records ?? 0) + 1;
   return true;
 }

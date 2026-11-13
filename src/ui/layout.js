@@ -3,6 +3,7 @@ import * as C from "../core/index.js";
 import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../data/index.js";
 import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
+import { planTitle } from "./art.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
 const STAGE_TITLE = { kid: "เด็ก", teen: "วัยรุ่น", adult: "ผู้ใหญ่", old: "ผู้สูงวัย" };
@@ -21,6 +22,7 @@ export function card(s) {
   const alerts = C.alerts(s).map((a) => `<div class="alert">${esc(a.text)}</div>`).join("");
   const goals = C.goalProgress(s).map((g) =>
     `<div class="goal"><span>📌 ${esc(g.label)} <b class="num">${g.cur}/${g.target}</b>${g.done ? " ✓" : ""}</span>${btn("unpin:" + g.key, "×", 'class="sm"')}</div>`).join("");
+  const main = C.focusList(s).find((f) => f.id === s.focus);
   const plans = C.focusList(s).map((f) => btn("focus:" + f.id, esc(f.n), s.focus === f.id ? 'class="on"' : "")).join("");
   const xp = s.hunter ? `<div class="kv"><span>EXP</span><b>${Math.floor(s.hunter.xp)}/${C.xpNeed(s.hunter.lv)}</b></div>${bar("xp", s.hunter.xp, C.xpNeed(s.hunter.lv))}` : "";
   return `
@@ -34,7 +36,22 @@ export function card(s) {
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
   ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
   <div class="stats">${stats}</div>${alerts}${goals}
-  <h3>แผนเดือนนี้</h3><div class="plan">${plans}</div>`;
+  <h3>${planTitle(s)}</h3><div class="plan">${plans}</div>${planDesc(main)}${secondPlan(s)}`;
+}
+
+// What a choice touches if it goes well (core/events.js effectChips), small and dim under its label.
+const chips = (fx) => (fx?.length ? `<small class="chips">${fx.map(esc).join(" · ")}</small>` : "");
+
+// What the chosen plan does, in one line (data/stats.js desc).
+const planDesc = (p) => (p?.desc ? `<div class="pdesc">${esc(p.desc)}</div>` : "");
+// From 13: a secondary plan at half strength (core/clock.js focus2List).
+function secondPlan(s) {
+  const list = C.focus2List(s);
+  if (!list.length) return "";
+  const on = (id) => (s.focus2 === id || (!s.focus2 && id === "none") ? 'class="on"' : "");
+  const btns = [btn("focus2:none", "ไม่มี", on("none")), ...list.map((f) => btn("focus2:" + f.id, esc(f.n), on(f.id)))];
+  return `<h3>แผนรอง <span class="dim">(ผลครึ่งหนึ่ง)</span></h3><div class="plan">${btns.join("")}</div>`
+    + (s.focus2 ? `<div class="pdesc">${esc(C.focus2Desc(s))}</div>` : "");
 }
 
 function badge(v) {
@@ -68,7 +85,7 @@ function eventCard(s, waitingAuto) {
     n++;
     const lock = v.locked ? `<div class="lockrow">🔒 ${esc(v.lockText)} ${btn("pin:" + i, "📌 ปักเป้าหมาย", 'class="sm"')}</div>` : "";
     return `<div><button class="opt ${v.locked ? "lock" : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
-      <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}</span><span>${badge(v)}</span></button>${lock}</div>`;
+      <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}${chips(v.fx)}</span><span>${badge(v)}</span></button>${lock}</div>`;
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";
   const wait = waitingAuto ? `<div class="waitchip">⏸ เกมหยุดรอคุณเลือก</div>` : "";

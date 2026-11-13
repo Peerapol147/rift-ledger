@@ -31,10 +31,10 @@ function pulse(s) {
   }
   if (roll < 0.65) {
     const t = pk(R, Object.keys(TOWERS)), cur = s.world.records[t] ?? 40;
-    if (cur >= 60) return news(s, `ทีมใหญ่จากหลายประเทศพยายามทำลายสถิติ${TOWERS[t].n} แต่ถอยกลับมาที่ชั้นเดิม`);
+    if (cur >= 60) return news(s, `ทีมใหญ่จากหลายประเทศพยายามทำลายสถิติ ${TOWERS[t].short} แต่ถอยกลับมาที่ชั้นเดิม`);
     s.world.records[t] = cur + 1;
     const hero = s.world.roster.filter((n) => n.alive && n.rank >= 5);
-    return news(s, `${hero.length ? pk(R, hero).n : "ทีมนิรนาม"} ทำลายสถิติ${TOWERS[t].n} ขึ้นถึงชั้น ${cur + 1}`);
+    return news(s, `${hero.length ? pk(R, hero).n : "ทีมนิรนาม"} ทำลายสถิติ ${TOWERS[t].short} ขึ้นถึงชั้น ${cur + 1}`);
   }
   if (roll < 0.85) {
     // a hunter of the roster falls; someone new takes the place (you are not the only story)

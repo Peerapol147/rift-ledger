@@ -25,6 +25,7 @@ export function val(s, key) {
   if (key === "age") return ageY(s);
   if (key === "rank") return s.hunter ? s.hunter.rank : -1;
   if (key === "fame") return s.fame;
+  if (key === "employed") return s.job ? 1 : 0;
   if (key.startsWith("fac:")) return s.fac?.[key.slice(4)] ?? 0;
   if (key === "guild") return !s.guild ? 0 : s.guild.role === "master" ? 2 : 1;
   if (key === "vault" || key === "home") return s.store?.[key]?.length ?? 0;
@@ -70,7 +71,21 @@ export function optionView(s, opt) {
   else if (opt.risk) view.odds = Math.round((1 - opt.risk) * 100);
   // risk is rolled by choose(); danger is information only (the risk lives inside the fight it starts).
   view.risk = opt.risk ?? opt.danger ?? 0;
+  view.fx = effectChips(opt.y ?? {});
   return view;
+}
+
+// What an option touches if it goes well, as short chips for its button: stats, money, health, mind, fame. Never
+// counters, factions or acts (secrets stay secret), never what happens on a failed check.
+export function effectChips(y) {
+  const out = [];
+  for (const [k, v] of Object.entries(y.st ?? {})) if (STATS[k] && v) out.push(STATS[k] + (v > 0 ? "↑" : "↓"));
+  const sign = (v) => (v > 0 ? "+" : "−");
+  if (y.gold) out.push("เงิน" + sign(y.gold));
+  if (y.hp) out.push("สุขภาพ" + sign(y.hp));
+  if (y.mind) out.push("สุขภาพจิต" + sign(y.mind));
+  if (y.fame) out.push("ชื่อเสียง" + sign(y.fame));
+  return out;
 }
 
 export function eligible(s, ev) {
@@ -84,6 +99,8 @@ export function eligible(s, ev) {
   if (ev.once && s.c["ev:" + ev.id]) return false;
   for (const [k, min] of Object.entries(ev.if ?? {})) if (val(s, k) < min) return false;
   for (const [k, max] of Object.entries(ev.max ?? {})) if (val(s, k) > max) return false;
+  // a follow-up waits so many months after the counter it needs was first set
+  for (const [k, m] of Object.entries(ev.after ?? {})) if (s.ageM - (s.c["at:" + k] ?? -1e9) < m) return false;
   return true;
 }
 
@@ -118,7 +135,8 @@ export function choose(s, i) {
   s.ev = null;
   s.c["ev:" + ev.id] = (s.c["ev:" + ev.id] ?? 0) + 1;
   const tail = out.m ? ` ${fill(s, out.m)}` : "";
-  log(s, ev.tag, `${ev.t} → ${opt.l}${tail}`, ok ? "imp" : "bad");
+  const from = ev.fromPlan ? ` · มาจากแผน ${ev.fromPlan}` : "";
+  log(s, ev.tag, `${ev.t} → ${opt.l}${tail}${from}`, ok ? "imp" : "bad");
   applyOutcome(s, out, opt.l, !!opt.risk);
 }
 
@@ -139,7 +157,10 @@ export function applyOutcome(s, out, label = "เหตุการณ์", leth
   hooks.facOutcome?.(s, out);
   if (out.gold) addLedger(s, out.goldLabel ?? label, out.gold);
   for (const [k, d] of Object.entries(out.st ?? {})) s.st[k] = Math.max(0, s.st[k] + d);
-  for (const [k, d] of Object.entries(out.c ?? {})) s.c[k] = (s.c[k] ?? 0) + d;
+  for (const [k, d] of Object.entries(out.c ?? {})) {
+    if (!s.c[k] && d > 0) s.c["at:" + k] = s.ageM; // when it began, for follow-ups that wait (`after`)
+    s.c[k] = (s.c[k] ?? 0) + d;
+  }
   Object.assign(s.flags, out.flags ?? {});
   if (out.mind) hooks.changeMind ? hooks.changeMind(s, out.mind) : (s.mind = clamp(s.mind + out.mind, 0, 100));
   if (out.injury) hooks.injure?.(s, out.injury[0], out.injury[1] ?? null);

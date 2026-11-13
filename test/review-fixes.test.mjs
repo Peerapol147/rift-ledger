@@ -71,3 +71,43 @@ test("the world keeps making news after the calendar runs out, and illness never
   for (let i = 0; i < 400 && !t.dead; i++) { t.ev = null; C.tick(t); }
   if (t.dead?.cause === "โรคร้ายที่ไม่ได้รักษา") assert.ok((t.c["ev:illness"] ?? 0) >= 1, "warned first");
 });
+
+// Continuity part 1: events fit the life they open in.
+import { breakCheck } from "../src/core/hunt.js";
+const evById = (id) => C.EVENT_INDEX.get(id);
+const adultAt = (seed, age) => { const s = C.newLife(seed); s.ageM = age * 12; s.ev = null; return s; };
+
+test("love proposal needs someone met first", () => {
+  const s = adultAt("love", 25);
+  assert.equal(C.eligible(s, evById("adultLove")), false);
+  s.c.dating = 1;
+  assert.equal(C.eligible(s, evById("adultLove")), true);
+});
+
+test("meeting someone as an adult starts dating", () => {
+  const meet = evById("adultMeet");
+  assert.ok(meet && meet.once, "adultMeet exists and is once");
+  assert.deepEqual(meet.age, [20, 40]);
+  assert.equal(meet.o[0].y.c.dating, 1);
+  const s = adultAt("meet", 30); s.c.married = 1;
+  assert.equal(C.eligible(s, meet), false, "not for the married");
+});
+
+test("an old or retired hunter is not called to a break", () => {
+  for (const [age, retired] of [[61, false], [40, true]]) {
+    const s = adultAt("brk" + age, age);
+    s.hunter = { rank: 2, cls: Object.keys(C.CLASSES ?? {})[0], lv: 10, skills: [], slots: [] };
+    if (retired) s.flags.stoppedHunting = 1;
+    s.city = "bkk";
+    for (let i = 0; i < 2000 && !s.ev; i++) breakCheck(s);
+    assert.ok(s.ev, "a break came");
+    assert.notEqual(s.ev.id, "hunterBreakCall");
+  }
+});
+
+test("a baby's plans fit a baby", () => {
+  const s = C.newLife("baby"); s.ageM = 12;
+  assert.deepEqual(C.focusList(s).map((f) => f.id), ["cuddle", "nap"]);
+  s.ageM = 5 * 12;
+  assert.deepEqual(C.focusList(s).map((f) => f.id), ["play", "study", "sport", "chores"]);
+});

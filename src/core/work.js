@@ -84,6 +84,7 @@ for (const id of Object.keys(CAREERS)) hooks.act["job:" + id] = (s) => takeJob(s
 hooks.act.jobHunt = openJobChoice;
 hooks.act.retire = (s) => { quitJob(s); s.flags.retired = true; };
 hooks.act.openJobChoice = openJobChoice;
+hooks.act.quitJob = quitJob;
 resolvers.jobName = (id) => CAREERS[id]?.n ?? id;
 
 monthly.push((s) => {
