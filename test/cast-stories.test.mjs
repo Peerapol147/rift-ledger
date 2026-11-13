@@ -9,6 +9,7 @@ const SETUP = {
   silawong: (s) => { s.country = "th"; s.city = "bkk"; },
   yoon: (s) => { s.country = "kr"; s.city = "sel"; },
   hong: (s) => { s.country = "th"; s.city = "bkk"; },
+  mingyu: (s) => { s.country = "kr"; s.city = "pus"; },
 };
 let turn = 0;
 // first, second and last visible option, and one that varies from scene to scene (a player who is not consistent)
@@ -80,4 +81,50 @@ test("hong reaches a hunter who sells loot, even one with money", () => {
 test("thongbai's story starts for Thai lives only", () => {
   const s = play("thongbai", "tb-kr", pickers[0], (x) => { x.country = "kr"; x.city = "sel"; });
   assert.equal(s.narrative.stories.thongbai, undefined);
+});
+
+const castOf = (s, id) => Object.values(s.world.people).find((p) => p.cast === id);
+const adult = (seed, country, city, years = 25) => {
+  const s = C.newLife(seed); s.country = country; s.city = city; s.ageM = years * 12; C.updatePeople(s); return s;
+};
+
+test("mingyu reaches Korean lives in Busan, and Korean lives hurt or in medicine anywhere", () => {
+  const D = C.STORY_DEFS.mingyu;
+  assert.equal(D.discover(adult("mg1", "kr", "pus")), true);
+  const hurt = adult("mg2", "kr", "sel"); assert.equal(D.discover(hurt), false);
+  hurt.injuries = [{ id: "breakScar", untilM: null }]; assert.equal(D.discover(hurt), true);
+  const doc = adult("mg3", "kr", "icn"); doc.job = { id: "hdoc" }; assert.equal(D.discover(doc), true);
+  assert.equal(D.discover(adult("mg4", "kr", "pus", 15)), false);
+  assert.equal(D.discover(adult("mg5", "kr", "pus", 61)), false);
+});
+
+test("mingyu: never for Thai lives, never after his death", () => {
+  const D = C.STORY_DEFS.mingyu;
+  const th = adult("mg6", "th", "bkk"); th.injuries = [{ id: "breakScar", untilM: null }];
+  assert.equal(D.discover(th), false);
+  const kr = adult("mg7", "kr", "pus");
+  C.setPersonStatus(kr, castOf(kr, "mingyu").id, { diedWorldM: C.worldMonth(kr) });
+  assert.equal(D.discover(kr), false);
+});
+
+test("mingyu: a Korean life that moves to Thailand pauses the story", () => {
+  let s, i = 0; // a world where he is still alive at the player's 20
+  do s = adult(`mg8-${i++}`, "kr", "pus", 20); while (castOf(s, "mingyu").diedWorldM != null);
+  for (let n = 0; n < 4000 && !s.narrative.stories.mingyu; n++) {
+    if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
+  }
+  assert.ok(s.narrative.stories.mingyu, "started");
+  if (s.ev?.story?.id === "mingyu") C.choose(s, Math.max(0, firstOpen(s)));
+  s.country = "th"; s.city = "bkk";
+  const until = s.ageM + 48;
+  while (s.ageM < until && !s.dead) {
+    assert.notEqual(s.ev?.story?.id, "mingyu", "a mingyu scene opened in Thailand");
+    if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
+  }
+  assert.equal(s.narrative.stories.mingyu.status, "paused");
+  for (let n = 0; n < 4000 && !s.dead && s.narrative.stories.mingyu.status !== "done"; n++) {
+    assert.notEqual(s.ev?.story?.id, "mingyu", "a mingyu scene opened in Thailand");
+    if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
+  }
+  assert.equal(s.narrative.stories.mingyu.ending, "patient"); // ten years away: he is someone you met once
 });

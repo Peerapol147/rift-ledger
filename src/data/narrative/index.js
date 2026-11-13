@@ -5,8 +5,9 @@ import { THONGBAI } from "./thongbai.js";
 import { SILAWONG } from "./silawong.js";
 import { YOON } from "./yoon.js";
 import { HONG } from "./hong.js";
+import { MINGYU } from "./mingyu.js";
 
 export const STORY_DEFS = { office: OFFICE, friend: FRIEND, thongbai: THONGBAI, silawong: SILAWONG, yoon: YOON,
-  hong: HONG };
+  hong: HONG, mingyu: MINGYU };
 // Old chapter chains replaced by a story above: core/stories.js skips them for a life that started the story.
 export const MIGRATED = ["office"];
