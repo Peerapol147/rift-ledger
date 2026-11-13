@@ -9,7 +9,8 @@ export const CAST = {
   lalin: c("ลลิล ศิลาวงศ์", "f", "th", "bkk", 1, 0, 5, "healer", null, "silawong", "peer", true, 18),
   seojin: c("ยุน ซอจิน", "m", "kr", "sel", -20, 6, 6, "mblade", "baekho", "yoon", "rival"),
   harin: c("ยุน ฮาริน", "f", "kr", "sel", -1, 0, 5, "sword", null, "yoon", "peer", true, 18),
-  thongbai: c("ครูทองใบ", "m", "th", "bkk", -32, 4, 4, "knight", "saengnuea", null, "mentor"),
+  thongbai: { ...c("ครูทองใบ", "m", "th", "bkk", -32, 4, 4, "knight", "saengnuea", null, "mentor"),
+    retired: true }, // the rescue chief no longer goes into gates
   mingyu: c("ชเว มินกยู", "m", "kr", "pus", -10, 5, 5, "healer", "haneul", null, "ally"),
   hong: c("เจ๊หงส์", "f", "th", "bkk", -18, 3, 3, "appraiser", "mekdam", null, "fixer"),
   dohyun: c("คัง โดฮยอน", "m", "kr", "icn", -6, 4, 5, "trapper", "geomeun", null, "rival"),
