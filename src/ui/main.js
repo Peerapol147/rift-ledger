@@ -28,7 +28,7 @@ const ui = {
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
 const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
-let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0;
+let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0, bannerUrgent = false;
 
 // ---- Start, load, death
 // A new life takes the first empty slot, else the first finished one; -1 when every slot holds a life in progress.
@@ -146,10 +146,14 @@ let saveFailing = false;
 function autosave() {
   if (!s || ui.slot < 0) return;
   const ok = slots.save(ui.slot, s);
-  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ");
+  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ", true);
   saveFailing = !ok;
 }
-function banner(text) { const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; }
+// A failed save is urgent: news and birthdays wait until it has been on screen for its full time.
+function banner(text, urgent = false) {
+  if (bannerUrgent && bannerT > 0 && !urgent) return;
+  const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; bannerUrgent = urgent;
+}
 
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
 const shown = {};
@@ -261,7 +265,7 @@ function act(a, el) {
       if (life.dead) showEnd(false); // a finished life: show its end, do not count it again
     },
     save: () => {
-      if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน");
+      if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", true);
       ui.slot = +v; banner("บันทึกแล้ว");
     },
     del: () => {

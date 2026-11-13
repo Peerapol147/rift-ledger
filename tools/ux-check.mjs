@@ -77,6 +77,51 @@ async function loaded(b, life, o = {}) {
 const choices = (page) => page.locator('#ev [data-a^="choose:"], [data-a^="choose:"]').count();
 const settings = async (page) => { await page.locator('[data-a="settings"]').first().click(); await page.waitForTimeout(150); };
 
+// ---- Blind spots the report did not test (docs/superpowers/specs/2026-11-13-ux-blind-spots-design.md)
+const failWrites = (page) => page.evaluate(() => {
+  Storage.prototype.setItem = function () { throw new DOMException("full", "QuotaExceededError"); };
+});
+// every text the banner shows, with when it appeared and when it was replaced
+const watchBanner = (page) => page.evaluate(() => {
+  window.__banners = [];
+  const b = document.querySelector("#banner"), at = () => performance.now();
+  new MutationObserver(() => {
+    const last = window.__banners.at(-1);
+    if (last && last.text !== b.textContent && last.end == null) last.end = at();
+    if (!b.hidden && b.textContent && (!last || last.text !== b.textContent || last.end != null)) {
+      window.__banners.push({ text: b.textContent, start: at(), end: null });
+    }
+  }).observe(b, { childList: true, characterData: true, subtree: true, attributes: true });
+});
+
+CASES["B-save-fail"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await failWrites(page);
+  await settings(page);
+  await page.locator('#modal [data-a="save:1"]').click(); await page.waitForTimeout(150);
+  const t = await page.locator("#banner").innerText();
+  await ctx.close();
+  return [/ไม่สำเร็จ/.test(t) && !/บันทึกแล้ว/.test(t), `a save that cannot be written says so ("${t}")`];
+};
+
+CASES["B-autosave-fail"] = async (b) => {
+  const { ctx, page } = await loaded(b, adult.s, { init: { [CFGK]: { policy: "skip", speed: 16, fs: 2 } } });
+  await failWrites(page); await watchBanner(page);
+  await page.locator('[data-a="speed:16"]').click();
+  // answer whatever the autopilot leaves to the player, so at least one birthday (and its autosave) passes
+  for (let i = 0; i < 30; i++) {
+    const c = page.locator('[data-a^="choose:"]').first();
+    if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
+    await page.waitForTimeout(200);
+  }
+  const seen = await page.evaluate(() => window.__banners);
+  await ctx.close();
+  const fail = seen.find((x) => /บันทึกอัตโนมัติไม่สำเร็จ/.test(x.text));
+  const shown = fail ? ((fail.end ?? fail.start + 1e9) - fail.start) / 1000 : 0;
+  return [shown >= 1, `the autosave failure stays readable (${fail ? Math.min(shown, 99).toFixed(2) + " s" : "never shown"}`
+    + `, ${seen.length} banners)`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);
