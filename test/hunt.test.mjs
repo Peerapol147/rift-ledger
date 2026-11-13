@@ -24,7 +24,7 @@ test("op defs have foes and decisions", () => {
   assert.ok(op.foes.length && op.decisions.length);
   const t = towerOp(s, "silent", 5);
   assert.equal(t.kind, "tower");
-  assert.equal(GATES.length >= 3, true);
+  assert.equal(GATES.length >= 8, true);
 });
 
 test("floors 1–50 use their band's own decisions; filler floors use the shared ones", async () => {
