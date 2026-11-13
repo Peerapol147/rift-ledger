@@ -120,7 +120,9 @@ export function playable(s) {
   for (const [k, v] of Object.entries(fresh)) {
     if (kind(v) !== "other" && kind(s[k]) !== kind(v) && !(v === null || s[k] === null)) return false;
   }
-  for (const [k, v] of Object.entries(fresh.world)) if (kind(v) !== "other" && kind(s.world?.[k]) !== kind(v)) return false;
+  for (const [k, v] of Object.entries(fresh.world)) {
+    if (kind(v) !== "other" && kind(s.world?.[k]) !== kind(v)) return false;
+  }
   return true;
 }
 
@@ -164,7 +166,8 @@ export function slots(store, n = 3) {
       const s = deserialize(str);
       if (!s || !playable(s)) return { ok: false, reason: "ข้อความเซฟไม่ครบ" };
       const prev = store.get(SLOT(i));
-      if (prev && deserialize(prev) && store.set(BAK(i), prev) === false) return { ok: false, reason: "บันทึกไม่สำเร็จ" };
+      const failed = { ok: false, reason: "บันทึกไม่สำเร็จ" };
+      if (prev && deserialize(prev) && store.set(BAK(i), prev) === false) return failed;
       if (store.set(SLOT(i), str) === false) return { ok: false, reason: "บันทึกไม่สำเร็จ" };
       return { ok: true, reason: "" };
     },
