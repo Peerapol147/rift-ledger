@@ -6,7 +6,7 @@ import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf, isNight } from "./art.js";
 import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
-import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { card, eventPanel, controls, tabsBar, TABS, POLICIES, hunterHeader, planPanel } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
 import { logTab } from "./tabs/log.js";
@@ -39,6 +39,7 @@ function freeSlot() {
 }
 
 function begin(life) {
+  if ($("#title-backdrop")) $("#title-backdrop").hidden = true;
   s = life;
   for (const id of book.get().seen.cal ?? []) s.flags["knowCal:" + id] = true;
   s.prefs ??= { plan: "careful" };
@@ -48,16 +49,18 @@ function begin(life) {
 }
 
 function startScreen() {
+  if ($("#title-backdrop")) $("#title-backdrop").hidden = false;
+  if ($("#bgm")) document.body.appendChild($("#bgm"));
   const list = slots.list();
   const rows = list.map((x, i) => (x?.locked ? `<div class="item"><span>ช่อง ${i + 1}: `
     + `<span class="dim">เซฟจากเกมเวอร์ชันใหม่กว่า เปิดในตั้งค่าเพื่อส่งออกได้</span></span></div>`
     : x ? `<div class="item"><span>ช่อง ${i + 1}: ${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}</span>
     <span>${x.dead ? "" : btn("load:" + i, "เล่นต่อ", 'class="sm"')}${btn("del:" + i, "ลบ", 'class="sm"')}</span></div>` : "")).join("");
-  $("#start").innerHTML = `<div class="st-card"><div class="dim">ปีที่ 21 หลังวันฟ้าแตก</div><h1>บันทึกหลังรอยแยก</h1>
+  $("#start").innerHTML = `<div class="st-card"><div class="start-brand">RIFT LEDGER</div><div class="dim">ปีที่ 21 หลังวันฟ้าแตก</div><h1>บันทึกหลังรอยแยก</h1>
     <p class="lede">เกิดในโลกที่เกตและหอคอยเปิดมาแล้วยี่สิบเอ็ดปี ใช้ชีวิตตั้งแต่เกิดจนวันสุดท้าย จะตื่นพลังหรือไม่ก็ได้</p>
     <div class="row"><input data-c="seed" placeholder="Seed (เว้นว่างเพื่อสุ่ม)" style="flex:1">${btn("new", "เริ่มชีวิตใหม่", 'class="pri"')}</div>
     <details class="howto"${book.get().lives ? "" : " open"}><summary>เล่นยังไง</summary>
-      <p>ทุกเดือนเลือก <b>แผนเดือนนี้</b> ทางซ้าย เช่น เรียน ทำงาน ฝึกฝน หรือล่าเกตเมื่อตื่นพลังแล้ว</p>
+      <p>ทุกเดือนเลือก <b>แผนชีวิต</b> ใต้เหตุการณ์ เช่น เรียน ทำงาน ฝึกฝน หรือล่าเกตเมื่อตื่นพลังแล้ว</p>
       <p>เมื่อมีเรื่องเข้ามา เลือกทางในช่องเหตุการณ์ ตัวเลข % คือโอกาสสำเร็จตามค่าสถานะของคุณ</p>
       <p>ตอนเริ่ม เกมหยุดรอคุณเลือกเองทุกเรื่อง ถ้าอยากให้เร็วขึ้น เปิดออโต้ได้ที่ช่องข้างปุ่มความเร็ว ให้เลือกเรื่องเล็กแทนคุณ</p>
       <p>ชีวิตจบได้หลายแบบ สิ่งที่ได้เห็นจะถูกจดในสมุดสะสมและเปิดทางให้ชีวิตถัดไป</p>
@@ -89,6 +92,7 @@ function busy() { if (s.ev || s.op) { banner("จัดการเรื่อ�
 
 // record: true the first time a life ends (collection + save); false when re-opening a finished save
 function showEnd(record) {
+  if ($("#bgm")) document.body.appendChild($("#bgm"));
   const d = C.deathSummary(s);
   if (record) {
     book.addLife();
@@ -159,7 +163,9 @@ function put(sel, html) {
   // a redraw must not take keyboard focus away from the control the player is on
   const box = $(sel), a = document.activeElement, key = box.contains(a) && a !== box
     && (a.dataset.a ? `[data-a="${a.dataset.a}"]` : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
+  const openDetails = [...box.querySelectorAll("details[open][id]:not(#nav-more)")].map((d) => d.id);
   box.innerHTML = html;
+  for (const id of openDetails) { const d = box.querySelector(`[id="${id}"]`); if (d) d.open = true; }
   if (key && document.activeElement === document.body) box.querySelector(key)?.focus({ preventScroll: true });
 }
 
@@ -171,11 +177,14 @@ function render() {
   reveal();
   if (!TABS.some(([k, , ok]) => k === ui.tab && ok(s))) ui.tab = "log";
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
+  if ($("#bgm") && $("#bgm").parentElement !== $("#headerbar")) $("#headerbar").appendChild($("#bgm"));
+  put("#hud", hunterHeader(s, ui));
   put("#card", card(s));
+  put("#lifeplan", planPanel(s));
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
   put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
   put("#ctrl", controls(ui));
-  put("#tabs", tabsBar(s, ui.tab));
+  put("#tabs", tabsBar(s, ui.tab, window.innerWidth <= 820));
   const view = $("#view"), keep = view.scrollTop;
   const typing = view.contains(document.activeElement) && document.activeElement.matches("input,textarea,select");
   if (!typing) put("#view", TAB_VIEW[ui.tab]());
@@ -295,7 +304,7 @@ function act(a, el) {
     fs: () => { ui.fs = +v; saveCfg(); },
     settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
     close: () => { ui.settings = false; ui.opener?.focus?.(); ui.opener = null; },
-    tab: () => { ui.tab = v; },
+    tab: () => { ui.tab = v; const more = $("#nav-more"); if (more) more.open = false; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
     slot: () => toggleSlot(s, v),
@@ -389,6 +398,7 @@ document.addEventListener("keydown", (e) => {
   saveCfg(); dirty = true;
 });
 
+window.addEventListener("resize", () => { dirty = true; });
 initStage($("#cv"), $("#ov"));
 startScreen();
 requestAnimationFrame(loop);

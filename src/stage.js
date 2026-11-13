@@ -1,3 +1,4 @@
+import { loadHunterCity, hunterCityPixels } from "./hunter-city-art.js";
 import { professionArt } from "./profession-art.js";
 import { civilianArt } from "./civilian-art.js";
 import { HERO_RASTER } from "./hero-raster.js";
@@ -87,7 +88,9 @@ function blit(l, dst) { const off = ((Math.round(cam * l.k) % LW) + LW) % LW, B 
 function backdrop() {
  const s0 = ((Math.round(cam * 0.12) % W) + W) % W, s1 = ((Math.round(cam) % W) + W) % W;
  if (!s0 && !s1) bg.set(base); else for (let y = 0; y < H; y++) { const sh = y < GY ? s0 : s1, r = y * W; bg.set(base.subarray(r + sh, r + W), r); if (sh) bg.set(base.subarray(r, r + sh), r + W - sh); }
- for (const l of layers) if (!l.front) blit(l, bg);
+ const city = hunterCityPixels(scene);
+ if (city) bg.set(city);
+ else for (const l of layers) if (!l.front) blit(l, bg);
 }
 // Soft contact shadow so bodies sit on the floor instead of floating over it.
 function shadow(cx, half) { for (let j = 0; j < 3; j++) { const w = Math.round(half * (j === 1 ? 1 : 0.7)); for (let i = -w; i <= w; i++) { const x = cx + i; if (x >= 0 && x < W) bg[(GY + 1 + j) * W + x] = dim(bg[(GY + 1 + j) * W + x]); } } }
@@ -230,7 +233,7 @@ function drawFrame(now) {
   }
   for (const f of fxs) f.fx.draw(frame, "front"); for (const a of amb) if (a.name === "rain") a.fx.draw(frame, "front");
   if (outdoor) drawWeather((x,y,c) => { if (!weatherColors.has(c)) weatherColors.set(c,rgb(c)); pix(x,y,weatherColors.get(c)); },W,H,GY,weather,t,true);
-  for (const l of layers) if (l.front) blit(l, frame.color);
+  for (const l of layers) if (l.front && !hunterCityPixels(scene)) blit(l, frame.color);
   composite(frame, img.data, bg);
   // Shake is "trauma" 0..1 that hits add to and time drains. The offset is trauma squared on two sine waves, so small hits barely move,
   // big ones punch, and it always settles; a fresh random offset every frame only buzzes. Calm mode (settings) keeps the picture still.
@@ -240,4 +243,4 @@ function drawFrame(now) {
     ctx.globalCompositeOperation = "source-over"; }
   if (trip) { const u = trip.t / (TRIP / 2), d = Math.max(0, 1 - Math.abs(u - 1) * 2.2); if (d > 0) { ctx.fillStyle = `rgba(6,6,12,${d.toFixed(2)})`; ctx.fillRect(0, 0, W, H); } }
 }
-export function initStage(canvas, ov) { canvas.width = W; canvas.height = H; ctx = canvas.getContext("2d"); frame = createFrame(W, H); img = new ImageData(W, H); bg = new Uint32Array(W * H); base = new Uint32Array(W * H); overlay = ov; stage.renderDisabled = false; setScene("home"); requestAnimationFrame(frameLoop); }
+export function initStage(canvas, ov) { loadHunterCity(); canvas.width = W; canvas.height = H; ctx = canvas.getContext("2d"); frame = createFrame(W, H); img = new ImageData(W, H); bg = new Uint32Array(W * H); base = new Uint32Array(W * H); overlay = ov; stage.renderDisabled = false; setScene("home"); requestAnimationFrame(frameLoop); }

@@ -39,3 +39,12 @@ Five original bosses generated and refined with OpenAI `image_gen`, using parkin
 - `boss/dry-lighthouse-keeper.png` (`mon-29`) — OpenAI `image_gen`, 2026-11-13. Prompt: hovering rust-clad old keeper fused to a yellow lighthouse lamp in his chest, short leftward beam, rope and logbook, salt-white beard. Refinement changed diffuse light into a hard-edged short beam and simplified hanging props.
 - `boss/last-tide-queen.png` (`mon-30`) — OpenAI `image_gen`, 2026-11-13. Prompt: grounded queen, coral-pink crown, deep-teal frozen-wave gown with cracked salt-white trim and one open hand calling water that never arrives. Refinement made three large wave crests and an unbroken readable gown silhouette.
 - `boss/salt-general.png` (`mon-31`) — OpenAI `image_gen`, 2026-11-13. Prompt: grounded dark-iron and sand-armoured general, salt-crystal shoulder and forearm, broken spear pointing left, two pale salt-soldier statues flanking his boots. Refinement enlarged the crystal masses and soldier silhouettes and simplified the damaged spear.
+
+
+## Hunter interface city — 2026-11-14
+
+`art/ui/hunter-city.png` is an original environment generated with OpenAI image_gen for the owner-approved Hunter UI.
+Prompt: rainy modern Thai/Korean hunter city, navy/indigo buildings, warm storefronts, violet dimensional gate,
+wide pixel-art side-view stage, empty horizontal foreground pavement, no people, no UI, no text or logos.
+It supplies only the city backdrop and title presentation; characters, enemies, weather effects and choices remain live.
+The full concept image is a visual reference and is not used as an interactive screen or copied character asset.

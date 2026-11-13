@@ -96,19 +96,22 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
 /* UX-06: the monthly plan comes right after the event, before the long log; UX-10: tap targets of 44px */
 #center{display:contents}#top{order:1}#card{order:2}#lower{order:3}
 #game button,#modal button,#start button{min-height:44px}#game{padding-bottom:84px}}
+
+/*HUNTER_THEME*/
 </style>
 </head>
 <body>
 <div id="start"></div><div id="end" hidden></div><div id="modal" hidden></div><div id="banner" role="status" aria-live="polite" hidden></div>
 <div id="game" hidden>
-  <aside id="card"></aside>
-  <section id="center">
-    <div id="top">
-      <div><div id="stagewrap"><canvas id="cv"></canvas><div id="ov"></div></div><div id="ctrl"></div></div>
-      <div id="event"></div>
-    </div>
-    <div id="lower"><nav id="tabs"></nav><div id="view"></div></div>
-  </section>
+  <div id="headerbar"><header id="hud"></header>
+    <button class="settings-key" data-a="settings" aria-label="ตั้งค่า"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m9 3 1-2h4l1 2 3 2 3 1v4l-2 2 2 2v4l-3 1-3 2-1 2h-4l-1-2-3-2-3-1v-4l2-2-2-2V6l3-1 3-2Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </div>
+  <aside id="card" aria-label="ข้อมูลตัวละคร"></aside>
+  <section id="stagepanel" aria-label="ฉากชีวิต"><div id="stagewrap"><canvas id="cv"></canvas><div id="ov"></div></div></section>
+  <section id="event" aria-label="เหตุการณ์และทางเลือก"></section>
+  <div id="ctrl" aria-label="ควบคุมเวลา"></div>
+  <section id="lifeplan" aria-label="แผนชีวิต"></section>
+  <section id="lower"><nav id="tabs" aria-label="หมวดข้อมูล"></nav><div id="view"></div></section>
 </div>
 <script>/*BUNDLE*/</script>
 <script>

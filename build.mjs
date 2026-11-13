@@ -35,6 +35,6 @@ const out = await esbuild.build({
 });
 const js = out.outputFiles[0].text.replace(/<\/script/g, "<\\/script");
 const license = "pixelfx (c) 2026 Patch, MIT License; portions (c) 2026 Hugo Duprez and rehan-remade, MIT License. See THIRD_PARTY.md";
-const html = readFileSync("src/index.html", "utf8").replace("<script>/*BUNDLE*/</script>", () => `<!-- ${license} -->\n<script>${js}</script>`);
+const html = readFileSync("src/index.html", "utf8").replace("/*HUNTER_THEME*/", readFileSync("src/hunter.css", "utf8")).replace("<script>/*BUNDLE*/</script>", () => `<!-- ${license} -->\n<script>${js}</script>`);
 writeFileSync("play.html", html);
 console.log(`play.html: ${(js.length / 1024).toFixed(0)} KB JS, ${list.length} effects`);

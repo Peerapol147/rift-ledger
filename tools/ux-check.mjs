@@ -6,7 +6,7 @@ import * as C from "../src/core/index.js";
 import { ITEMS } from "../src/data/items.js";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
-const URL = pathToFileURL(process.cwd() + "/play.html").href;
+const URL = process.env.GAME_URL || pathToFileURL(process.cwd() + "/play.html").href;
 const CASES = {};
 const only = process.argv.slice(2);
 
@@ -187,7 +187,7 @@ CASES["UX-06"] = async (b) => {
   for (const [w, h] of [[390, 844], [320, 568], [1280, 800]]) {
     const { ctx, page } = await loaded(b, adult.s, { w, h, mobile: w < 700 });
     out.push(await page.evaluate(() => {
-      const plan = [...document.querySelectorAll('#card [data-a^="focus:"]')][0];
+      const plan = [...document.querySelectorAll('#lifeplan')][0];
       return plan ? Math.round(plan.getBoundingClientRect().top + scrollY) : 1e9;
     }));
     await ctx.close();
@@ -211,7 +211,8 @@ CASES["UX-10"] = async (b) => {
 CASES["R-scroll"] = async (b) => {
   const { ctx, page } = await loaded(b, adult.s, { w: 390, h: 844, mobile: true });
   await page.locator('[data-a="pause"]').first().click(); // running again
-  const btn = page.locator('#card [data-a^="focus:"]').last();
+  await page.locator("#plan-options summary").click();
+  const btn = page.locator('#lifeplan [data-a^="focus:"]').last();
   await btn.scrollIntoViewIfNeeded(); await btn.tap(); await page.waitForTimeout(200);
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(2500);
   const y = await page.evaluate(() => scrollY);
@@ -256,7 +257,8 @@ CASES["UX-15"] = async (b) => {
   return [shown === minor.ev.t, "a first play leaves every choice to the player"];
 };
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CHROMIUM_EXECUTABLE
+  ? { executablePath: process.env.CHROMIUM_EXECUTABLE, args: ["--no-sandbox"] } : {});
 let fail = 0;
 for (const [id, run] of Object.entries(CASES)) {
   if (only.length && !only.includes(id)) continue;
