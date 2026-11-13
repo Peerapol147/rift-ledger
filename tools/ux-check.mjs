@@ -122,6 +122,38 @@ CASES["B-autosave-fail"] = async (b) => {
     + `, ${seen.length} banners)`];
 };
 
+CASES["B-two-tabs"] = async (b) => {
+  const ctx = await b.newContext();
+  await ctx.addInitScript(({ k, v, ck, c }) => {
+    if (localStorage.getItem(k)) return;
+    localStorage.setItem(k, v); localStorage.setItem(ck, c);
+  }, { k: SLOT0, v: C.serialize(adult.s), ck: CFGK, c: JSON.stringify({ policy: "skip", speed: 16, fs: 2 }) });
+  const tab = async () => {
+    const p = await ctx.newPage(); await p.goto(URL); await p.waitForTimeout(300);
+    await p.locator('[data-a="load:0"]').click(); await p.waitForTimeout(200);
+    await p.locator('[data-a="pause"]').first().click().catch(() => {});
+    return p;
+  };
+  const A = await tab(), B = await tab();
+  const ageIn = () => B.evaluate((k) => localStorage.getItem(k), SLOT0).then((x) => C.deserialize(x)?.ageM);
+  const start = await ageIn();
+  await B.bringToFront(); await B.locator('[data-a="speed:16"]').click();
+  for (let i = 0; i < 30 && (await ageIn()) < start + 24; i++) {
+    const c = B.locator('[data-a^="choose:"]').first();
+    if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
+    await B.waitForTimeout(200);
+  }
+  await B.locator('[data-a="pause"]').first().click().catch(() => {});
+  await settings(B); await B.locator('#modal [data-a="save:0"]').click(); await B.waitForTimeout(150);
+  const ahead = await ageIn();
+  const ageA = (await cardText(A)).match(/อายุ\s*(\d+)/)?.[1];
+  await A.bringToFront(); await settings(A); await A.locator('#modal [data-a="save:0"]').click(); await A.waitForTimeout(150);
+  const after = await ageIn(), said = await A.locator("#banner").innerText();
+  await ctx.close();
+  return [ahead > start && after === ahead && /อีกแท็บ/.test(said),
+    `an older tab cannot save over a newer life (slot ${start} → ${ahead} → ${after} months, A at ${ageA}; "${said}")`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);

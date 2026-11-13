@@ -41,3 +41,20 @@ test("collection survives deleting all slots", () => {
   assert.deepEqual(collection(st).get().titles, ["ผู้รอดจากเกตแตก"]);
   assert.ok(collection(st).get().seen.cal.includes("cal24"));
 });
+
+test("slot save refuses an older state of the same life (another tab is further on)", () => {
+  const st = fakeStore(), sl = slots(st);
+  const s = newLife("tabs"); s.ageM = 240;
+  assert.equal(sl.save(0, s), true);
+  const older = deserialize(serialize(s)); older.ageM = 120;
+  assert.equal(sl.save(0, older), "newer");
+  assert.equal(deserialize(st.get("riftledger.slot.v2.0")).ageM, 240);
+  s.ageM = 252; assert.equal(sl.save(0, s), true); // the same life, further on, still saves
+});
+
+test("an heir or another life still saves over the slot", () => {
+  const st = fakeStore(), sl = slots(st);
+  const a = newLife("tabs-a"); a.ageM = 600; sl.save(0, a);
+  const b = newLife("tabs-b"); b.ageM = 12;
+  assert.equal(sl.save(0, b), true);
+});

@@ -143,9 +143,11 @@ function reveal() {
 
 // Every save the player did not ask for: says so once if it fails, instead of losing progress in silence.
 let saveFailing = false;
+const NEWER = "อีกแท็บเล่นชีวิตนี้ไปไกลกว่าแล้ว เซฟนี้ไม่ได้บันทึกทับ";
 function autosave() {
   if (!s || ui.slot < 0) return;
   const ok = slots.save(ui.slot, s);
+  if (ok === "newer") { if (!saveFailing) banner(NEWER, true); saveFailing = true; return; }
   if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ", true);
   saveFailing = !ok;
 }
@@ -265,7 +267,9 @@ function act(a, el) {
       if (life.dead) showEnd(false); // a finished life: show its end, do not count it again
     },
     save: () => {
-      if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", true);
+      const r = slots.save(+v, s);
+      if (r === "newer") return banner(NEWER, true);
+      if (!r) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", true);
       ui.slot = +v; banner("บันทึกแล้ว");
     },
     del: () => {
