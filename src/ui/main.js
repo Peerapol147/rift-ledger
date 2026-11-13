@@ -244,6 +244,7 @@ function act(a, el) {
     pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),
+    focus2: () => C.setFocus2(s, v === "none" ? null : v),
     speed: () => { ui.speed = +v; ui.paused = false; saveCfg(); },
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
