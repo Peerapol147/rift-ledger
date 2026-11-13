@@ -51,7 +51,7 @@ function secondPlan(s) {
   const on = (id) => (s.focus2 === id || (!s.focus2 && id === "none") ? 'class="on"' : "");
   const btns = [btn("focus2:none", "ไม่มี", on("none")), ...list.map((f) => btn("focus2:" + f.id, esc(f.n), on(f.id)))];
   return `<h3>แผนรอง <span class="dim">(ผลครึ่งหนึ่ง)</span></h3><div class="plan">${btns.join("")}</div>`
-    + planDesc(list.find((f) => f.id === s.focus2));
+    + (s.focus2 ? `<div class="pdesc">${esc(C.focus2Desc(s))}</div>` : "");
 }
 
 function badge(v) {

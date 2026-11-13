@@ -104,3 +104,18 @@ test("each toy in the grab sets its own number", () => {
   const toy = (i) => C.EVENT_INDEX.get("infToy").o[i].y.c.grab;
   assert.deepEqual([toy(0), toy(1), toy(2)], [1, 2, 3]);
 });
+
+// Review fix: the secondary row describes what a secondary really gives (half the stats, a small pull), never the
+// main plan's health, mind or money line; a plan that only gives those cannot be a secondary.
+test("a secondary plan's line names only half stats and the pull, and rest with no stats is not offered", () => {
+  const a = at("d2", 30); C.setFocus(a, "work");
+  assert.ok(!C.focus2List(a).some((f) => f.id === "rest"), "adult rest gives nothing as a secondary");
+  C.setFocus2(a, "train");
+  const line = C.focus2Desc(a);
+  assert.match(line, /ครึ่ง/);
+  assert.match(line, /กาย/);
+  assert.doesNotMatch(line, /สุขภาพจิตฟื้น|ได้เงิน|เหนื่อย/);
+  const t = at("d3", 15); C.setFocus(t, "train"); C.setFocus2(t, "study");
+  assert.doesNotMatch(C.focus2Desc(t), /เหนื่อยใจ/);
+  assert.equal(C.focus2Desc(at("d4", 30)), "");
+});

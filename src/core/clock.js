@@ -5,7 +5,7 @@ import { eligible, openEvent, EVENT_INDEX } from "./events.js";
 import { kindsOf } from "./kinds.js";
 import { addLedger } from "./money.js";
 import { bodyMonth, yearEnd, changeMind } from "./body.js";
-import { FOCUS } from "../data/stats.js";
+import { FOCUS, STATS } from "../data/stats.js";
 import { MILESTONES } from "../data/milestones.js";
 import { ALL_EVENTS } from "../data/events/index.js";
 
@@ -35,7 +35,19 @@ export function setFocus(s, id) {
 const NOT_SECOND = new Set(["hunt", "work"]);
 export function focus2List(s) {
   if (ageY(s) < 13) return [];
-  return focusList(s).filter((f) => f.id !== s.focus && !NOT_SECOND.has(f.id));
+  // a plan whose only gifts are money, health or mind (adult rest) would give nothing as a secondary
+  return focusList(s).filter((f) => f.id !== s.focus && !NOT_SECOND.has(f.id) && Object.keys(f.st).length);
+}
+
+// The secondary's own line, built from the plan so it cannot promise what a secondary does not give.
+const KIND_TH = { study: "การเรียน", body: "ร่างกาย", social: "ผู้คน", money: "เงิน", mind: "จิตใจ", luck: "โชค",
+  hunt: "การล่า" };
+export function focus2Desc(s) {
+  const f = s.focus2 && FOCUS[stageOf(s)][s.focus2];
+  if (!f) return "";
+  const st = Object.keys(f.st).map((k) => STATS[k]).join("และ");
+  const kinds = (f.kinds ?? []).map((k) => KIND_TH[k]).join("และ");
+  return `${st}โตครึ่งเดียวของแผนหลัก${kinds ? ` · เรื่อง${kinds}มาบ่อยขึ้นเล็กน้อย` : ""}`;
 }
 
 export function setFocus2(s, id) {
