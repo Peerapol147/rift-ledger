@@ -172,6 +172,32 @@ CASES["UX-14"] = async (b) => {
   return [after === before && !errors.length && /ไม่ครบ/.test(msg), "a broken import changes nothing and says why"];
 };
 
+CASES["UX-06"] = async (b) => {
+  const out = [];
+  for (const [w, h] of [[390, 844], [320, 568], [1280, 800]]) {
+    const { ctx, page } = await loaded(b, adult.s, { w, h, mobile: w < 700 });
+    out.push(await page.evaluate(() => {
+      const plan = [...document.querySelectorAll('#card [data-a^="focus:"]')][0];
+      return plan ? Math.round(plan.getBoundingClientRect().top + scrollY) : 1e9;
+    }));
+    await ctx.close();
+  }
+  return [out[0] <= 1200 && out[1] <= 1200 && out[2] <= 700, `monthly plan top at 390/320/1280: ${out.join(" / ")}`];
+};
+
+CASES["UX-10"] = async (b) => {
+  const small = [];
+  for (const w of [390, 320]) {
+    const { ctx, page } = await loaded(b, adult.s, { w, h: 800, mobile: true });
+    small.push(await page.evaluate(() => [...document.querySelectorAll('[data-a^="choose:"], [data-a^="tab:"], '
+      + '[data-a^="focus:"], [data-a="settings"], [data-a^="speed:"]')]
+      .filter((x) => x.getClientRects().length).map((x) => x.getBoundingClientRect().height)
+      .filter((hh) => hh < 44).length));
+    await ctx.close();
+  }
+  return [small.every((n) => n === 0), `buttons under 44px at 390/320: ${small.join(" / ")}`];
+};
+
 const browser = await chromium.launch();
 let fail = 0;
 for (const [id, run] of Object.entries(CASES)) {
