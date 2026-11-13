@@ -83,7 +83,7 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
 .storyline { font-size: 13px; margin: 0 0 6px; line-height: 1.4; padding-right: 44px; }
   .person small { display: block; color: var(--dim, #9aa); }
   .chips{display:block;opacity:.7;font-size:.82em;margin-top:2px}.pdesc{opacity:.75;font-size:.86em;margin:4px 0 8px}
-#banner{position:fixed;left:50%;top:auto;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--pan2);border:1px solid var(--rift);padding:8px 14px;z-index:7;max-width:calc(100% - 32px)}
+#banner{position:fixed;left:50%;top:auto;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--pan2);border:1px solid var(--rift);padding:8px 14px;z-index:30;max-width:calc(100% - 32px)}
 .float{position:absolute;transform:translateX(-50%);font-weight:700;font-size:20px;text-shadow:0 2px 0 #000;animation:up .95s ease-out forwards}
 .float.crit{color:var(--leg)}.float.bad{color:var(--bad)}.float.good{color:var(--good)}.float.sk{font-size:14px;color:#fff;top:12%!important}
 @keyframes up{from{opacity:0;margin-top:14px}15%{opacity:1;margin-top:0}to{opacity:0;margin-top:-52px}}
@@ -96,7 +96,7 @@ table{width:100%;border-collapse:collapse;font-size:.88em}td{padding:3px 4px;bor
 </style>
 </head>
 <body>
-<div id="start"></div><div id="end" hidden></div><div id="modal" hidden></div><div id="banner" hidden></div>
+<div id="start"></div><div id="end" hidden></div><div id="modal" hidden></div><div id="banner" role="status" aria-live="polite" hidden></div>
 <div id="game" hidden>
   <aside id="card"></aside>
   <section id="center">

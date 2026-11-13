@@ -95,7 +95,7 @@ function showEnd(record) {
     book.setLegacy(C.legacyOf(s));
     book.addTitle(d.role);
     for (const [kind, id] of C.lifeRecord(s)) book.addSeen(kind, id);
-    if (ui.slot >= 0) slots.save(ui.slot, s);
+    autosave();
   }
   $("#end").innerHTML = `<div class="st-card"><div class="dim">${esc(C.dateText(s))}</div><h1>${esc(d.name)}</h1>
     <div class="leg">${esc(d.role)}</div><p>จากไปเมื่ออายุ ${d.ageY} ปี · ${esc(d.cause)}</p>
@@ -123,7 +123,7 @@ function fx() {
   else if (now.lv > prev.lv) trigger({ n: "levelup" });
   if (s.lastFight) { trigger({ n: "fight", a: { ...s.lastFight, wfx: "melee/claw-swipe" } }); delete s.lastFight; }
   else if (now.gold - prev.gold > 500) trigger({ n: "coin" });
-  if (now.year > prev.year && ui.slot >= 0) slots.save(ui.slot, s);
+  if (now.year > prev.year) autosave();
   prev = now;
 }
 
@@ -141,6 +141,14 @@ function reveal() {
   }
 }
 
+// Every save the player did not ask for: says so once if it fails, instead of losing progress in silence.
+let saveFailing = false;
+function autosave() {
+  if (!s || ui.slot < 0) return;
+  const ok = slots.save(ui.slot, s);
+  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ");
+  saveFailing = !ok;
+}
 function banner(text) { const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; }
 
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
@@ -165,14 +173,26 @@ function render() {
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
-  if (!view.contains(document.activeElement) || document.activeElement === view) put("#view", TAB_VIEW[ui.tab]());
+  const typing = view.contains(document.activeElement) && document.activeElement.matches("input,textarea,select");
+  if (!typing) put("#view", TAB_VIEW[ui.tab]());
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
   stage.night = isNight(s.ev?.t);
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
-  $("#modal").hidden = !ui.settings;
-  if (ui.settings) $("#modal").innerHTML = `<div>${settingsView(ui, slots.list())}</div>`;
+  const m = $("#modal");
+  m.hidden = !ui.settings;
+  if (ui.settings) {
+    m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "ตั้งค่า");
+    const html = `<div>${settingsView(ui, slots.list())}</div>`;
+    if (m.dataset.html !== html) {
+      const a = document.activeElement, key = m.contains(a) && (a.dataset.a ? `[data-a="${a.dataset.a}"]`
+        : a.dataset.c ? `[data-c="${a.dataset.c}"]` : null);
+      m.innerHTML = html; m.dataset.html = html;
+      if (key) m.querySelector(key)?.focus();
+    }
+    if (ui.focusModal) { m.querySelector("button")?.focus(); ui.focusModal = false; }
+  } else delete m.dataset.html;
 }
 
 // The owner's private feedback form (an artifact on claude.ai): experience only, nothing from the game is sent.
@@ -240,10 +260,16 @@ function act(a, el) {
       if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน");
       ui.slot = +v; banner("บันทึกแล้ว");
     },
-    del: () => { slots.del(+v); if (!s || s.dead) startScreen(); },
+    del: () => {
+      const x = slots.list()[+v];
+      if (!confirm(`ลบเซฟช่อง ${+v + 1}${x?.name ? ` (${x.name})` : ""} จริงไหม? ลบแล้วกู้คืนไม่ได้`)) return;
+      slots.del(+v);
+      if (s && !s.dead && ui.slot === +v) { ui.slot = -1; banner("ชีวิตนี้จะไม่บันทึกจนกว่าจะเลือกช่องใหม่ในตั้งค่า"); }
+      if (!s || s.dead) startScreen();
+    },
     export: () => { ui.exportText = slots.exportStr(+v) ?? ""; },
     import: () => banner(slots.importStr(2, ui.importText) ? "นำเข้าลงช่อง 3 แล้ว" : "ข้อความเซฟไม่ถูกต้อง"),
-    quit: () => { if (s && !s.dead && ui.slot >= 0) slots.save(ui.slot, s); s = null; ui.settings = false; startScreen(); },
+    quit: () => { if (s && !s.dead) autosave(); s = null; ui.settings = false; startScreen(); },
     choose: () => { const n0 = s.log.length; C.choose(s, +v); showResult(n0); fx(); },
     fate: () => { const n0 = s.log.length; if (C.chooseByFate(s)) { showResult(n0); fx(); } },
     pin: () => { if (s.ev?.opts[+v]) C.pinFromOption(s, s.ev.opts[+v]); },
@@ -254,8 +280,8 @@ function act(a, el) {
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
-    settings: () => { ui.settings = true; ui.exportText = ""; },
-    close: () => { ui.settings = false; },
+    settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
+    close: () => { ui.settings = false; ui.opener?.focus?.(); ui.opener = null; },
     tab: () => { ui.tab = v; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
@@ -293,7 +319,9 @@ const target = (e) => { const el = e.target.closest("[data-a]"); return el && !e
 const FAST = /^choose:/;
 document.addEventListener("pointerdown", (e) => {
   const el = target(e);
-  if (e.button === 0 && el && FAST.test(el.dataset.a)) { el.dataset.done = "1"; act(el.dataset.a, el); }
+  if (e.pointerType === "mouse" && e.button === 0 && el && FAST.test(el.dataset.a)) {
+    el.dataset.done = "1"; act(el.dataset.a, el);
+  }
 });
 document.addEventListener("click", (e) => {
   const el = target(e);
@@ -314,8 +342,20 @@ document.addEventListener("input", (e) => {
   if (c === "importText") ui.importText = e.target.value;
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !$("#modal").hidden) return act("close");
+  const modal = $("#modal");
+  if (!modal.hidden) {
+    if (e.key === "Escape") return act("close");
+    if (e.key === "Tab") { // focus stays inside the dialog
+      const f = [...modal.querySelectorAll("button,input,select,textarea,a[href]")].filter((x) => !x.disabled);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f.at(-1).focus(); }
+      else if (!e.shiftKey && (i < 0 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+    }
+    return; // no game shortcuts while the dialog is open
+  }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  if (e.key === " " && e.target.matches("button,a,[data-a]")) return; // Space presses the focused button
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
   else if (e.key === "+" || e.key === "=") ui.speed = SPEEDS.find((n) => n > ui.speed) ?? SPEEDS.at(-1);
   else if (e.key === "-") ui.speed = [...SPEEDS].reverse().find((n) => n < ui.speed) ?? SPEEDS[0];
