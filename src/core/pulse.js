@@ -3,6 +3,7 @@
 // And illness: the one civilian death that comes with warning and a choice, never out of nowhere (spec §2).
 import { ch, pk, ri, rnd } from "./rng.js";
 import { stream, log, ageY, yearsAfterRift, monthOfYear } from "./state.js";
+import { syncRosterPeople } from "./people.js";
 import { openEvent } from "./events.js";
 import { monthly, hooks } from "./registry.js";
 import { die } from "./body.js";
@@ -46,6 +47,7 @@ function pulse(s) {
     s.c.npcGen = (s.c.npcGen ?? 0) + 1;
     s.world.roster.push({ id: "gen" + s.c.npcGen + "_" + y, n: pk(R, NAMES[country][sex]), country, rank: ri(R, 2, 5),
       cls: n.cls, fame: 20, alive: true });
+    syncRosterPeople(s);
     return news(s,
       `${n.n} ฮันเตอร์แรงก์ ${RANK[n.rank] ?? "?"} ไม่ได้กลับออกมาจากเกต สื่อเริ่มพูดถึงชื่อใหม่ในรุ่นถัดไปแทน`);
   }

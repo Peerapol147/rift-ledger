@@ -1,6 +1,7 @@
 // The world around the player: notable NPCs per seed, the fixed calendar, tower records, moving. Spec §3 and §4.1.
 import { pk, ri, wp, ch } from "./rng.js";
 import { stream, log, onNewLife, yearsAfterRift, monthOfYear, ageY } from "./state.js";
+import { syncRosterPeople } from "./people.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { SHIP_FEE } from "./storage.js";
@@ -34,6 +35,7 @@ export function initWorld(s) {
     roster.push(npc(R, "npc" + roster.length, pk(R, ["th", "kr"]), rank));
   }
   s.world.roster = roster;
+  syncRosterPeople(s);
 }
 
 const npcName = (s, id) => s.world.roster.find((n) => n.id === id)?.n ?? "ฮันเตอร์นิรนาม";

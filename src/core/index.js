@@ -28,3 +28,4 @@ export * from "./heir.js";
 export * from "./pulse.js";
 export * from "./spend.js";
 export * from "./kinds.js";
+export * from "./people.js";
