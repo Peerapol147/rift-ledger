@@ -136,6 +136,19 @@ office done) kept under `test/fixtures/`.
 - **Which people are listed.** Migration imports roster and team. New team members are listed on hire only (offers
   are not). Team death, `loseAlly`, `dismiss`, roster death all go through `setPersonStatus`.
 
+### 5.8 Every life feels it: the childhood friend (owner approval note)
+The owner approved this design and asked that the **next play must already feel like the model game**. The office
+story reaches only office workers, so P1 also ships a second story every life gets **(call)**:
+- `friend` — a neighbour child born within a year of the player, a canonical person bound at birth (same city).
+- Beats across the whole life, every 3–8 years: first meeting (age 4–7), school trouble, teen fork (stand by them /
+  drift / compete), early adulthood (they awaken or not, independent of the player), a request for help, a long
+  silence, a reunion, old age. Each beat's text cites what really happened earlier (a memory id), never a stock line.
+- Routes `close`, `drift`, `rival`, `partner` (partner only if both unmarried and trust high; it sets `married` and
+  `dating` like today's love events). Endings: `lifelong`, `apart`, `rivals-to-end`, `together`, plus `friend-gone`
+  when they die first (a funeral beat that recalls one shared memory).
+- If the player awakens and the friend does not (or the reverse), the next beats are about that gap.
+- Uses the same engine, validator and UI line as the office story; an heir gets a new neighbour child.
+
 ## 6. Decided by the pack, kept
 Pack sections 02.A–I, 03.2 graph and endings, 05 acceptance gates and the C1 paired-choice cohort, scoped to P0–P1.
 
