@@ -39,11 +39,17 @@ export function recruitOffers(s) {
   return list;
 }
 
+// The one way a member joins the team: on the list of people too (P1 review R2).
+export function addTeamMember(s, m) {
+  s.team.push(m);
+  listMember(s, m);
+  return m;
+}
+
 export function hire(s, m) {
   if (s.party || s.team.filter((x) => x.alive).length >= teamMax(s) || s.gold < feeOf(m)) return false;
   addLedger(s, "ค่าจ้างลูกทีมแรกเข้า", -feeOf(m));
-  s.team.push(m);
-  listMember(s, m);
+  addTeamMember(s, m);
   if (s.recruits) s.recruits.list = s.recruits.list.filter((x) => x !== m);
   log(s, "ทีม", `${m.n} (${CLASSES[m.cls].n}) เข้าร่วมทีมของคุณ`, "imp");
   return true;
@@ -130,7 +136,7 @@ hooks.act.loyalAlly = (s) => {
   const m = member(s, stream(s, "recruit"), Math.max(0, s.hunter.rank - 1));
   m.loyalty = 100;
   m.sworn = true;
-  s.team.push(m);
+  addTeamMember(s, m);
   log(s, "ทีม", `${m.n} ขอเข้าทีมของคุณ และสาบานว่าจะไม่ทิ้งคุณ`, "leg");
 };
 hooks.act.allyLeave = (s) => { const m = evMember(s); if (m) dismiss(s, m.id); };

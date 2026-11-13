@@ -94,6 +94,9 @@ export function migrate(s) {
   let v = Number.isInteger(s.sv) && s.sv > 0 ? s.sv : 1;
   while (v < SAVE_SV) { MIGRATIONS[v]?.(s); v++; }
   s.sv = SAVE_SV;
+  // Idempotent repair on every load: members who joined without a place on the list (before the P1 review fix)
+  // get one; the source key makes a second load find the same person.
+  hooks.repairPeople?.(s);
   return s;
 }
 

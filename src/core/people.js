@@ -78,3 +78,12 @@ hooks.migratePeople = (s) => {
     if (!m.alive) setPersonStatus(s, m.personId, { diedWorldM: personById(s, m.personId).diedWorldM ?? worldMonth(s) });
   }
 };
+
+hooks.repairPeople = (s) => {
+  if (!s.world?.people) return;
+  for (const m of s.team ?? []) {
+    if (m.personId) continue;
+    listMember(s, m);
+    if (!m.alive) setPersonStatus(s, m.personId, { diedWorldM: worldMonth(s) });
+  }
+};
