@@ -115,3 +115,26 @@ export function recordHolder(s, rosterId, country) {
   const n = s.world.roster?.find((x) => x.id === rosterId);
   return { name: n?.n ?? "ฮันเตอร์นิรนาม", personId: null };
 }
+
+// ---- What the player's stories do to them (spec §6). Applied by core/narrative.js for the outcome key castAct.
+export function applyCastAct(s, p, act) {
+  if (!p?.cast) return;
+  const now = worldMonth(s);
+  p.ties ??= {};
+  if (act === "rescued") p.savedUntilWM = now + 120;
+  else if (act === "injured") p.hurtUntilWM = now + 12;
+  else if (act === "retire") p.retired = true;
+  else if (act === "rankUp") { if (p.hunter && p.rank < p.ceiling) { p.rank++; p.hunter.rank = p.rank; } }
+  else if (act === "quitGuild") p.guild = null;
+  else if (act.startsWith("joinGuild:")) p.guild = act.slice(10);
+  else if (act === "partner") {
+    s.c.married = 1; s.c.dating = 1; p.partnerOf = s.lifeId; p.ties[s.familyId] = "partner";
+  } else if (["friend", "enemy", "owes"].includes(act)) p.ties[s.familyId] = act;
+  syncRoster(s, p);
+}
+
+// Romance (spec §6): only a romanceable member, alive, within five years of the player, both unmarried.
+export function canRomance(s, p) {
+  return !!p?.cast && !!CAST[p.cast].romance && p.diedWorldM == null && !p.partnerOf && !(s.c.married > 0)
+    && Math.abs(p.bornWorldM - (s.mon0 ?? 0)) <= 60;
+}

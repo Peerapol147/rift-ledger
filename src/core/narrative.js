@@ -7,6 +7,7 @@ import { openEvent, applyOutcome } from "./events.js";
 import { monthly, hooks } from "./registry.js";
 import { ensurePerson, personById, personPresent, changeRelation, remember } from "./people.js";
 import { STORY_DEFS } from "../data/narrative/index.js";
+import { applyCastAct, canRomance } from "./cast.js";
 
 export { STORY_DEFS };
 
@@ -82,7 +83,8 @@ export function narrativeMonth(s) {
     if (node.beat) { resolveOut(s, id, st, node.beat, true); continue; }
     const fillOut = (o) => o && { ...o, m: o.m == null ? o.m : textOf(s, st, o.m) };
     openEvent(s, { id: `story:${id}:${st.node}`, tag: def.tag ?? "ชีวิต", t: textOf(s, st, node.t), important: true,
-      o: node.o.filter((o) => !o.show || o.show(s, st))
+      o: node.o.filter((o) => (!o.show || o.show(s, st))
+        && (!o.romance || canRomance(s, personById(s, st.cast[o.romance]))))
         .map((o) => ({ ...o, l: textOf(s, st, o.l), y: fillOut(o.y), n: fillOut(o.n) })) });
     s.ev.story = { id, node: st.node };
     return;
@@ -101,6 +103,7 @@ function resolveOut(s, id, st, out, beat = false) {
     changeRelation(s, pid, { trust: r.trust ?? 0, owe: r.owe ?? 0, tag: r.tag });
     if (r.mem) remember(s, pid, { id: `${id}:${st.node}`, text: textOf(s, st, r.mem), worldM: worldMonth(s) });
   }
+  for (const [role, act] of Object.entries(out.castAct ?? {})) applyCastAct(s, personById(s, st.cast[role]), act);
   if (text) { st.lastText = text; st.lastM = worldMonth(s); }
   if (out.end) endStory(s, id, out.end);
   else if (out.go) enterNode(s, id, st, out.go);
@@ -129,9 +132,10 @@ export function followedStory(s) {
 
 // Keys a story may use; anything else is a typo that would do nothing at runtime (P1 review Task D).
 const NODE_KEYS = new Set(["t", "delay", "needCast", "when", "o", "beat", "skip", "reach"]);
-const OPT_KEYS = new Set(["l", "s", "diff", "need", "risk", "nerve", "danger", "d", "y", "n", "show", "noAuto"]);
+const OPT_KEYS = new Set(["l", "s", "diff", "need", "risk", "nerve", "danger", "d", "y", "n", "show", "noAuto",
+  "romance"]);
 const OUT_KEYS = new Set(["m", "fame", "jobXp", "ally", "fac", "gold", "goldLabel", "st", "hp", "mind", "c", "flags",
-  "act", "injury", "next", "cause", "go", "end", "route", "vars", "rel", "goResume"]);
+  "act", "injury", "next", "cause", "go", "end", "route", "vars", "rel", "goResume", "castAct"]);
 const unknown = (obj, keys) => Object.keys(obj ?? {}).filter((k) => !keys.has(k));
 
 // Data checks run by the tests: every way on exists, every check can fail somewhere, every node can be reached,
