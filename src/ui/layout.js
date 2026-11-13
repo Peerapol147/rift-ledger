@@ -5,7 +5,7 @@ import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
 import { planTitle } from "./art.js";
 import { SPEEDS } from "./cfg.js";
-import { icon } from "./hunter.js";
+import { icon, characterNotices } from "./hunter.js";
 export { interfaceStatus, hunterHeader } from "./hunter.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
@@ -22,9 +22,6 @@ export function card(s) {
   const st = C.stageOf(s), life = C.lifespan(s);
   const stamp = s.hunter ? `<div class="stamp">${RANKS[s.hunter.rank]}</div>` : "";
   const stats = Object.entries(STATS).map(([k, n]) => `<div class="stat"><span>${n}</span><b>${Math.floor(s.st[k])}</b></div>`).join("");
-  const alerts = C.alerts(s).map((a) => `<div class="alert">${esc(a.text)}</div>`).join("");
-  const goals = C.goalProgress(s).map((g) =>
-    `<div class="goal"><span>📌 ${esc(g.label)} <b class="num">${g.cur}/${g.target}</b>${g.done ? " ✓" : ""}</span>${btn("unpin:" + g.key, "×", 'class="sm"')}</div>`).join("");
   const xp = s.hunter ? `<div class="kv"><span>EXP</span><b>${Math.floor(s.hunter.xp)}/${C.xpNeed(s.hunter.lv)}</b></div>${bar("xp", s.hunter.xp, C.xpNeed(s.hunter.lv))}` : "";
   return `
   <div class="who">${stamp}<div class="dim">${esc(COUNTRIES[s.country].n)} · ${esc(cityOf(s.city).n)}</div>
@@ -36,7 +33,7 @@ export function card(s) {
   <div class="kv"><span>เงิน</span><b class="${s.gold < 0 ? "bad" : ""}">${money(s.gold)}</b></div>
   ${s.debt > 0 ? `<div class="kv"><span>หนี้</span><b class="bad">${money(s.debt)}</b></div>` : ""}
   ${st !== "kid" ? `<div class="kv"><span>ชื่อเสียง</span><b>${Number(s.fame)}</b></div>` : ""}
-  <h3>ค่าสถานะ</h3><div class="stats">${stats}</div>${alerts}${goals}`;
+  <h3>ค่าสถานะ</h3><div class="stats">${stats}</div>${characterNotices(s)}`;
 }
 
 
@@ -52,7 +49,8 @@ export function planPanel(s) {
     + `<details id="plan-options" class="plan-disclosure"><summary>เปลี่ยนแผน ${icon("arrow")}</summary>`
     + `<div class="plan-options"><h3>${planTitle(s)}</h3><div class="plan">${plans}</div>`
     + `${planDesc(main)}${secondPlan(s)}</div></details>`
-    + `<p class="plan-summary">${esc(main?.desc ?? "")}</p>`;
+    + `<p class="plan-summary">${esc(main?.desc ?? "")}</p>`
+    + `<div class="mobile-notices">${characterNotices(s)}</div>`;
 }
 
 // What a choice touches if it goes well (core/events.js effectChips), small and dim under its label.

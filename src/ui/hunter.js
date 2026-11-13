@@ -1,7 +1,7 @@
 // Presentation-only chrome for the owner-approved Hunter interface. No gameplay mutations.
 import * as C from '../core/index.js';
 import { COUNTRIES, cityOf } from '../data/world.js';
-import { esc, money, bar } from './dom.js';
+import { esc, money, bar, btn } from './dom.js';
 
 const PATHS = {
   log: '<path d="M8 3h8l3 3v15H5V3h3Zm0 5h8M8 12h8M8 16h5"/>',
@@ -34,4 +34,13 @@ export function hunterHeader(s, ui) {
     + `<div class="mobile-identity"><b>${esc(s.name)}</b><span>อายุ ${C.ageY(s)} ปี</span><strong>${money(s.gold)}</strong>`
     + `<div><span>สุขภาพ ${Math.round(s.hp)}/100</span>${bar('hp', s.hp, 100)}</div>`
     + `<div><span>สุขภาพจิต ${Math.round(s.mind)}/100</span>${bar('mind', s.mind, 100)}</div></div>`;
+}
+
+// The same live notices are reachable in the sidebar and in the phone's plan area.
+export function characterNotices(s) {
+  const alerts = C.alerts(s).map((a) => `<div class="alert">${esc(a.text)}</div>`).join("");
+  const goals = C.goalProgress(s).map((g) => `<div class="goal"><span>📌 ${esc(g.label)} `
+    + `<b class="num">${g.cur}/${g.target}</b>${g.done ? " ✓" : ""}</span>`
+    + `${btn("unpin:" + g.key, "×", 'class="sm" aria-label="เลิกปักเป้าหมาย"')}</div>`).join("");
+  return alerts + goals;
 }

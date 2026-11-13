@@ -9,12 +9,13 @@ const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXEC
   ? {executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox']} : {})});
 const results=[];
 const check=(ok,message)=>{if(!ok)throw new Error(message);};
-async function screen(width,age=30,font=2) {
+async function screen(width,age=30,font=2,notices=false) {
   const context=await browser.newContext({viewport:{width,height:844}});
   const s=C.newLife('hunter-browser');s.ageM=age*12;s.focus=age<4?'cuddle':age<18?'study':'work';
   if(age>=18)s.job={id:'office',tier:1,xp:0};
+  if(notices)s.hp=20;
   C.openEvent(s,{id:'browser-choice',tag:'ชีวิต',t:'เหตุการณ์ทดสอบหน้าจอ',o:[
-    {l:'รับเงิน',y:{gold:50,m:'ได้รับเงินแล้ว'}},{l:'ผ่านไป',y:{mind:1}}]});
+    {l:'รับเงิน',...(notices?{need:{gold:100000}}:{}),y:{gold:50,m:'ได้รับเงินแล้ว'}},{l:'ผ่านไป',y:{mind:1}}]});
   await context.addInitScript(({s,font})=>{
     if(sessionStorage.getItem('hunter-test'))return;
     sessionStorage.setItem('hunter-test','1');
@@ -48,6 +49,24 @@ await run('mobile More reaches every extra tab and closes after selection',async
     await page.waitForTimeout(100);check(!(await page.locator('#nav-more').evaluate(e=>e.open)),'menu did not close');
     check(await page.locator(`[data-a="tab:${id}"]`).getAttribute('aria-current')==='page','selection missing');
   }await context.close();
+});
+await run('Space opens plan and More disclosures without pausing gameplay',async()=>{
+  const {page,context}=await screen(390);
+  for(const id of ['plan-options','nav-more']){
+    await page.locator('#'+id+' summary').focus();await page.keyboard.press('Space');
+    await page.waitForTimeout(100);
+    check(await page.locator('#'+id).evaluate(e=>e.open),id+' did not open');
+    check((await page.locator('.system-status').innerText()).includes('รอคุณเลือก'),'Space paused the game');
+  }await context.close();
+});
+await run('mobile exposes health alerts and pinned goals with working unpin',async()=>{
+  const {page,context}=await screen(390,30,2,true);
+  await page.locator('[data-a="pin:0"]').click();await page.waitForTimeout(150);
+  check(await page.locator('.mobile-notices .alert:visible').count()>0,'health alert is hidden');
+  check(await page.locator('.mobile-notices .goal:visible').count()>0,'pinned goal is hidden');
+  await page.locator('.mobile-notices [data-a^="unpin:"]').click();await page.waitForTimeout(150);
+  check(await page.locator('.mobile-notices .goal').count()===0,'unpin did not remove goal');
+  await context.close();
 });
 await run('plan controls stay open through selection and redraw',async()=>{
   const {page,context}=await screen(390);await page.locator('#plan-options summary').click();

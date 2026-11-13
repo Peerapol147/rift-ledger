@@ -385,7 +385,7 @@ document.addEventListener("keydown", (e) => {
     act(e.target.dataset.a, e.target);
     return;
   }
-  if (e.key === " " && e.target.matches("button,a")) return;
+  if (e.key === " " && e.target.matches("button,a,summary")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
   else if (e.key === "+" || e.key === "=") ui.speed = SPEEDS.find((n) => n > ui.speed) ?? SPEEDS.at(-1);
   else if (e.key === "-") ui.speed = [...SPEEDS].reverse().find((n) => n < ui.speed) ?? SPEEDS[0];

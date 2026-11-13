@@ -1,0 +1,72 @@
+PASS the title city artwork loads from the embedded game
+PASS desktop exposes all unlocked game tabs
+PASS mobile More reaches every extra tab and closes after selection
+PASS Space opens plan and More disclosures without pausing gameplay
+PASS mobile exposes health alerts and pinned goals with working unpin
+PASS plan controls stay open through selection and redraw
+PASS layout 320px age 0 font 2
+PASS layout 390px age 15 font 2
+PASS layout 390px age 30 font 2
+PASS layout 320px age 75 font 3
+PASS layout 820px age 30 font 3
+PASS layout 1024px age 30 font 2
+PASS layout 1440px age 30 font 3
+PASS real choice and keyboard settings still work
+[
+  {
+    "name": "the title city artwork loads from the embedded game",
+    "passed": true
+  },
+  {
+    "name": "desktop exposes all unlocked game tabs",
+    "passed": true
+  },
+  {
+    "name": "mobile More reaches every extra tab and closes after selection",
+    "passed": true
+  },
+  {
+    "name": "Space opens plan and More disclosures without pausing gameplay",
+    "passed": true
+  },
+  {
+    "name": "mobile exposes health alerts and pinned goals with working unpin",
+    "passed": true
+  },
+  {
+    "name": "plan controls stay open through selection and redraw",
+    "passed": true
+  },
+  {
+    "name": "layout 320px age 0 font 2",
+    "passed": true
+  },
+  {
+    "name": "layout 390px age 15 font 2",
+    "passed": true
+  },
+  {
+    "name": "layout 390px age 30 font 2",
+    "passed": true
+  },
+  {
+    "name": "layout 320px age 75 font 3",
+    "passed": true
+  },
+  {
+    "name": "layout 820px age 30 font 3",
+    "passed": true
+  },
+  {
+    "name": "layout 1024px age 30 font 2",
+    "passed": true
+  },
+  {
+    "name": "layout 1440px age 30 font 3",
+    "passed": true
+  },
+  {
+    "name": "real choice and keyboard settings still work",
+    "passed": true
+  }
+]

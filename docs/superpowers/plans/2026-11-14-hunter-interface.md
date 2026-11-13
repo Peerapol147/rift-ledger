@@ -42,5 +42,5 @@ Files: tools/hunter-ui-check.mjs, tools/ux-check.mjs selector updates only where
 - [x] Browser checks for mobile plan proximity, active state, disclosures/redraw, all tabs, real choice outcome, modal/input keyboard and 320px/large fonts.
 - [x] Run existing UX tests via local HTTP/system Chromium when file access is unavailable.
 - [x] Fix demonstrated failures and rerun affected checks and whole suite.
-- [ ] Fresh independent review, then one verified fix pass for important findings.
+- [x] Fresh independent review, then one verified fix pass for important findings.
 - [ ] Commit functional UI, generated play.html and ZIP; push isolated feature branch and attempt PR. Do not merge or deploy.

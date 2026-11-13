@@ -1,0 +1,17 @@
+PASS UX-11 16× moves the life on (age 0 → 2)
+PASS UX-12 start screen with a null setting
+PASS UX-02 a cancelled touch chooses nothing
+PASS UX-03 settings keeps keys and focus to itself
+PASS UX-04 equip shows at once
+PASS UX-05 delete asks first, cancel keeps the save
+PASS UX-07 Space presses the focused button
+PASS UX-08 the import box keeps its text
+PASS UX-09 save feedback shows above the settings
+PASS UX-13 a deleted save does not come back on quit
+PASS UX-14 a broken import changes nothing and says why
+PASS UX-06 monthly plan top at 390/320/1280: 382 / 399 / 518
+PASS UX-10 buttons under 44px at 390/320: 0 / 0
+PASS R-scroll the page stays where the player scrolled (scrollY 0)
+PASS R-import-playing a life imported into the slot being played is not written over
+PASS R-space-hold holding Space acts once (หยุด then หยุด, หยุด, หยุด)
+PASS UX-15 a first play leaves every choice to the player
