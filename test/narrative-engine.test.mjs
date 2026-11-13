@@ -1,5 +1,5 @@
 // Branching stories (lives that remember, Task 3). A small test-only story is registered for each test.
-import { test, afterEach } from "node:test";
+import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import * as C from "../src/core/index.js";
 
@@ -22,7 +22,10 @@ const def = (extra = {}) => ({
   endings: { done: { title: "จบ" }, wait: { title: "รอ" } },
   ...extra,
 });
-afterEach(() => { delete C.STORY_DEFS[ID]; });
+// these tests are about the engine: the game's real stories are set aside so only the test story can open
+const REAL = { ...C.STORY_DEFS };
+beforeEach(() => { for (const k of Object.keys(REAL)) delete C.STORY_DEFS[k]; });
+afterEach(() => { delete C.STORY_DEFS[ID]; Object.assign(C.STORY_DEFS, REAL); });
 
 const life = (seed, years = 30) => { const s = C.newLife(seed); s.ageM = years * 12; return s; };
 const openNext = (s) => { for (let i = 0; i < 400 && !s.ev?.story; i++) { if (s.ev) s.ev = null; C.narrativeMonth(s); s.ageM++; } return s.ev; };

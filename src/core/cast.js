@@ -133,8 +133,9 @@ export function applyCastAct(s, p, act) {
   syncRoster(s, p);
 }
 
-// Romance (spec §6): only a romanceable member, alive, within five years of the player, both unmarried.
+// Romance (spec §6): only a romanceable member, alive, within five years of the player, both unmarried, and
+// someone who already trusts you (60).
 export function canRomance(s, p) {
   return !!p?.cast && !!CAST[p.cast].romance && p.diedWorldM == null && !p.partnerOf && !(s.c.married > 0)
-    && Math.abs(p.bornWorldM - (s.mon0 ?? 0)) <= 60;
+    && Math.abs(p.bornWorldM - (s.mon0 ?? 0)) <= 60 && trustOf(s, p.id) >= 60;
 }

@@ -43,6 +43,7 @@ test("the validator knows castAct", () => {
 test("romance is only for a romanceable member near the player's age, both unmarried", () => {
   const s = C.newLife("rom"); s.ageM = 25 * 12;
   const lalin = C.castPerson(s, "lalin"), poramet = C.castPerson(s, "poramet");
+  C.changeRelation(s, lalin.id, { trust: 60 }); C.changeRelation(s, poramet.id, { trust: 60 });
   assert.equal(C.canRomance(s, lalin), true);
   assert.equal(C.canRomance(s, poramet), false);
   s.c.married = 1; assert.equal(C.canRomance(s, lalin), false);
@@ -57,9 +58,18 @@ test("a romance option shows only when the romance rule allows it", () => {
   d.nodes.a.o.push({ l: "ขอคบ", romance: "x", y: { m: "m", end: "e", castAct: { x: "partner" } } });
   C.STORY_DEFS[ID] = d;
   const s = C.newLife("rm1"); s.ageM = 25 * 12;
+  C.changeRelation(s, C.castPerson(s, "lalin").id, { trust: 60 });
   C.narrativeMonth(s); C.narrativeMonth(s);
   assert.ok(s.ev.opts.some((o) => o.l === "ขอคบ"));
   const t = C.newLife("rm2"); t.ageM = 25 * 12; t.c.married = 1;
   C.narrativeMonth(t); C.narrativeMonth(t);
   assert.ok(!t.ev.opts.some((o) => o.l === "ขอคบ"));
+});
+
+test("romance also needs real trust (spec §6: trust 60)", () => {
+  const s = C.newLife("rom3"); s.ageM = 25 * 12;
+  const lalin = C.castPerson(s, "lalin");
+  assert.equal(C.canRomance(s, lalin), false);
+  C.changeRelation(s, lalin.id, { trust: 60 });
+  assert.equal(C.canRomance(s, lalin), true);
 });

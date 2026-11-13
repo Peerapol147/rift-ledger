@@ -4,7 +4,7 @@
 import { ri } from "./rng.js";
 import { stream, worldMonth, log } from "./state.js";
 import { openEvent, applyOutcome } from "./events.js";
-import { monthly, hooks } from "./registry.js";
+import { lastly, hooks } from "./registry.js";
 import { ensurePerson, personById, personPresent, changeRelation, remember } from "./people.js";
 import { STORY_DEFS } from "../data/narrative/index.js";
 import { applyCastAct, canRomance } from "./cast.js";
@@ -184,6 +184,6 @@ export function validateNarrative(defs) {
   return issues;
 }
 
-// Before the old chapter chains, so a story's month is not taken by them.
-const at = monthly.findIndex((f) => f.name === "storyMonth");
-monthly.splice(at < 0 ? monthly.length : at, 0, narrativeMonth);
+// After the world's own events of the month (calendar, factions, secrets, chapters: owner's pack 02.G puts them
+// first) and before the monthly gate offer, so a waiting story never crowds out the rest of the world.
+lastly.unshift(narrativeMonth);
