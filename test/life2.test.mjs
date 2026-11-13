@@ -48,7 +48,7 @@ test("taking the severance leaves you without the job", () => {
   s.job = { id: "office", lv: 1, xp: 0 };
   const ev = ALL_EVENTS.find((e) => e.id === "m4Layoff");
   assert.equal(C.eligible(s, ev), true);
-  C.openEvent(s, ev); C.choose(s, ev.o.length - 1);
+  C.openEvent(s, ev); C.choose(s, ev.o.findIndex((o) => o.l === "รับเงินชดเชยแล้วพัก"));
   assert.equal(s.job, null);
 });
 
