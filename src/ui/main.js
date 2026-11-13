@@ -5,6 +5,7 @@ import { initStage, setScene, setHero, trigger, stage } from "../stage.js";
 import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf, isNight } from "./art.js";
+import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
 import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
@@ -17,14 +18,13 @@ import { worldTab } from "./tabs/world.js";
 import { bookTab } from "./tabs/book.js";
 
 const CFG = "riftledger.cfg.v2";
-const SPEEDS = { 1: 0.8, 2: 0.4, 4: 0.17, 8: 0.05 };
 const POLICY_ORDER = Object.keys(POLICIES);
 const slots = C.slots(store), book = C.collection(store);
 
-const loadCfg = () => { try { return JSON.parse(store.get(CFG) ?? "{}"); } catch { return {}; } };
+const loadCfg = () => { try { return cleanCfg(JSON.parse(store.get(CFG) ?? "{}")); } catch { return cleanCfg(null); } };
 const cfg0 = loadCfg();
 const ui = {
-  speed: cfg0.speed ?? 2, policy: cfg0.policy ?? "important", fs: cfg0.fs ?? 2, paused: false, tab: "log", onlyImp: false,
+  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
 const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
@@ -201,7 +201,7 @@ function loop(t) {
   if (bannerT > 0 && (bannerT -= dt) <= 0) $("#banner").hidden = true;
   if (s && !s.dead && !ui.paused && !ui.settings) {
     acc += dt;
-    while (acc >= SPEEDS[ui.speed]) { acc -= SPEEDS[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
+    while (acc >= STEP_S[ui.speed]) { acc -= STEP_S[ui.speed]; if (!step()) { acc = 0; break; } fx(); dirty = true; if (s.dead) break; }
   }
   if (s?.dead && $("#end").hidden && !s.endShown) { s.endShown = true; endScreen(); }
   if (dirty) render();
@@ -250,7 +250,7 @@ function act(a, el) {
     unpin: () => C.unpinGoal(s, v),
     focus: () => C.setFocus(s, v),
     focus2: () => C.setFocus2(s, v === "none" ? null : v),
-    speed: () => { ui.speed = +v; ui.paused = false; saveCfg(); },
+    speed: () => { if (SPEEDS.includes(+v)) ui.speed = +v; ui.paused = false; saveCfg(); },
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
@@ -317,8 +317,8 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !$("#modal").hidden) return act("close");
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
   if (e.key === " ") { e.preventDefault(); ui.paused = !ui.paused; }
-  else if (e.key === "+" || e.key === "=") ui.speed = [1, 2, 4, 8, 16].find((n) => n > ui.speed) ?? 16;
-  else if (e.key === "-") ui.speed = [16, 8, 4, 2, 1].find((n) => n < ui.speed) ?? 1;
+  else if (e.key === "+" || e.key === "=") ui.speed = SPEEDS.find((n) => n > ui.speed) ?? SPEEDS.at(-1);
+  else if (e.key === "-") ui.speed = [...SPEEDS].reverse().find((n) => n < ui.speed) ?? SPEEDS[0];
   else if (e.key === "a" || e.key === "A") ui.policy = POLICY_ORDER[(POLICY_ORDER.indexOf(ui.policy) + 1) % 3];
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);

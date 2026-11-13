@@ -4,6 +4,7 @@ import { STATS, RANKS, CAREERS, CLASSES, ROLES, COUNTRIES, cityOf } from "../dat
 import { esc, money, bar, btn, tag } from "./dom.js";
 import { prepPanel } from "./prep.js";
 import { planTitle } from "./art.js";
+import { SPEEDS } from "./cfg.js";
 import { storyLine } from "./people.js";
 
 export const POLICIES = { stop: "หยุดทุกตัวเลือก", important: "หยุดเฉพาะเรื่องสำคัญ", skip: "ข้ามถึงหมุดหมาย" };
@@ -109,7 +110,7 @@ function opStatus(s) {
 }
 
 export function controls(ui) {
-  const sp = [1, 2, 4, 8, 16].map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
+  const sp = SPEEDS.map((n) => btn("speed:" + n, n + "×", ui.speed === n && !ui.paused ? 'class="on"' : "")).join("");
   const pol = Object.entries(POLICIES).map(([k, n]) => `<option value="${k}" ${ui.policy === k ? "selected" : ""}>${n}</option>`).join("");
   return `${btn("pause", ui.paused ? "เล่นต่อ" : "หยุด")}${sp}
     <select data-c="policy" aria-label="โหมดออโต้">${pol}</select><span class="sp"></span>${btn("settings", "ตั้งค่า")}`;
