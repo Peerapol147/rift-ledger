@@ -24,6 +24,13 @@ Design `docs/superpowers/specs/2026-11-13-lives-that-remember-design.md`, plan
   (`teamed`), school scenes a school-age child (`childAge`), workplace scenes a job; reporting the thief really pauses
   hunting; the story validator rejects unknown keys; a stale story scene pays and rolls nothing. Life checker rules
   now read the life and the option text. Cohort: `node tools/story-cohort.mjs 100`.
+- **P2a main cast done** (design `docs/superpowers/specs/2026-11-13-main-cast-design.md`, plan
+  `docs/superpowers/plans/2026-11-13-main-cast-p2a.md`): nine fixed people in every world (`src/data/cast.js`), each
+  living a slightly random life on its own stream (`src/core/cast.js` `updatePeople`; `node tools/cast-cohort.mjs`),
+  changed by the player through four stories (`thongbai`, `silawong`, `yoon`, `hong`) and `castAct`; tower records go
+  to whoever is alive; the world tab lists guilds by tier and the cast this life knows; heirs see family ties as
+  words. Stories run after the world's monthly events (`lastly`). Next (P2b): the other five cast stories, cast
+  marriages and children, the "twin star" destiny at birth.
 - Next (P2): life arcs + story focus/queue + relationship requests, and the owner's fixed guild/family cast (S-ranks
   who are the same every seed). P3 gate variety: PR #34's seven scenes are material, but it needs 4+ templates per theme
   picked by the real team, and its observatory boss is the tower's secret top-floor boss.
