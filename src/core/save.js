@@ -97,25 +97,47 @@ export function migrate(s) {
   return s;
 }
 
+// What a stored string is: a save this game can play, one from a newer game (kept untouched), or unreadable.
+export function inspect(str) {
+  if (!str) return "empty";
+  let raw;
+  try { raw = JSON.parse(str); } catch { return "corrupt"; }
+  if (raw && typeof raw === "object" && (raw.v > 2 || (Number.isInteger(raw.sv) && raw.sv > SAVE_SV))) {
+    return "unsupported";
+  }
+  return deserialize(str) ? "ok" : "corrupt";
+}
+
 export function slots(store, n = 3) {
   const BAK = (i) => SLOT(i) + ".bak";
+  // ok | empty | corrupt | unsupported (a newer game's save in front or behind: never loaded, never written over)
+  const status = (i) => {
+    const a = inspect(store.get(SLOT(i))), b = inspect(store.get(BAK(i)));
+    if (a === "unsupported" || (a !== "ok" && b === "unsupported")) return "unsupported";
+    if (a === "ok" || b === "ok") return "ok";
+    return a === "empty" && b === "empty" ? "empty" : "corrupt";
+  };
   // a slot that no longer reads (cut short, hand-edited) falls back to the save before it
-  const load = (i) => deserialize(store.get(SLOT(i)) ?? "") ?? deserialize(store.get(BAK(i)) ?? "");
+  const load = (i) => (status(i) === "ok"
+    ? deserialize(store.get(SLOT(i)) ?? "") ?? deserialize(store.get(BAK(i)) ?? "") : null);
   return {
     list: () => Array.from({ length: n }, (_, i) => {
+      if (status(i) === "unsupported") return { locked: true };
       const s = load(i);
       return s && { name: s.name, ageM: s.ageM, dead: !!s.dead };
     }),
+    status,
     load,
     save: (i, s) => {
+      if (status(i) === "unsupported") return false;
       const prev = store.get(SLOT(i));
       if (prev && deserialize(prev)) store.set(BAK(i), prev);
-      store.set(SLOT(i), serialize(s));
+      return store.set(SLOT(i), serialize(s)) !== false;
     },
     del: (i) => { store.del(SLOT(i)); store.del(BAK(i)); },
     exportStr: (i) => store.get(SLOT(i)),
     importStr(i, str) {
-      if (!deserialize(str)) return false;
+      if (status(i) === "unsupported" || !deserialize(str)) return false;
       store.set(SLOT(i), str);
       return true;
     },

@@ -21,8 +21,11 @@ const GLOSSARY = [
 export function settingsView(ui, slotList) {
   const pol = Object.entries(POLICIES).map(([k, n]) => btn("policy:" + k, n, `class="sm ${ui.policy === k ? "on" : ""}"`)).join("");
   const fs = [1, 2, 3].map((n) => btn("fs:" + n, ["เล็ก", "ปกติ", "ใหญ่"][n - 1], `class="sm ${ui.fs === n ? "on" : ""}"`)).join("");
-  const slots = slotList.map((x, i) => `<div class="item"><span>ช่อง ${i + 1}: ${x ? `${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}` : `<span class="dim">ว่าง</span>`}</span>
-    <span>${btn("save:" + i, "บันทึก", 'class="sm"')}${x ? btn("load:" + i, "โหลด", 'class="sm"') + btn("export:" + i, "ส่งออก", 'class="sm"') + btn("del:" + i, "ลบ", 'class="sm"') : ""}</span></div>`).join("");
+  // a save from a newer version of the game: shown, exportable, never written over from here
+  const locked = (i) => `<div class="item"><span>ช่อง ${i + 1}: <span class="dim">เซฟนี้มาจากเกมเวอร์ชันใหม่กว่า `
+    + `เปิดด้วยเกมเวอร์ชันล่าสุดเท่านั้น</span></span><span>${btn("export:" + i, "ส่งออก", 'class="sm"')}</span></div>`;
+  const slots = slotList.map((x, i) => (x?.locked ? locked(i) : `<div class="item"><span>ช่อง ${i + 1}: ${x ? `${esc(x.name)} อายุ ${Math.floor(x.ageM / 12)}${x.dead ? " (จบแล้ว)" : ""}` : `<span class="dim">ว่าง</span>`}</span>
+    <span>${btn("save:" + i, "บันทึก", 'class="sm"')}${x ? btn("load:" + i, "โหลด", 'class="sm"') + btn("export:" + i, "ส่งออก", 'class="sm"') + btn("del:" + i, "ลบ", 'class="sm"') : ""}</span></div>`)).join("");
   return `<div class="st-card"><h3>ตั้งค่า</h3>
     <h4>ออโต้</h4><div class="row">${pol}</div>
     <h4>ขนาดตัวอักษร</h4><div class="row">${fs}</div>
