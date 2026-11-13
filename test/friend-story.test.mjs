@@ -71,7 +71,7 @@ test("awaken text follows who awakened", () => {
   for (const [me, them] of [[1, 1], [1, 0], [0, 1], [0, 0]]) {
     const s = C.newLife("frw");
     play(s, {}, (x) => x.ev?.story?.node === "awaken" || C.ageY(x) >= 17);
-    s.ev = null; story(s).node = "awaken"; story(s).due = 0; s.ageM = 19 * 12;
+    s.ev = null; story(s).node = "awaken"; story(s).due = 0; s.ageM = 19 * 12; s.c["ev:ms18"] = 1;
     s.hunter = me ? { rank: 1, lv: 1, skills: [], xp: 0, cls: "knight" } : null;
     friendOf(s).hunter = them ? { rank: 1, cls: null } : null;
     C.narrativeMonth(s);

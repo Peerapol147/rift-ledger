@@ -12,13 +12,15 @@ const present = (s, st) => {
 const go = (node, m, extra = {}) => ({ m, go: node, ...extra });
 const end = (ending, m, extra = {}) => ({ m, end: ending, ...extra });
 const CLAIMANT = ["claimant"];
+const INDEPENDENT = ["independent-offer", "client-return", "client-search"];
+const backToWork = { act: "job:office" };
 
 export const OFFICE = {
   id: "office", title: "แฟ้มที่ไม่ได้ปิด", tag: "งาน", entry: "intake", castGone: "claimant-gone",
   // starts for an office worker of 18+ whose old chapter chain never began (old saves finish their own chain)
   discover: (s) => s.job?.id === "office" && s.ageM >= 18 * 12 && !(s.c["ch:office"] > 0)
     && !String(s.ev?.id ?? "").startsWith("office:"),
-  active: (s) => s.job?.id === "office", pauseMax: 36, pauseEnd: "transfer",
+  active: (s, st) => s.job?.id === "office" || INDEPENDENT.includes(st.node), pauseMax: 36, pauseEnd: "transfer",
   pauseLog: "แฟ้มเคลมของ {cast:claimant} ถูกส่งต่อให้คนอื่นดูแล คุณไม่ได้กลับไปที่โต๊ะนั้นอีก",
   cast: {
     claimant: (s) => {
@@ -89,7 +91,8 @@ export const OFFICE = {
           { rel: { claimant: { trust: 5, mem: "คุณโทรมาบอกตรงๆ ว่าอุทธรณ์ไม่ผ่าน" } } }) },
         { l: "ให้เงินเขาเงียบเรื่องนี้", need: { gold: 2000 }, noAuto: true,
           y: go("cover-up", "เขารับซองไปโดยไม่มองหน้าคุณ", { gold: -2000, goldLabel: "เงินปิดเรื่องเคลม",
-            route: "complicity", rel: { claimant: { trust: -30, mem: "คุณยื่นซองเงินให้เขาเลิกตามเรื่อง" } } }) },
+            route: "complicity", vars: { hush: 1 }, rel: { claimant: { trust: -30,
+              mem: "คุณยื่นซองเงินให้เขาเลิกตามเรื่อง" } } }) },
       ],
     },
     paid: {
@@ -176,19 +179,25 @@ export const OFFICE = {
       delay: [6, 12],
       t: "หลังจากคุณปฏิเสธกิลด์ งานใหญ่ไม่ผ่านโต๊ะคุณอีกเลย หัวหน้าบอกว่าเป็นเรื่องบังเอิญ",
       o: [
-        { l: "ขอแรงหนุนจากคนที่เชื่อคุณ", show: (s, st) => (present(s, st) && trust(s, st) >= 40)
-          || s.c.offClean > 0, noAuto: true,
+        { l: "ขอแรงหนุนจากคนที่เชื่อคุณ", show: (s, st) => present(s, st) && trust(s, st) >= 40, noAuto: true,
           y: go("reform-offer", "จดหมายสนับสนุนสองฉบับถึงโต๊ะผู้บริหาร ฉบับหนึ่งมาจากฮันเตอร์ที่คุณเคยช่วย") },
+        { l: "ขอแรงหนุนจากคนในบริษัท", show: (s, st) => !(present(s, st) && trust(s, st) >= 40), s: "cha", diff: 14,
+          noAuto: true, y: go("reform-offer", "เพื่อนร่วมแผนกสามคนลงชื่อในจดหมายถึงผู้บริหารกับคุณ"),
+          n: end("steady", "ทุกคนพยักหน้าเห็นด้วย แต่ไม่มีใครลงชื่อ คุณทำงานต่อที่เดิม", { mind: -3 }) },
         { l: "ทำงานตามหน้าที่ต่อไป", y: end("steady", "คุณทำงานต่อที่เดิม เรื่องนั้นเงียบไปเอง", { mind: 3 }) },
-        { l: "ลาออก", noAuto: true, y: go("independent-offer", "คุณเก็บของในลิ้นชักใส่กล่องเดียวพอดี") },
+        { l: "ลาออก", noAuto: true, y: go("independent-offer", "คุณเก็บของในลิ้นชักใส่กล่องเดียวพอดี",
+          { act: "quitJob" }) },
       ],
     },
     "cover-up": {
       delay: [1, 3],
-      t: "ซองสีน้ำตาลวางอยู่บนโต๊ะคุณตอนเช้า ข้างในมีเงินสามพันกับกระดาษเขียนว่า 'ขอบคุณที่เข้าใจ'",
+      t: (s, st) => (st.vars.hush
+        ? "หัวหน้าเรียกคุณไปคุยเรื่องเคลมของ {cast:claimant} ที่เงียบไปเอง แล้ววางซองสีน้ำตาลลงบนโต๊ะ "
+          + "'บริษัทประหยัดไปเยอะ นี่ส่วนของคุณ' ข้างในมีเงินสามพัน"
+        : "ซองสีน้ำตาลวางอยู่บนโต๊ะคุณตอนเช้า ข้างในมีเงินสามพันกับกระดาษเขียนว่า 'ขอบคุณที่เข้าใจ'"),
       o: [
         { l: "รับเงิน", noAuto: true, y: go("liability", "คุณเก็บซองไว้ในลิ้นชักล่างสุด", { gold: 3000,
-          goldLabel: "ซองจากกิลด์ลูกค้า", c: { offDirty: 1 }, route: "complicity" }) },
+          goldLabel: "ซองเงินจากบริษัท", c: { offDirty: 1 }, route: "complicity", vars: { tookCash: 1 } }) },
         { l: "ส่งซองคืน", s: "wil", diff: 15, noAuto: true,
           y: go("investigation", "คุณส่งซองคืนพร้อมสำเนาตัวเลขเดิมไปที่สมาคม", { vars: { kept: 1 } }),
           n: go("liability", "คุณส่งซองคืน แต่ตัวเลขที่แก้ไปแล้วยังอยู่ในระบบ มีชื่อคุณกำกับ", { mind: -6 }) },
@@ -196,9 +205,15 @@ export const OFFICE = {
     },
     liability: {
       delay: [12, 24],
-      t: "ผู้ตรวจสอบจากสมาคมชื่อ {cast:investigator} เริ่มขอเอกสารเก่าของกิลด์ลูกค้า ชื่อคุณอยู่ท้ายตัวเลขที่ถูกแก้",
+      t: (s, st) => (st.vars.hush
+        ? "ผู้ตรวจสอบจากสมาคมชื่อ {cast:investigator} เริ่มสอบเคลมฮันเตอร์ที่ถูกปิดเงียบ "
+          + "แฟ้มของ {cast:claimant} มีชื่อคุณอยู่"
+        : "ผู้ตรวจสอบจากสมาคมชื่อ {cast:investigator} เริ่มขอเอกสารเก่าของกิลด์ลูกค้า ชื่อคุณอยู่ท้ายตัวเลขที่ถูกแก้"),
       o: [
-        { l: "คืนเงินแล้วให้การ", need: { gold: 3000 }, noAuto: true,
+        { l: "ไปให้การเอง", show: (s, st) => !st.vars.tookCash, noAuto: true,
+          y: go("investigation", "{cast:investigator} จดทุกคำ แล้วบอกว่าการมาเองนับเป็นเรื่องดี",
+            { vars: { kept: 1 } }) },
+        { l: "คืนเงินแล้วให้การ", show: (s, st) => st.vars.tookCash === 1, need: { gold: 3000 }, noAuto: true,
           y: go("investigation", "{cast:investigator} จดทุกคำ แล้วบอกว่าการมาเองนับเป็นเรื่องดี", { gold: -3000,
             goldLabel: "คืนเงินซองกิลด์", vars: { kept: 1 } }) },
         { l: "เก็บเงียบ", s: "luk", diff: 14,
@@ -225,7 +240,7 @@ export const OFFICE = {
       delay: [1, 3],
       t: "เรื่องตัวเลขความเสียหายหลุดถึงผู้บริหาร ชื่อคุณอยู่ในรายชื่อคนที่ต้องรับผิดชอบ",
       o: [
-        { l: "คืนผลประโยชน์ทั้งหมด", show: (s, st) => st.route === "complicity", need: { gold: 3000 }, noAuto: true,
+        { l: "คืนผลประโยชน์ทั้งหมด", show: (s, st) => st.vars.tookCash === 1, need: { gold: 3000 }, noAuto: true,
           y: end("burned", "คุณคืนเงินครบ ถูกลดตำแหน่ง แต่ยังมีงานทำ", { gold: -3000, goldLabel: "คืนเงินซองกิลด์",
             fame: -2, fac: { assoc: -5 } }) },
         { l: "ยอมรับผลทางงาน", y: end("burned", "คุณถูกย้ายไปแผนกเอกสารเก่า ห้องที่ไม่มีหน้าต่าง", { fame: -2,
@@ -258,9 +273,10 @@ export const OFFICE = {
           noAuto: true, y: go("client-return", "คุณเริ่มหาห้องเช่าเล็กๆ ใกล้สาขาสมาคม") },
         { l: "เปิดบริษัทที่ปรึกษา", show: (s, st) => !(present(s, st) && trust(s, st) >= 40), need: { gold: 15000 },
           noAuto: true, y: go("client-search", "คุณเริ่มหาห้องเช่าเล็กๆ ใกล้สาขาสมาคม") },
-        { l: "หางานบริษัทใหม่", y: end("transfer", "คุณได้งานที่บริษัทอื่นในอีกสองเดือน ตำแหน่งเท่าเดิม",
-          { act: "quitJob" }) },
-        { l: "กลับไปขอทำงานเดิม", y: end("steady", "หัวหน้ารับคุณกลับ แต่ไม่ได้ให้โต๊ะริมหน้าต่างอีก", { mind: -2 }) },
+        { l: "หางานบริษัทใหม่", y: end("transfer", "คุณได้งานที่บริษัทอื่นในอีกสองเดือน เริ่มใหม่จากตำแหน่งแรกเข้า",
+          backToWork) },
+        { l: "กลับไปขอทำงานเดิม", y: end("steady", "หัวหน้ารับคุณกลับ แต่ไม่ได้ให้โต๊ะริมหน้าต่างอีก",
+          { mind: -2, ...backToWork }) },
       ],
     },
     "client-return": {
@@ -271,7 +287,7 @@ export const OFFICE = {
           y: end("independent", "ลูกค้ารายแรกของคุณคือ {cast:claimant} กับเพื่อนอีกสามคน", { gold: -15000,
             goldLabel: "ทุนเปิดบริษัท", act: "open:ownFirm", rel: { claimant: { trust: 10,
               mem: "เขาพาลูกค้ากลุ่มแรกมาให้บริษัทของคุณ" } } }) },
-        { l: "เลื่อนไปก่อน", y: end("steady", "คุณกลับไปทำงานประจำ และเก็บนามบัตรที่พิมพ์ไว้ในลิ้นชัก") },
+        { l: "เลื่อนไปก่อน", y: end("steady", "คุณกลับไปทำงานประจำ และเก็บนามบัตรที่พิมพ์ไว้ในลิ้นชัก", backToWork) },
       ],
     },
     "client-search": {
@@ -284,8 +300,8 @@ export const OFFICE = {
         { l: "หาหุ้นส่วนมาช่วยลงทุน", need: { gold: 8000 }, s: "cha", diff: 15, noAuto: true,
           y: end("independent", "หุ้นส่วนของคุณนำลูกค้าเก่ามาด้วยครึ่งหนึ่ง", { gold: -8000, goldLabel: "ทุนเปิดบริษัท",
             act: "open:ownFirm" }),
-          n: end("transfer", "หุ้นส่วนถอนตัวก่อนเซ็นสัญญา คุณกลับไปหางานประจำ", { act: "quitJob" }) },
-        { l: "เลื่อนไปก่อน", y: end("steady", "คุณกลับไปทำงานประจำ และเก็บนามบัตรที่พิมพ์ไว้ในลิ้นชัก") },
+          n: end("transfer", "หุ้นส่วนถอนตัวก่อนเซ็นสัญญา คุณกลับไปหางานประจำที่บริษัทใหม่", backToWork) },
+        { l: "เลื่อนไปก่อน", y: end("steady", "คุณกลับไปทำงานประจำ และเก็บนามบัตรที่พิมพ์ไว้ในลิ้นชัก", backToWork) },
       ],
     },
     "claimant-gone": {

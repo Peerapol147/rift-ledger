@@ -17,7 +17,7 @@ const mem = (text, trust = 0, extra = {}) => ({ friend: { trust, mem: text, ...e
 
 export const FRIEND = {
   id: "friend", title: "เด็กบ้านข้างๆ", tag: "ความสัมพันธ์", entry: "meet", castGone: "funeral",
-  discover: () => true,
+  discover: (s) => s.ageM < 48, // a childhood story: an old save of an adult life does not start it
   cast: {
     friend: (s, st, roll) => {
       const sex = roll(0, 1) ? "f" : "m", list = NAMES[s.country][sex];
@@ -36,19 +36,19 @@ export const FRIEND = {
       t: "ลูกบอลของเด็กบ้านข้างๆ ข้ามรั้วมาตกในสวนบ้านคุณ เด็กคนนั้นชื่อ {cast:friend} ปีนรั้วตามมาโดยไม่ขออนุญาตใคร",
       o: [
         { l: "ชวนเล่นด้วยกัน", y: go("school", "คุณสองคนเตะบอลจนมืด แม่ต้องออกมาเรียกเข้าบ้าน",
-          { rel: mem("{cast:friend} ปีนรั้วมาเอาลูกบอลคืน แล้วอยู่เล่นกับคุณจนมืด", 20) }) },
+          { rel: mem("เขาปีนรั้วมาเอาลูกบอลคืน แล้วอยู่เล่นกับคุณจนมืด", 20) }) },
         { l: "ส่งลูกบอลคืนแล้วกลับเข้าบ้าน", y: go("school", "เขาพยักหน้าขอบคุณ แล้วปีนรั้วกลับไป",
-          { rel: mem("{cast:friend} ปีนรั้วมาเอาลูกบอลคืน คุณยื่นให้แล้วกลับเข้าบ้าน", 5) }) },
+          { rel: mem("เขาปีนรั้วมาเอาลูกบอลคืน แล้วคุณยื่นให้แล้วกลับเข้าบ้าน", 5) }) },
         { l: "แย่งลูกบอลไว้ก่อน", s: "agi", diff: 8,
           y: go("school", "คุณวิ่งหนีรอบบ้านสามรอบก่อนยอมคืน", { rel: mem(
-            "{cast:friend} ปีนรั้วมาเอาลูกบอลคืน แต่คุณแย่งไว้แล้ววิ่งหนีรอบบ้าน", 0) }),
+            "เขาปีนรั้วมาเอาลูกบอลคืน แต่คุณแย่งไว้แล้ววิ่งหนีรอบบ้าน", 0) }),
           n: go("school", "เขาวิ่งเร็วกว่า คุณหกล้มเข่าถลอก", { hp: -2, rel: mem(
-            "{cast:friend} ปีนรั้วมาเอาลูกบอลคืน คุณแย่งไม่ทันแล้วหกล้มต่อหน้าเขา", -5) }) },
+            "เขาปีนรั้วมาเอาลูกบอลคืน แล้วคุณแย่งไม่ทันจนหกล้มต่อหน้าเขา", -5) }) },
       ],
     },
     school: {
       delay: [30, 54], needCast: F,
-      t: (s, st) => `คุณกับ {cast:friend} รู้จักกันตั้งแต่วันที่${first(s, st).replace("{cast:friend} ", "เขา")} `
+      t: (s, st) => `คุณกับ {cast:friend} รู้จักกันตั้งแต่วันที่${first(s, st)} `
         + "วันนี้ครูกล่าวหาว่าเขาทำกระจกห้องเรียนแตก ทั้งที่คุณเห็นว่าเป็นเด็กห้องอื่น",
       o: [
         { l: "บอกครูตามจริง", s: "cha", diff: 10,
@@ -65,7 +65,7 @@ export const FRIEND = {
     teenFork: {
       delay: [30, 54], needCast: F, when: (s) => age(s) >= 13,
       t: (s, st) => `ชมรมเตรียมรับเกตแตกเหลือที่ว่างที่เดียว คุณกับ {cast:friend} ยืนอยู่หน้าบอร์ดรับสมัครพร้อมกัน `
-        + `เขายังพูดถึงตอนที่${latest(s, st).replace(/^คุณ/, "คุณ")}`,
+        + `คุณยังนึกถึงตอนที่${latest(s, st)}`,
       o: [
         { l: "ยกที่ให้เขา", y: go("awaken", "เขาได้ที่นั้น และพาคุณไปนั่งดูการฝึกทุกเย็น", { route: "close",
           rel: mem("คุณยกที่ในชมรมให้เขา", 20) }) },
@@ -79,7 +79,8 @@ export const FRIEND = {
       ],
     },
     awaken: {
-      delay: [12, 36], needCast: F, when: (s) => age(s) >= 18,
+      // after the player's own screening at eighteen, never before it
+      delay: [12, 36], needCast: F, when: (s) => age(s) >= 18 && (s.c["ev:ms18"] ?? 0) > 0,
       t: (s, st) => (iHunt(s) && theyHunt(s, st)
         ? "ผลตรวจพลังของคุณกับ {cast:friend} ออกวันเดียวกัน ตื่นพลังทั้งคู่ เขาโทรมาก่อนคุณจะทันได้โทรหา"
         : theyHunt(s, st)
@@ -115,7 +116,7 @@ export const FRIEND = {
       // someone you drifted from does not call you at one in the morning
       skip: { to: "silence", when: (s, st) => st.route === "drift" || trust(s, st) < 0 },
       t: (s, st) => `{cast:friend} โทรมาตอนตีหนึ่ง เขาจะเซ็นสัญญาเช่าร้านแรกพรุ่งนี้ ขาดเงินค้ำประกันอีกนิด `
-        + `และอยากให้คุณไปเป็นพยาน "เหมือนตอนที่${latest(s, st).replace(/^คุณ/, "คุณ")}" เขาว่า`,
+        + `และอยากให้คุณไปเป็นพยาน คุณนึกถึงตอนที่${latest(s, st)}`,
       o: [
         { l: "ให้ยืมเงิน", need: { gold: 3000 }, noAuto: true, y: go("godparent",
           "ร้านของเขาเปิดในเดือนนั้น ป้ายร้านเขียนผิดหนึ่งตัว",
@@ -131,7 +132,7 @@ export const FRIEND = {
       delay: [12, 48], needCast: F,
       skip: { to: "silence", when: (s, st) => st.route === "drift" || st.route === "rival" || trust(s, st) < 40 },
       t: (s, st) => `ลูกคนแรกของ {cast:friend} เกิดแล้ว เขาขอให้คุณเป็น${s.sex === "f" ? "แม่" : "พ่อ"}ทูนหัวของเด็ก `
-        + `"เพราะคุณคือคนที่${latest(s, st).replace(/^คุณ/, "")}" เขาว่า`,
+        + `คุณนึกถึงตอนที่${latest(s, st)}`,
       o: [
         { l: (s) => `รับเป็น${s.sex === "f" ? "แม่" : "พ่อ"}ทูนหัว`, y: go("silence",
           "เด็กคนนั้นเรียกคุณด้วยชื่อเล่นที่ผิดไปหนึ่งตัวจนโต", { mind: 6,
@@ -147,8 +148,8 @@ export const FRIEND = {
     },
     reunion: {
       delay: [24, 96], needCast: F, when: (s) => age(s) >= 35,
-      t: (s, st) => `คุณเจอ {cast:friend} ที่งานศพครูประถม ผมเขาเริ่มขาวที่ขมับ เขายังจำได้ว่า${first(s, st)
-        .replace("{cast:friend} ", "เขา")}`,
+      t: (s, st) => `คุณเจอ {cast:friend} ที่งานศพครูประถม ผมเขาเริ่มขาวที่ขมับ คุณสองคนหัวเราะเรื่องวันที่${
+        first(s, st)}`,
       o: [
         { l: "นัดกินข้าวกันทุกเดือน", y: go("old", "นัดแรกยาวจนร้านปิด นัดที่สองเขามาสาย", { route: "close",
           rel: mem("คุณสองคนกลับมานัดกินข้าวกันทุกเดือน", 15) }) },
@@ -185,8 +186,7 @@ export const FRIEND = {
     },
     funeral: {
       delay: [0, 1],
-      t: (s, st) => `ข่าวมาถึงทางโทรศัพท์ {cast:friend} ไม่อยู่แล้ว ระหว่างนั่งในงานศพ คุณนึกถึงวันที่${first(s, st)
-        .replace("{cast:friend} ", "เขา")}`,
+      t: (s, st) => `ข่าวมาถึงทางโทรศัพท์ {cast:friend} ไม่อยู่แล้ว ระหว่างนั่งในงานศพ คุณนึกถึงวันที่${first(s, st)}`,
       o: [
         { l: "วางดอกไม้แล้วนั่งอยู่จนงานเลิก", show: (s, st) => trust(s, st) >= 40,
           y: end("lifelong", "ญาติของเขาบอกว่าเขาพูดถึงคุณบ่อย", { mind: -8 }) },
