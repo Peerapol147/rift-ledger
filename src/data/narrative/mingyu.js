@@ -8,7 +8,8 @@ export const MINGYU = {
   id: "mingyu", title: "คลินิกหลังเกตแตก", tag: "ชีวิต", entry: "tent", castGone: "gone",
   // the city-break clause of the design is read as "his own city": nothing in a save records a break per city
   discover: (s) => s.country === "kr" && s.ageM >= 16 * 12 && s.ageM <= 60 * 12
-    && (s.city === "pus" || (s.injuries ?? []).length > 0 || medic(s))
+    // a lasting injury (P2b-1 Task 7: any injury brought him to 55% of Korean lives, over the 50% variety cap)
+    && (s.city === "pus" || (s.injuries ?? []).some((i) => i.untilM == null) || medic(s))
     && Object.values(s.world.people ?? {}).some((p) => p.cast === "mingyu" && p.diedWorldM == null),
   active: (s) => s.country === "kr", pauseMax: 120, pauseEnd: "patient",
   cast: { mingyu: who("mingyu") },

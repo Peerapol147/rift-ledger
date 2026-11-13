@@ -34,6 +34,13 @@ for (const country of ["th", "kr"]) {
     const any = lives.filter((s) => IDS.some((id) => s.narrative.stories[id])).length;
     console.log(`  ${name}: at least one cast story ${pct(any, lives.length)} (hunters ${hunters.length},`
       + ` civilians ${civs.length})`);
+    if (name === "heirs" && country === "th") { // design §5: pim in Bangkok heirs who are 12 while she lives
+      const pimAlive = (s) => Object.values(s.world.people).some((p) => p.cast === "pim"
+        && (p.diedWorldM == null || p.diedWorldM > (s.mon0 ?? 0) + 12 * 12));
+      const bkk = lives.filter((s) => s.city === "bkk" && pimAlive(s));
+      console.log(`  pim in Bangkok heirs while she lives: ${pct(bkk.filter((s) => s.narrative.stories.pim).length,
+        bkk.length)} of ${bkk.length}`);
+    }
     for (const id of IDS) {
       const h = hunters.filter((s) => s.narrative.stories[id]).length;
       const c = civs.filter((s) => s.narrative.stories[id]).length;

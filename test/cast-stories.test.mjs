@@ -121,6 +121,12 @@ test("mingyu reaches Korean lives in Busan, and Korean lives hurt or in medicine
   assert.equal(D.discover(adult("mg5", "kr", "pus", 61, "mingyu")), false);
 });
 
+test("mingyu: a healing scrape outside Busan is not enough, a lasting injury is", () => {
+  const s = adult("mg9", "kr", "sel", 30, "mingyu");
+  s.injuries = [{ id: "breakScar", untilM: s.ageM + 6 }]; assert.equal(C.STORY_DEFS.mingyu.discover(s), false);
+  s.injuries = [{ id: "breakScar", untilM: null }]; assert.equal(C.STORY_DEFS.mingyu.discover(s), true);
+});
+
 test("mingyu: never for Thai lives, never after his death", () => {
   const D = C.STORY_DEFS.mingyu;
   const th = adult("mg6", "th", "bkk", 25, "mingyu"); th.injuries = [{ id: "breakScar", untilM: null }];
