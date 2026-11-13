@@ -2,7 +2,7 @@
 import { pk, ri, wp, ch } from "./rng.js";
 import { stream, log, onNewLife, yearsAfterRift, monthOfYear, ageY } from "./state.js";
 import { syncRosterPeople } from "./people.js";
-import { addCast } from "./cast.js";
+import { addCast, recordHolder } from "./cast.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { SHIP_FEE } from "./storage.js";
@@ -40,7 +40,6 @@ export function initWorld(s) {
   syncRosterPeople(s);
 }
 
-const npcName = (s, id) => s.world.roster.find((n) => n.id === id)?.n ?? "ฮันเตอร์นิรนาม";
 const news = (s, text) => log(s, "ข่าวโลก", text, "");
 
 export function recordFloor(s, tower, floor, byPlayer) {
@@ -61,9 +60,12 @@ function viewFor(s, entry) {
 
 function runEntry(s, e) {
   if (e.kind === "record") {
-    const text = (t) => t.replace("{npc}", npcName(s, e.npc));
+    const who = recordHolder(s, e.npc, TOWERS[e.tower].country); // whoever is alive and hunting by then
+    const text = (t) => t.replace("{npc}", who.name);
     if (s.world.records[e.tower] >= e.floor) return news(s, text(e.failNews));
     s.world.records[e.tower] = e.floor;
+    const p = who.personId && s.world.people[who.personId];
+    if (p?.cast && p.rank < p.ceiling) { p.rank++; p.hunter.rank = p.rank; } // a record makes a name
     return news(s, text(e.news));
   }
   if (e.kind === "news") return news(s, e.news);

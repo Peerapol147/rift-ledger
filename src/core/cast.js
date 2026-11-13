@@ -96,3 +96,21 @@ export function updatePeople(s) {
   }
 }
 monthly.unshift(updatePeople); // first in the month; it never opens an event
+
+// Who sets a calendar tower record now (spec §12.1): the cast holder if alive and hunting; else the strongest
+// living, hunting cast member of that country at A or above; else the strongest living roster hunter there.
+const hunting = (p) => p && p.diedWorldM == null && p.hunter && !p.retired;
+export function recordHolder(s, rosterId, country) {
+  const own = HOLDERS[rosterId] ? castPerson(s, HOLDERS[rosterId]) : null;
+  if (hunting(own)) return { name: own.name, personId: own.id };
+  if (HOLDERS[rosterId]) {
+    const next = Object.values(s.world.people)
+      .filter((p) => p.cast && p.country === country && hunting(p) && p.rank >= 5).sort((a, b) => b.rank - a.rank || a.cast.localeCompare(b.cast))[0];
+    if (next) return { name: next.name, personId: next.id };
+    const other = (s.world.roster ?? []).filter((n) => !n.cast && n.alive && n.country === country)
+      .sort((a, b) => b.rank - a.rank)[0];
+    return { name: other?.n ?? "ฮันเตอร์นิรนาม", personId: null };
+  }
+  const n = s.world.roster?.find((x) => x.id === rosterId);
+  return { name: n?.n ?? "ฮันเตอร์นิรนาม", personId: null };
+}
