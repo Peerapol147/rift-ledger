@@ -125,3 +125,14 @@ test("a small job tier gets a team trial, not the national reform", () => {
   assert.ok(!s.flags.insureReform);
   assert.ok(st.status === "done");
 });
+
+// Pack §05 C1 with natural stats: looking at the books is enough for the guild to come to you, pass or fail.
+test("failing the review check still brings the guild's request", () => {
+  const s = worker("office-review-fail");
+  for (const k of Object.keys(s.st)) s.st[k] = 1;
+  C.startStory(s, "office");
+  Object.assign(story(s), { node: "routine-review", due: 0 });
+  s.ev = null; C.narrativeMonth(s);
+  C.choose(s, s.ev.opts.findIndex((o) => o.l === "ไล่ดูตัวเลขที่ไม่ตรง"));
+  assert.equal(story(s).node, "audit");
+});

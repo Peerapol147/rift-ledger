@@ -132,6 +132,8 @@ export function choose(s, i) {
   if (!opt) return;
   const view = optionView(s, opt);
   if (!view.visible || view.locked) return;
+  // a story scene that has moved on since this event opened pays nothing and rolls nothing; it just closes
+  if (ev.story && hooks.storyStale?.(s, ev)) { s.ev = null; return; }
   countUnseen(s, ev.opts);
   const ok = view.odds == null || ch(stream(s, "ev"), view.odds / 100);
   const out = ok ? opt.y : opt.n ?? {};

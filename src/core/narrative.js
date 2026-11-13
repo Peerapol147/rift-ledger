@@ -109,6 +109,11 @@ function resolveOut(s, id, st, out, beat = false) {
 }
 
 // choose() calls this after the outcome is applied; a stale event (the story moved meanwhile) changes nothing.
+// Asked by choose() before anything is rolled or paid: is this open story event out of date?
+hooks.storyStale = (s, ev) => {
+  const st = s.narrative?.stories[ev.story.id];
+  return !st || st.status !== "active" || st.node !== ev.story.node;
+};
 hooks.storyResolve = (s, ev, out) => {
   const st = s.narrative?.stories[ev.story.id];
   if (!st || st.status !== "active" || st.node !== ev.story.node) return;
@@ -121,6 +126,13 @@ export function followedStory(s) {
   const [id, st] = list.sort((a, b) => b[1].lastM - a[1].lastM)[0];
   return { title: STORY_DEFS[id].title, last: st.lastText };
 }
+
+// Keys a story may use; anything else is a typo that would do nothing at runtime (P1 review Task D).
+const NODE_KEYS = new Set(["t", "delay", "needCast", "when", "o", "beat", "skip", "reach"]);
+const OPT_KEYS = new Set(["l", "s", "diff", "need", "risk", "nerve", "danger", "d", "y", "n", "show", "noAuto"]);
+const OUT_KEYS = new Set(["m", "fame", "jobXp", "ally", "fac", "gold", "goldLabel", "st", "hp", "mind", "c", "flags",
+  "act", "injury", "next", "cause", "go", "end", "route", "vars", "rel", "goResume"]);
+const unknown = (obj, keys) => Object.keys(obj ?? {}).filter((k) => !keys.has(k));
 
 // Data checks run by the tests: every way on exists, every check can fail somewhere, every node can be reached,
 // every cast role named in text is declared.
@@ -144,6 +156,14 @@ export function validateNarrative(defs) {
     }
     for (const [k, n] of Object.entries(nodes)) {
       if (!seen.has(k)) issues.push(`${id}: ${k} unreachable`);
+      for (const bad of unknown(n, NODE_KEYS)) issues.push(`${id}.${k}: unknown node key ${bad}`);
+      for (const o of n.o ?? []) {
+        for (const bad of unknown(o, OPT_KEYS)) issues.push(`${id}.${k}: unknown option key ${bad}`);
+        for (const out of [o.y, o.n]) for (const bad of unknown(out, OUT_KEYS)) {
+          issues.push(`${id}.${k}: unknown outcome key ${bad}`);
+        }
+      }
+      for (const bad of unknown(n.beat, OUT_KEYS)) issues.push(`${id}.${k}: unknown outcome key ${bad}`);
       for (const o of n.o ?? []) if ((o.s || o.risk) && !o.n) issues.push(`${id}.${k}: "${o.l}" has a check but no n`);
       if (n.skip && !nodes[n.skip.to]) issues.push(`${id}.${k}: skip to ${n.skip.to}`);
       for (const out of outsOf(n)) {
