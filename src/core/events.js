@@ -97,6 +97,8 @@ export function eligible(s, ev) {
   if (ev.who && !ev.who.some((id) => s.job?.id === id || s.hunter?.cls === id)) return false;
   if (ev.hunter === true && !s.hunter) return false;
   if (ev.hunter === false && s.hunter) return false;
+  // hunting now: awakened, not retired, not on a break (same rule as hunter.js canHunt)
+  if (ev.activeHunter && !(s.hunter && !s.flags.stoppedHunting && s.ageM >= (s.c.huntBreakUntil ?? 0))) return false;
   if (ev.once && s.c["ev:" + ev.id]) return false;
   for (const [k, min] of Object.entries(ev.if ?? {})) if (val(s, k) < min) return false;
   for (const [k, max] of Object.entries(ev.max ?? {})) if (val(s, k) > max) return false;

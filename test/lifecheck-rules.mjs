@@ -13,6 +13,12 @@ function misfit(s, id) {
   const a = C.ageY(s);
   if (id === "hunterBreakCall" && (a > 60 || s.flags.stoppedHunting)) return `hunterBreakCall at ${a}`;
   if (id === "adultLove" && !s.c.dating) return "adultLove with no one met";
+  // Rules read from the life, not from a list of ids (P1 review: catch the kind of mistake, not two events).
+  const ev = RANDOM.get(id), t = String(s.ev?.t ?? "");
+  if (ev?.activeHunter && !C.canHunt(s)) return `${id}: gate work while not hunting`;
+  if (ev && /หัวหน้า(?!ปาร์ตี้|ทีม|หน่วย|กิลด์)/.test(t) && !s.job && !s.party && !s.hunter) return `${id}: a boss with no job`;
+  const kidAge = s.c["at:kids"] != null ? (s.ageM - s.c["at:kids"]) / 12 : -1;
+  if (ev && /ลูก[^ ]*กลับจากโรงเรียน|ลูกกลับจากโรงเรียน/.test(t) && kidAge < 5) return `${id}: a child from school at ${kidAge}`;
   return "";
 }
 
