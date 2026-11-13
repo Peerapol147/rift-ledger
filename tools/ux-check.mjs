@@ -51,6 +51,15 @@ CASES["UX-12"] = async (b) => {
 // ---- fixtures made by the game itself
 const firstOpen = (s) => s.ev.opts.findIndex((o) => { const v = C.optionView(s, o); return v.visible && !v.locked; });
 const infant = (() => { const s = C.newLife("ux-click-audit"); for (let i = 0; i < 100 && !s.ev; i++) C.advance(s); return s; })();
+// a small event the old default ("important") would answer by itself
+const minor = (() => {
+  const s = C.newLife("ux-minor");
+  for (let i = 0; i < 20000; i++) {
+    if (s.ev && C.autoDecide(s, "important") >= 0) return s;
+    if (s.ev) C.choose(s, firstOpen(s)); else C.advance(s);
+  }
+  throw new Error("no minor event fixture");
+})();
 const adult = (() => {
   const s = C.newLife("ux-inventory");
   for (let i = 0; i < 4000 && !s.dead && s.ageM < 240; i++) { if (s.ev) C.choose(s, firstOpen(s)); else C.advance(s); }
@@ -236,6 +245,15 @@ CASES["R-space-hold"] = async (b) => {
   const held = [await press(true), await press(true), await press(true)];
   await ctx.close();
   return [held.every((l) => l === first), `holding Space acts once (${first} then ${held.join(", ")})`];
+};
+
+CASES["UX-15"] = async (b) => {
+  const { ctx, page } = await open(b, { raw: { [SLOT0]: C.serialize(minor) } }); // a fresh profile: no settings
+  await page.locator('[data-a="load:0"]').click();
+  await page.waitForTimeout(2500);
+  const shown = await page.locator(".ev p").first().innerText().catch(() => "");
+  await ctx.close();
+  return [shown === minor.ev.t, "a first play leaves every choice to the player"];
 };
 
 const browser = await chromium.launch();

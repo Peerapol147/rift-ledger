@@ -4,7 +4,8 @@ export const SPEEDS = [1, 2, 4, 8, 16];
 // seconds of real time per game step at each speed
 export const STEP_S = { 1: 0.8, 2: 0.4, 4: 0.17, 8: 0.05, 16: 0.025 };
 export const POLICY_IDS = ["stop", "important", "skip"];
-export const DEFAULT_CFG = { speed: 2, policy: "important", fs: 2 };
+// A first play leaves every choice to the player; the autopilot is theirs to turn on (UX-15, as in the model game).
+export const DEFAULT_CFG = { speed: 2, policy: "stop", fs: 2 };
 
 export function cleanCfg(raw) {
   const r = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
