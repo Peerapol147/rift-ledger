@@ -33,7 +33,9 @@ test("migration lists the roster and team without changing them", () => {
   for (const k of ["id", "rank", "lv", "loyalty", "hurtUntilM", "story"]) assert.deepEqual(m[k], old.team[0][k], k);
   assert.ok(m.personId && C.personById(s, m.personId).name === "สมชาย");
   for (const n of s.world.roster) assert.ok(C.personById(s, n.personId), n.id);
-  assert.equal(Object.keys(s.world.people).length, s.world.roster.length + 1);
+  // the roster (its two record holders are cast members), the nine cast, and the one teammate
+  const holders = s.world.roster.filter((n) => n.cast).length;
+  assert.equal(Object.keys(s.world.people).length, s.world.roster.length - holders + 9 + 1);
 });
 
 test("a new life lists its world roster", () => {

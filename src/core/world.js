@@ -2,6 +2,7 @@
 import { pk, ri, wp, ch } from "./rng.js";
 import { stream, log, onNewLife, yearsAfterRift, monthOfYear, ageY } from "./state.js";
 import { syncRosterPeople } from "./people.js";
+import { addCast } from "./cast.js";
 import { openEvent, EVENT_INDEX } from "./events.js";
 import { addLedger } from "./money.js";
 import { SHIP_FEE } from "./storage.js";
@@ -35,6 +36,7 @@ export function initWorld(s) {
     roster.push(npc(R, "npc" + roster.length, pk(R, ["th", "kr"]), rank));
   }
   s.world.roster = roster;
+  addCast(s); // the main cast, and the record holders become them (same world draws as before)
   syncRosterPeople(s);
 }
 
