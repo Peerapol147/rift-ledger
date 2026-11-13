@@ -10,6 +10,7 @@ const SETUP = {
   yoon: (s) => { s.country = "kr"; s.city = "sel"; },
   hong: (s) => { s.country = "th"; s.city = "bkk"; },
   mingyu: (s) => { s.country = "kr"; s.city = "pus"; },
+  dohyun: (s) => { s.country = "kr"; s.city = "icn"; },
 };
 let turn = 0;
 // first, second and last visible option, and one that varies from scene to scene (a player who is not consistent)
@@ -84,32 +85,36 @@ test("thongbai's story starts for Thai lives only", () => {
 });
 
 const castOf = (s, id) => Object.values(s.world.people).find((p) => p.cast === id);
-const adult = (seed, country, city, years = 25) => {
-  const s = C.newLife(seed); s.country = country; s.city = city; s.ageM = years * 12; C.updatePeople(s); return s;
+// a life of that age in a world where the cast member it is about is still alive (background deaths are seeded)
+const adult = (seed, country, city, years = 25, alive = null) => {
+  for (let i = 0; ; i++) {
+    const s = C.newLife(i ? `${seed}-${i}` : seed); s.country = country; s.city = city; s.ageM = years * 12;
+    C.updatePeople(s);
+    if (!alive || castOf(s, alive).diedWorldM == null) return s;
+  }
 };
 
 test("mingyu reaches Korean lives in Busan, and Korean lives hurt or in medicine anywhere", () => {
   const D = C.STORY_DEFS.mingyu;
-  assert.equal(D.discover(adult("mg1", "kr", "pus")), true);
-  const hurt = adult("mg2", "kr", "sel"); assert.equal(D.discover(hurt), false);
+  assert.equal(D.discover(adult("mg1", "kr", "pus", 25, "mingyu")), true);
+  const hurt = adult("mg2", "kr", "sel", 25, "mingyu"); assert.equal(D.discover(hurt), false);
   hurt.injuries = [{ id: "breakScar", untilM: null }]; assert.equal(D.discover(hurt), true);
-  const doc = adult("mg3", "kr", "icn"); doc.job = { id: "hdoc" }; assert.equal(D.discover(doc), true);
-  assert.equal(D.discover(adult("mg4", "kr", "pus", 15)), false);
-  assert.equal(D.discover(adult("mg5", "kr", "pus", 61)), false);
+  const doc = adult("mg3", "kr", "icn", 25, "mingyu"); doc.job = { id: "hdoc" }; assert.equal(D.discover(doc), true);
+  assert.equal(D.discover(adult("mg4", "kr", "pus", 15, "mingyu")), false);
+  assert.equal(D.discover(adult("mg5", "kr", "pus", 61, "mingyu")), false);
 });
 
 test("mingyu: never for Thai lives, never after his death", () => {
   const D = C.STORY_DEFS.mingyu;
-  const th = adult("mg6", "th", "bkk"); th.injuries = [{ id: "breakScar", untilM: null }];
+  const th = adult("mg6", "th", "bkk", 25, "mingyu"); th.injuries = [{ id: "breakScar", untilM: null }];
   assert.equal(D.discover(th), false);
-  const kr = adult("mg7", "kr", "pus");
+  const kr = adult("mg7", "kr", "pus", 25, "mingyu");
   C.setPersonStatus(kr, castOf(kr, "mingyu").id, { diedWorldM: C.worldMonth(kr) });
   assert.equal(D.discover(kr), false);
 });
 
 test("mingyu: a Korean life that moves to Thailand pauses the story", () => {
-  let s, i = 0; // a world where he is still alive at the player's 20
-  do s = adult(`mg8-${i++}`, "kr", "pus", 20); while (castOf(s, "mingyu").diedWorldM != null);
+  const s = adult("mg8", "kr", "pus", 20, "mingyu");
   for (let n = 0; n < 4000 && !s.narrative.stories.mingyu; n++) {
     if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
   }
@@ -127,4 +132,28 @@ test("mingyu: a Korean life that moves to Thailand pauses the story", () => {
     if (s.ev) C.choose(s, Math.max(0, firstOpen(s))); else C.advance(s);
   }
   assert.equal(s.narrative.stories.mingyu.ending, "patient"); // ten years away: he is someone you met once
+});
+
+test("dohyun reaches Korean hunters, traders and Incheon lives aged 18–50", () => {
+  const D = C.STORY_DEFS.dohyun;
+  const h = adult("dh1", "kr", "sel", 30, "dohyun");
+  h.hunter = { rank: 1, lv: 10, xp: 0, skills: [], cls: "knight" };
+  assert.equal(D.discover(h), true);
+  const p = adult("dh2", "kr", "pus", 30, "dohyun"); p.job = { id: "porter" }; assert.equal(D.discover(p), true);
+  assert.equal(D.discover(adult("dh3", "kr", "icn", 30, "dohyun")), true);
+  const o = adult("dh4", "kr", "sel", 30, "dohyun"); o.job = { id: "office" }; assert.equal(D.discover(o), false);
+  assert.equal(D.discover(adult("dh5", "kr", "icn", 55, "dohyun")), false);
+  assert.equal(D.discover(adult("dh6", "th", "bkk", 30, "dohyun")), false);
+  const dead = adult("dh7", "kr", "icn", 30, "dohyun");
+  C.setPersonStatus(dead, castOf(dead, "dohyun").id, { diedWorldM: C.worldMonth(dead) });
+  assert.equal(D.discover(dead), false);
+});
+
+test("dohyun: reformed sends him to haneul as a friend of the family", () => {
+  const D = C.STORY_DEFS.dohyun;
+  const reform = Object.values(D.nodes).flatMap((n) => n.o).flatMap((o) => [o.y, o.n]).find((r) => r?.end === "reformed");
+  assert.ok(reform, "a reformed ending exists");
+  assert.deepEqual(reform.castAct, { dohyun: "joinGuild:haneul" });
+  assert.ok(Object.values(D.nodes).flatMap((n) => n.o).some((o) => o.y?.castAct?.dohyun === "friend"
+    && o.y.go), "a road to reformed makes him a friend first");
 });
