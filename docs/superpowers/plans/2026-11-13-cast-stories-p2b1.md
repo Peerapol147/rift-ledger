@@ -157,4 +157,14 @@ Cast-story starts, `node tools/cast-story-cohort.mjs 100` before any story (Task
 
 ## Results
 
-Filled in Task 7.
+Every check on the final code (after the review fixes, 2026-11-13):
+
+- `npm test` 449/449 · linelen clean · art ok (0 open) · lifecheck 200: 0 / 0 / 0 · playtest 200: no bugs · UX check 18/18 PASS
+- Sims vs baseline (within noise; mind normal not higher): careful mind WARN 81 (same), normal mind 72 (same),
+  reckless civilians old age WARN 78.8% (baseline 78.9%); hunter death <50: 1.5 / 3.8 / 25.4% (1.4 / 4.0 / 25.5%);
+  money at death 105417 / 106735 / 211735 (105632 / 107344 / 211810)
+- cast-cohort unchanged in shape (stories act only when played); office story-cohort 99/100 seeds with ≥ 2 endings
+- Cast-story starts (n = 100): kr gen 1 ≥ 1 story 100% (target ≥ 60%); new stories ≤ 50% of their country:
+  mingyu 30%, dohyun 39%, seojin 3% kr / 2% th (C+ hunters still hunting, Korean reporters and porters), poramet 31%,
+  pim 22% of Thai heirs = 100% of the 18 Bangkok heirs who are 12 while she lives (target ≥ 30%)
+- Known gap for 2b-2: Korean heirs meet no cast story; Thai heirs meet only pim.
