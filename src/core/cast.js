@@ -40,7 +40,7 @@ const trustOf = (s, id) => s.relations?.[id]?.trust ?? 0; // read only: no empty
 const PROMOTE = 0.2, SPITE = 0.35, HURT = 0.08, MOVE = 0.03;
 const GATE_DEATH = (rank) => (rank >= 6 ? 0.003 : 0.01);
 
-function news(s, text) { log(s, "ข่าวโลก", text, ""); }
+function news(s, text, p) { log(s, "ข่าวโลก", text, ""); if (p) p.heard = true; } // a name in the news is known
 function syncRoster(s, p) {
   const n = s.world.roster?.find((x) => x.personId === p.id);
   if (n) Object.assign(n, { rank: p.rank, alive: p.diedWorldM == null });
@@ -49,7 +49,7 @@ function die(s, p, m, cause) {
   p.diedWorldM = m; p.diedCause = cause;
   syncRoster(s, p);
   const age = Math.floor((m - p.bornWorldM) / 12);
-  news(s, cause === "gate" ? `${p.name} ไม่ได้กลับออกมาจากเกต` : `${p.name} จากไปอย่างสงบในวัย ${age} ปี`);
+  news(s, cause === "gate" ? `${p.name} ไม่ได้กลับออกมาจากเกต` : `${p.name} จากไปอย่างสงบในวัย ${age} ปี`, p);
 }
 
 function step(s, p, m) {
@@ -63,7 +63,7 @@ function step(s, p, m) {
     p.guild = homes[ri(R, 0, homes.length - 1)]?.id ?? null;
   }
   if (!p.hunter || p.retired) return;
-  if (age === p.retireAtY * 12) { p.retired = true; news(s, `${p.name} ประกาศเกษียณจากการล่า`); return; }
+  if (age === p.retireAtY * 12) { p.retired = true; news(s, `${p.name} ประกาศเกษียณจากการล่า`, p); return; }
   if (age >= 18 * 12 && (age - 18 * 12) % 24 === 0) {
     const t = trustOf(s, p.id);
     const up = rnd(R), hurt = rnd(R), move = rnd(R), pick = rnd(R); // always four draws: same stream either way

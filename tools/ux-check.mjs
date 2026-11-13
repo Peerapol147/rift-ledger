@@ -256,6 +256,16 @@ CASES["UX-15"] = async (b) => {
   return [shown === minor.ev.t, "a first play leaves every choice to the player"];
 };
 
+CASES["cast-world"] = async (b) => {
+  const { ctx, page, errors } = await loaded(b, adult.s, { w: 390, h: 844, mobile: true });
+  await page.locator('[data-a="tab:world"]').first().click(); await page.waitForTimeout(200);
+  const r = await page.evaluate(() => ({ text: document.querySelector("#view").innerText,
+    over: document.documentElement.scrollWidth > innerWidth }));
+  await ctx.close();
+  const ok = ["ตำนาน", "ใหญ่", "เงา", "ตระกูลศิลาวงศ์"].every((w) => r.text.includes(w)) && !r.over && !errors.length;
+  return [ok, "the world tab shows guilds by tier and families on a phone"];
+};
+
 const browser = await chromium.launch();
 let fail = 0;
 for (const [id, run] of Object.entries(CASES)) {

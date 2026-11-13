@@ -65,6 +65,7 @@ function runEntry(s, e) {
     if (s.world.records[e.tower] >= e.floor) return news(s, text(e.failNews));
     s.world.records[e.tower] = e.floor;
     const p = who.personId && s.world.people[who.personId];
+    if (p) p.heard = true;
     if (p?.cast && p.rank < p.ceiling) { p.rank++; p.hunter.rank = p.rank; } // a record makes a name
     return news(s, text(e.news));
   }

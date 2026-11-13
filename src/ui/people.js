@@ -4,6 +4,8 @@ import * as C from "../core/index.js";
 import { esc } from "./dom.js";
 
 const ROLE = { friend: "เพื่อนวัยเด็ก", claimant: "ฮันเตอร์ที่เคยมาเคลมประกัน", assoc: "ผู้ตรวจจากสมาคม" };
+const TIE = { partner: "เคยเป็นคู่ชีวิตของคนในครอบครัวคุณ", friend: "เพื่อนของครอบครัวคุณ",
+  enemy: "เคยเป็นศัตรูของครอบครัวคุณ", owes: "มีบุญคุณต่อกันกับครอบครัวคุณ" };
 
 export function storyLine(s) {
   const f = C.followedStory(s);
@@ -19,8 +21,14 @@ export function peopleView(s) {
     .map(([id, r]) => {
       const p = C.personById(s, id), role = p.tags.map((t) => ROLE[t]).find(Boolean) ?? "คนรู้จัก";
       const gone = p.diedWorldM != null ? " · จากไปแล้ว" : "";
-      return `<div class="item person"><span><b>${esc(p.name)}</b> · ${role}${gone}`
+      const tie = TIE[p.ties?.[s.familyId]] ? ` · ${TIE[p.ties[s.familyId]]}` : "";
+      return `<div class="item person"><span><b>${esc(p.name)}</b> · ${role}${gone}${tie}`
         + `<small>${esc(C.trustWord(r.trust))} · ${esc(r.memories.at(-1).text)}</small></span></div>`;
-    }).join("");
+    }).join("")
+    // people an earlier generation knew: what they were to the family, in words
+    + Object.values(s.world?.people ?? {})
+      .filter((p) => TIE[p.ties?.[s.familyId]] && !s.relations?.[p.id]?.memories?.length)
+      .map((p) => `<div class="item person"><span><b>${esc(p.name)}</b> · ${TIE[p.ties[s.familyId]]}`
+        + `${p.diedWorldM != null ? " · จากไปแล้ว" : ""}</span></div>`).join("");
   return rows ? `<h3>คนที่รู้จัก</h3>${rows}` : "";
 }
