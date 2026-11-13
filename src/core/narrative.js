@@ -80,7 +80,8 @@ export function narrativeMonth(s) {
     if (node.beat) { resolveOut(s, id, st, node.beat, true); continue; }
     const fillOut = (o) => o && { ...o, m: o.m == null ? o.m : textOf(s, st, o.m) };
     openEvent(s, { id: `story:${id}:${st.node}`, tag: def.tag ?? "ชีวิต", t: textOf(s, st, node.t), important: true,
-      o: node.o.map((o) => ({ ...o, l: textOf(s, st, o.l), y: fillOut(o.y), n: fillOut(o.n) })) });
+      o: node.o.filter((o) => !o.show || o.show(s, st))
+        .map((o) => ({ ...o, l: textOf(s, st, o.l), y: fillOut(o.y), n: fillOut(o.n) })) });
     s.ev.story = { id, node: st.node };
     return;
   }

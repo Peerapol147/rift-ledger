@@ -136,3 +136,18 @@ test("a beat logs and moves on without asking", () => {
   assert.match(s.log.at(-1).text, /เงียบไปนาน เพื่อนทดสอบ/);
   assert.equal(s.narrative.stories[ID].node, "gone");
 });
+
+test("an option hidden by show is not offered", () => {
+  const d = def();
+  d.nodes.a.o[0].show = (s, st) => st.vars.never === 1;
+  C.STORY_DEFS[ID] = d;
+  const s = life("ne12"); openNext(s);
+  assert.ok(!s.ev.opts.some((o) => o.l === "ไปทางซ้าย"));
+});
+
+test("job tier can be needed", () => {
+  const s = life("ne13"); s.job = { id: "office", tier: 2, xp: 0 };
+  assert.equal(C.val(s, "jobTier"), 2);
+  s.job = null;
+  assert.equal(C.val(s, "jobTier"), -1);
+});
