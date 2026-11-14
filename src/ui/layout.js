@@ -17,6 +17,24 @@ function roleLine(s) {
   return `${STAGE_TITLE[st]}ใน${esc(cityOf(s.city).n)}`;
 }
 
+// The bar above the stage, as in the model game: name, then age · rank or role · the life's chapter.
+export function topBar(s) {
+  const st = C.stageOf(s);
+  const rank = s.hunter ? `แรงก์ ${RANKS[s.hunter.rank]} · ${esc(CLASSES[s.hunter.cls]?.n)}`
+    : s.job ? esc(C.jobTitle(s)) : STAGE_TITLE[st];
+  return `<b>${esc(s.name)}</b><span class="line">อายุ ${C.ageY(s)} ปี · ${rank} · `
+    + `<span class="chap">${esc(C.chapterOf(s))}</span></span>`;
+}
+
+// Two short lines over the scene: where you are, and what is happening now.
+export function whereLine(s, place) {
+  const plan = (id) => C.focusList(s).find((f) => f.id === id)?.n ?? C.focus2List(s).find((f) => f.id === id)?.n;
+  const doing = s.op ? esc(s.op.def.t)
+    : s.ev ? `มีเรื่องรอตัดสินใจ · ${esc(s.ev.tag ?? "เหตุการณ์")}`
+    : [plan(s.focus), s.focus2 && plan(s.focus2)].filter(Boolean).map(esc).join(" · ");
+  return `<span class="place">${esc(place)} · ${esc(cityOf(s.city).n)}</span>${doing ? `<span>${doing}</span>` : ""}`;
+}
+
 export function card(s) {
   const st = C.stageOf(s), life = C.lifespan(s);
   const stamp = s.hunter ? `<div class="stamp">${RANKS[s.hunter.rank]}</div>` : "";

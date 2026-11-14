@@ -20,6 +20,10 @@ export const isNight = (text) => NIGHT.test(text ?? "");
 // A baby's plan is how the parents raise them; from four the child picks.
 export const planTitle = (s) => (s.ageM < 48 ? "พ่อแม่เลี้ยงคุณแบบ" : "แผนเดือนนี้");
 
+// The scenes' names for the "where" line over the stage
+export const PLACE = { room: "ห้องนอน", home: "บ้าน", tower: "หอคอย", rift: "เกต", arena: "ลานฝึก", guild: "กิลด์",
+  city: "ใจกลางเมือง", street: "ถนนในเมือง", clinic: "คลินิก", market: "ตลาด", ruins: "ซากเมือง" };
+
 export function sceneOf(s, stageName) {
   // babies live indoors; a child's night-time event happens at home, not out on the street
   if (stageName === "kid") return s.ageM < 48 || isNight(s.ev?.t) ? "room" : "home";

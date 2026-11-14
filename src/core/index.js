@@ -31,3 +31,4 @@ export * from "./kinds.js";
 export * from "./people.js";
 export * from "./narrative.js";
 export * from "./cast.js";
+export * from "./chapter.js";

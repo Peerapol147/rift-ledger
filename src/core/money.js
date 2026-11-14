@@ -103,7 +103,8 @@ function seize(s) {
 }
 
 function debtMonth(s) {
-  if (s.debt > 0) s.debt += Math.ceil(s.debt * INTEREST);
+  // past what anyone would lend, creditors stop adding interest (it only made debts of millions no life could see)
+  if (s.debt > 0 && s.debt < debtCap(s)) s.debt = Math.min(debtCap(s), s.debt + Math.ceil(s.debt * INTEREST));
   payInstalment(s);
   if (s.gold >= 0) return;
   const need = -s.gold;
@@ -123,9 +124,16 @@ function familyGift(s) {
   addLedger(s, "เงินตั้งตัวจากครอบครัว", f.gold);
 }
 
+// The state's old-age allowance: from 60, a life with no job gets half its city's living cost each month.
+function allowance(s) {
+  if (ageY(s) < 60 || s.job || (s.hunter && !s.flags.stoppedHunting)) return;
+  addLedger(s, "เบี้ยผู้สูงอายุ", Math.round(cityOf(s.city).cost * 0.5));
+}
+
 monthly.push((s) => {
   familyGift(s);
   living(s);
+  allowance(s);
   debtMonth(s);
 });
 hooks.act.kidBorn = (s) => { s.c.kidAt = s.ageM; };
