@@ -465,6 +465,29 @@ CASES["C-fold-focus"] = async (b) => {
   return [on === "unfold" && h >= 44, `folding moves focus to the reopen button (${on}); the "start folded" box is tall enough (${h}px)`];
 };
 
+// ---- Top bar and the where/doing line (docs/superpowers/specs/2026-11-14-top-bar-design.md)
+CASES["T-bar"] = async (b) => {
+  const out = [];
+  for (const o of [{}, { w: 390, h: 844, mobile: true }]) {
+    const { ctx, page } = await loaded(b, adult.s, o);
+    out.push(await page.evaluate((name) => {
+      const w = document.querySelector("#who"), st = document.querySelector("#stagewrap");
+      if (!w) return "no bar";
+      const a = w.getBoundingClientRect(), z = st.getBoundingClientRect();
+      return a.bottom <= z.top + 1 && w.innerText.includes(name) && /อายุ\s*\d+/.test(w.innerText) ? "ok" : w.innerText;
+    }, adult.s.name));
+    await ctx.close();
+  }
+  return [out.every((x) => x === "ok"), `a bar above the stage names the life and its age (${out.join(" / ")})`];
+};
+
+CASES["T-where"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  const t = await page.locator("#where").innerText().catch(() => "");
+  await ctx.close();
+  return [/·/.test(t) && /มีเรื่องรอตัดสินใจ/.test(t), `the scene says where you are and what is happening ("${t.replace(/\n/g, " / ")}")`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);

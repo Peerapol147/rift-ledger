@@ -4,9 +4,9 @@ import * as C from "../core/index.js";
 import { initStage, setScene, setHero, trigger, stage } from "../stage.js";
 import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
-import { classArt, careerArt, sceneOf, isNight } from "./art.js";
+import { classArt, careerArt, sceneOf, isNight, PLACE } from "./art.js";
 import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
-import { card, eventPanel, choiceCard, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { card, eventPanel, choiceCard, controls, tabsBar, topBar, whereLine, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
 import { logTab } from "./tabs/log.js";
@@ -191,6 +191,7 @@ function render() {
   reveal();
   if (!TABS.some(([k, , ok]) => k === ui.tab && ok(s))) ui.tab = "log";
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
+  put("#who", topBar(s)); // before the card is placed: the bar's height moves the controls
   put("#card", card(s));
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
   put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result, waiting));
@@ -222,6 +223,7 @@ function render() {
   if (!typing) put("#view", TAB_VIEW[ui.tab]());
   view.scrollTop = keep;
   const st = C.stageOf(s), sc = sceneOf(s, st);
+  put("#where", whereLine(s, PLACE[sc] ?? ""));
   setScene(sc, 7, weatherFor((s.mon0 ?? 0) + s.ageM, sc), null, "");
   stage.night = isNight(s.ev?.t);
   setHero(s.hunter ? "#c86bff" : "#7fa8c9", st === "kid", s.ageM, s.hunter ? null : careerArt(s.job?.id), s.hunter ? classArt(s.hunter.cls) : null);
