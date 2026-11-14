@@ -488,6 +488,28 @@ CASES["T-where"] = async (b) => {
   return [/·/.test(t) && /มีเรื่องรอตัดสินใจ/.test(t), `the scene says where you are and what is happening ("${t.replace(/\n/g, " / ")}")`];
 };
 
+CASES["E-end-top"] = async (b) => {
+  // a finished life: the end screen covers the whole game, the controls bar included (owner's screenshot)
+  // a life a few months short of its lifespan, run at 16× with the autopilot until it ends
+  const near = C.deserialize(C.serialize(adult.s)); near.ev = null; near.ageM = Math.max(near.ageM, C.lifespan(near) * 12 + 6);
+  const { ctx, page } = await open(b, { init: { [CFGK]: { policy: "skip", speed: 16, fs: 2 } },
+    raw: { [SLOT0]: C.serialize(near) } });
+  await page.locator('[data-a="load:0"]').click();
+  for (let i = 0; i < 60 && !(await page.locator("#end").isVisible()); i++) {
+    const c = page.locator('#choice [data-a^="choose:"]:not([disabled])').first();
+    if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
+    await page.waitForTimeout(250);
+  }
+  if (!(await page.locator("#end").isVisible())) { await ctx.close(); return [false, "the life did not end"]; }
+  const top = await page.evaluate(() => [...document.querySelectorAll("#ctrl button, #ctrl select")].every((x) => {
+    const r = x.getBoundingClientRect(); if (!r.width) return true;
+    const h = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+    return !h || !!h.closest("#end");
+  }));
+  await ctx.close();
+  return [top, `the end screen is above the controls bar (${top})`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);
