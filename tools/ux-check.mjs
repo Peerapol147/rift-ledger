@@ -339,13 +339,20 @@ CASES["C-keys"] = async (b) => {
   await page.locator('#choice [data-a="fold"]').click(); await page.locator("#unfold").click(); await page.waitForTimeout(100);
   const first = await page.evaluate(() => document.activeElement?.dataset?.a ?? "");
   let inside = true;
-  for (let i = 0; i < 10; i++) { await page.keyboard.press("Tab"); inside &&= await inCard(); }
+  let out = "";
+  for (let i = 0; i < 10; i++) {
+    await page.keyboard.press("Tab");
+    const here = await inCard();
+    if (!here && !out) out = await page.evaluate(() => document.activeElement?.dataset?.a ?? document.activeElement?.id
+      ?? document.activeElement?.tagName);
+    inside &&= here;
+  }
   await page.keyboard.press("f"); await page.waitForTimeout(100); const f1 = !(await cardOpen(page));
   await page.keyboard.press("f"); await page.waitForTimeout(100); const f2 = await cardOpen(page);
   await page.keyboard.press("Escape"); await page.waitForTimeout(100); const esc = !(await cardOpen(page));
   await ctx.close();
   return [/^choose:/.test(first) && inside && f1 && f2 && esc,
-    `focus starts on a choice (${first}), Tab stays in the card (${inside}), F folds/unfolds (${f1}/${f2}), Esc folds (${esc})`];
+    `focus starts on a choice (${first}), Tab stays in the card (${inside}${out ? ", left to " + out : ""}), F folds/unfolds (${f1}/${f2}), Esc folds (${esc})`];
 };
 
 CASES["C-settings-over"] = async (b) => {

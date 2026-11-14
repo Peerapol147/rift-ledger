@@ -414,11 +414,12 @@ document.addEventListener("keydown", (e) => {
     }
     return; // no game shortcuts while the dialog is open
   }
-  if (!s || s.dead || e.target.matches("input,textarea,select")) return;
-  // the decision card is a dialog: F (and Esc while open) folds and unfolds it; Tab stays inside while it is open
+  // the decision card is a dialog: Tab stays inside while it is open (also from its checkbox), F (and Esc while
+  // open) folds and unfolds it
   const ch = $("#choice");
-  if (!ch.hidden) {
-    if (e.key === "f" || e.key === "F" || (e.key === "Escape" && !ui.folded)) {
+  if (s && !s.dead && !ch.hidden) {
+    const typing = e.target.matches("input:not([type=checkbox]),textarea,select");
+    if (!typing && (e.key === "f" || e.key === "F" || (e.key === "Escape" && !ui.folded))) {
       e.preventDefault(); act(ui.folded ? "unfold" : "fold"); return;
     }
     if (e.key === "Tab" && !ui.folded) {
@@ -429,6 +430,7 @@ document.addEventListener("keydown", (e) => {
       return;
     }
   }
+  if (!s || s.dead || e.target.matches("input,textarea,select")) return;
   // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
   if (e.key === " " && e.target.matches("button[data-a]")) {
     e.preventDefault();
