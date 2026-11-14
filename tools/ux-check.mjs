@@ -401,6 +401,70 @@ CASES["C-key-result"] = async (b) => {
   return [res > 0, `choosing with a number key shows what happened, as a click does (${res})`];
 };
 
+// a save loaded onto a waiting decision, with nothing pressed afterwards (loaded() presses pause)
+async function fresh(b, life, o = {}) {
+  const r = await open(b, { ...o, init: { [CFGK]: STOP, ...(o.init ?? {}) }, raw: { [SLOT0]: C.serialize(life) } });
+  await r.page.locator('[data-a="load:0"]').click(); await r.page.waitForTimeout(300);
+  return r;
+}
+const clear = (page) => page.evaluate(() => {
+  const c = document.querySelector("#ctrl").getBoundingClientRect(), k = document.querySelector("#choice .card");
+  if (!k) return { ok: false, why: "no card" };
+  const r = k.getBoundingClientRect(), overlap = r.top < c.bottom && r.bottom > c.top;
+  return { ok: !overlap && r.bottom <= innerHeight + 1 && r.top >= 0, card: [Math.round(r.top), Math.round(r.bottom)],
+    ctrl: [Math.round(c.top), Math.round(c.bottom)], h: innerHeight };
+});
+
+CASES["C-fresh-load"] = async (b) => {
+  const out = [];
+  for (const o of [{}, { w: 390, h: 844, mobile: true }]) {
+    const { ctx, page } = await fresh(b, infant, o);
+    out.push(await clear(page)); await ctx.close();
+  }
+  return [out.every((x) => x.ok), `a save opened onto a decision: the card clears the controls (${JSON.stringify(out)})`];
+};
+
+CASES["C-rotate"] = async (b) => {
+  const { ctx, page } = await fresh(b, infant, { w: 390, h: 844, mobile: true });
+  await page.setViewportSize({ width: 844, height: 390 }); await page.waitForTimeout(300);
+  const r = await clear(page);
+  await ctx.close();
+  return [r.ok, `turning the phone moves the card with the screen (${JSON.stringify(r)})`];
+};
+
+CASES["C-no-scroll"] = async (b) => {
+  const { ctx, page } = await fresh(b, old, { w: 390, h: 844, mobile: true });
+  const y0 = await page.evaluate(() => scrollY);
+  await page.mouse.move(195, 120); await page.mouse.wheel(0, 600); await page.waitForTimeout(200);
+  const y1 = await page.evaluate(() => scrollY);
+  await ctx.close();
+  return [y1 === y0, `the page behind an open card does not scroll (${y0} → ${y1})`];
+};
+
+CASES["C-space-safe"] = async (b) => {
+  // the life runs at 16×; when the next decision opens, Space (meant as "pause") must not answer it
+  const { ctx, page } = await fresh(b, infant, { init: { [CFGK]: { policy: "stop", speed: 16, fs: 2 } } });
+  await page.locator('#choice [data-a^="choose:"]:not([disabled])').first().click();
+  const n0 = await page.evaluate(() => document.querySelectorAll("#log .l, .l").length);
+  let opened = false;
+  for (let i = 0; i < 100 && !opened; i++) { await page.waitForTimeout(30); opened = await cardOpen(page); }
+  const before = await page.locator("#choice .card p").first().innerText().catch(() => "");
+  await page.keyboard.press(" "); await page.waitForTimeout(250);
+  const after = await page.locator("#choice .card p").first().innerText().catch(() => "");
+  await ctx.close();
+  return [opened && before && after === before, `Space as a new card opens does not choose (${opened}, same event ${after === before})`];
+};
+
+CASES["C-fold-focus"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
+  await page.locator('#choice [data-a="fold"]').focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(150);
+  const on = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName);
+  await page.locator("#unfold").click(); await page.waitForTimeout(150);
+  const h = await page.evaluate(() => Math.round(document.querySelector("#choice .foldstart")?.getBoundingClientRect().height ?? 0));
+  await ctx.close();
+  return [on === "unfold" && h >= 44, `folding moves focus to the reopen button (${on}); the "start folded" box is tall enough (${h}px)`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);

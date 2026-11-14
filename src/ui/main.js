@@ -202,17 +202,21 @@ function render() {
   $("#ctrl").classList.toggle("waiting", waiting);
   put("#choice", waiting ? choiceCard(s, ui.policy !== "stop", ui.foldStart)
     + (ui.folded ? btn("unfold", `เปิดตัวเลือก · ${esc(s.ev.tag ?? "")}`, 'id="unfold" class="primary"') : "") : "");
-  if (waiting) placeCard(ch);
   // focus: onto the first choice when a card opens (or unfolds), back to pause once a choice closes it
   const open = waiting && !ui.folded;
   if (open && ui.cardFocus !== s.ev && $("#modal").hidden) {
-    ui.cardFocus = s.ev; ch.querySelector('.card [data-a^="choose:"]:not([disabled])')?.focus({ preventScroll: true });
+    ui.cardFocus = s.ev; ui.cardAt = performance.now();
+    ch.querySelector('.card [data-a^="choose:"]:not([disabled])')?.focus({ preventScroll: true });
   }
   if (!open && ui.cardFocus && ch.contains(document.activeElement)) document.querySelector('[data-a="pause"]')?.focus();
   if (!waiting && ui.cardFocus) { ui.cardFocus = null; if (document.activeElement === document.body) $('[data-a="pause"]')?.focus(); }
   if (!open) ui.cardFocus = waiting ? null : ui.cardFocus;
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
+  // placed after #ctrl is drawn (its size is only known then); the page behind an open card does not scroll
+  if (waiting) placeCard($("#choice"));
+  document.documentElement.classList.toggle("cardopen", waiting && !ui.folded);
+  if (ui.focusUnfold) { ui.focusUnfold = false; $("#unfold")?.focus(); }
   const view = $("#view"), keep = view.scrollTop;
   const typing = view.contains(document.activeElement) && document.activeElement.matches("input,textarea,select");
   if (!typing) put("#view", TAB_VIEW[ui.tab]());
@@ -332,7 +336,7 @@ function act(a, el) {
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
-    fold: () => { ui.folded = true; },
+    fold: () => { ui.folded = true; ui.focusUnfold = true; },
     unfold: () => { ui.folded = false; },
     settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
     close: () => {
@@ -401,6 +405,9 @@ document.addEventListener("input", (e) => {
   if (c === "q") { ui.itemFilter.q = e.target.value; }
   if (c === "importText") ui.importText = e.target.value;
 });
+// the card's place depends on the screen: draw again when it turns or is resized
+addEventListener("resize", () => { dirty = true; });
+window.visualViewport?.addEventListener("resize", () => { dirty = true; });
 document.addEventListener("keydown", (e) => {
   const modal = $("#modal");
   if (!modal.hidden) {
@@ -431,6 +438,10 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  // a card that just opened took focus onto its first choice: a Space or Enter meant for something else (pausing as
+  // the event appeared) must not answer it
+  if ((e.key === " " || e.key === "Enter") && e.target.matches('#choice [data-a^="choose:"]')
+    && performance.now() - (ui.cardAt ?? 0) < 400) { e.preventDefault(); return; }
   // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
   if (e.key === " " && e.target.matches("button[data-a]")) {
     e.preventDefault();
