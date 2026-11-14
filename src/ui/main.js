@@ -137,24 +137,26 @@ function reveal() {
   for (const [k, n, ok] of TABS) {
     if (!ok(s) || s.flags["seenTab:" + k]) continue;
     s.flags["seenTab:" + k] = true;
-    if (s.ageM > 0 && k !== "log") banner(`เปิดแท็บใหม่: ${n}`);
+    if (s.ageM > 0 && k !== "log") banner(`เปิดแท็บใหม่: ${n}`, "news");
   }
 }
 
 // Every save the player did not ask for: says so once if it fails, instead of losing progress in silence.
 let saveFailing = false;
-const NEWER = "อีกแท็บเล่นชีวิตนี้ไปไกลกว่าแล้ว เซฟนี้ไม่ได้บันทึกทับ";
+const NEWER = "อีกแท็บเล่นชีวิตนี้ไปไกลกว่าแล้ว เซฟนี้ไม่ได้บันทึกทับ และจะไม่บันทึกอัตโนมัติจนกว่าจะเลือกช่องในตั้งค่า";
 function autosave() {
   if (!s || ui.slot < 0) return;
   const ok = slots.save(ui.slot, s);
-  if (ok === "newer") { if (!saveFailing) banner(NEWER, true); saveFailing = true; return; }
-  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ", true);
+  // another tab is further on: stop writing to this slot at all, or this tab would take it once it passes that age
+  if (ok === "newer") { ui.slot = -1; banner(NEWER, "urgent"); return; }
+  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ", "urgent");
   saveFailing = !ok;
 }
-// A failed save is urgent: news and birthdays wait until it has been on screen for its full time.
-function banner(text, urgent = false) {
-  if (bannerUrgent && bannerT > 0 && !urgent) return;
-  const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; bannerUrgent = urgent;
+// kind: "urgent" (a save that did not happen), "news" (birthdays, new tabs: the game talking on its own), or the
+// answer to something the player just did. News waits while an urgent banner has its time; a player's action never.
+function banner(text, kind = "act") {
+  if (bannerUrgent && bannerT > 0 && kind === "news") return;
+  const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; bannerUrgent = kind === "urgent";
 }
 
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
@@ -220,7 +222,7 @@ function step() {
     const y = C.ageY(s);
     C.advance(s);
     const n = !s.dead && C.ageY(s) > y ? C.yearSummary(s, y).lines.length : 0;
-    if (n) banner(`ครบ ${y + 1} ขวบ · ปีที่ผ่านมามี ${n} เรื่องสำคัญ`);
+    if (n) banner(`ครบ ${y + 1} ขวบ · ปีที่ผ่านมามี ${n} เรื่องสำคัญ`, "news");
   }
   return true;
 }
@@ -268,8 +270,8 @@ function act(a, el) {
     },
     save: () => {
       const r = slots.save(+v, s);
-      if (r === "newer") return banner(NEWER, true);
-      if (!r) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", true);
+      if (r === "newer") { if (ui.slot === +v) ui.slot = -1; return banner(NEWER, "urgent"); }
+      if (!r) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", "urgent");
       ui.slot = +v; banner("บันทึกแล้ว");
     },
     del: () => {

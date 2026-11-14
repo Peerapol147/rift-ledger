@@ -58,3 +58,11 @@ test("an heir or another life still saves over the slot", () => {
   const b = newLife("tabs-b"); b.ageM = 12;
   assert.equal(sl.save(0, b), true);
 });
+
+test("a new life with the same seed saves over a finished one in that slot", () => {
+  const st = fakeStore(), sl = slots(st);
+  const done = newLife("myseed"); done.ageM = 500; done.dead = { cause: "อายุขัย", ageY: 41 };
+  sl.save(0, done);
+  const again = newLife("myseed"); again.ageM = 12;
+  assert.equal(sl.save(0, again), true);
+});

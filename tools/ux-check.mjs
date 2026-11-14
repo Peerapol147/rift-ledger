@@ -79,15 +79,17 @@ const settings = async (page) => { await page.locator('[data-a="settings"]').fir
 
 // ---- Blind spots the report did not test (docs/superpowers/specs/2026-11-13-ux-blind-spots-design.md)
 const failWrites = (page) => page.evaluate(() => {
+  window.__setItem ??= Storage.prototype.setItem;
   Storage.prototype.setItem = function () { throw new DOMException("full", "QuotaExceededError"); };
 });
+const healWrites = (page) => page.evaluate(() => { Storage.prototype.setItem = window.__setItem; });
 // every text the banner shows, with when it appeared and when it was replaced
 const watchBanner = (page) => page.evaluate(() => {
   window.__banners = [];
   const b = document.querySelector("#banner"), at = () => performance.now();
   new MutationObserver(() => {
     const last = window.__banners.at(-1);
-    if (last && last.text !== b.textContent && last.end == null) last.end = at();
+    if (last && last.end == null && (b.hidden || last.text !== b.textContent)) last.end = at();
     if (!b.hidden && b.textContent && (!last || last.text !== b.textContent || last.end != null)) {
       window.__banners.push({ text: b.textContent, start: at(), end: null });
     }
@@ -100,8 +102,13 @@ CASES["B-save-fail"] = async (b) => {
   await settings(page);
   await page.locator('#modal [data-a="save:1"]').click(); await page.waitForTimeout(150);
   const t = await page.locator("#banner").innerText();
+  // the next save the player makes, at once and into a slot that works, is answered and not hidden by the failure
+  await healWrites(page);
+  await page.locator('#modal [data-a="save:2"]').click(); await page.waitForTimeout(150);
+  const t2 = await page.locator("#banner").innerText();
   await ctx.close();
-  return [/ไม่สำเร็จ/.test(t) && !/บันทึกแล้ว/.test(t), `a save that cannot be written says so ("${t}")`];
+  return [/ไม่สำเร็จ/.test(t) && !/บันทึกแล้ว/.test(t) && /บันทึกแล้ว/.test(t2),
+    `a save that cannot be written says so ("${t}"), the next one that works says so ("${t2}")`];
 };
 
 CASES["B-autosave-fail"] = async (b) => {
@@ -110,7 +117,7 @@ CASES["B-autosave-fail"] = async (b) => {
   await page.locator('[data-a="speed:16"]').click();
   // answer whatever the autopilot leaves to the player, so at least one birthday (and its autosave) passes
   for (let i = 0; i < 30; i++) {
-    const c = page.locator('[data-a^="choose:"]').first();
+    const c = page.locator('[data-a^="choose:"]:not([disabled])').first();
     if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
     await page.waitForTimeout(200);
   }
@@ -118,40 +125,75 @@ CASES["B-autosave-fail"] = async (b) => {
   await ctx.close();
   const fail = seen.find((x) => /บันทึกอัตโนมัติไม่สำเร็จ/.test(x.text));
   const shown = fail ? ((fail.end ?? fail.start + 1e9) - fail.start) / 1000 : 0;
-  return [shown >= 1, `the autosave failure stays readable (${fail ? Math.min(shown, 99).toFixed(2) + " s" : "never shown"}`
-    + `, ${seen.length} banners)`];
+  // readable (≥ 1 s) and then gone (its 3.5 s, with room for frames), not stuck on screen
+  return [shown >= 1 && shown <= 4.5, `the autosave failure stays readable, then goes (${fail ? Math.min(shown, 99)
+    .toFixed(2) + " s" : "never shown"}, ${seen.length} banners)`];
 };
 
+// file:// pages do not always share storage between tabs; a real player is on a web page, so serve one
+async function served() {
+  const { createServer } = await import("node:http"), { readFileSync } = await import("node:fs");
+  const html = readFileSync(process.cwd() + "/play.html");
+  const srv = createServer((q, r) => { r.writeHead(200, { "content-type": "text/html; charset=utf-8" }); r.end(html); });
+  await new Promise((ok) => srv.listen(0, "127.0.0.1", ok));
+  return { url: `http://127.0.0.1:${srv.address().port}/play.html`, close: () => srv.close() };
+}
+
 CASES["B-two-tabs"] = async (b) => {
+  const web = await served();
   const ctx = await b.newContext();
   await ctx.addInitScript(({ k, v, ck, c }) => {
     if (localStorage.getItem(k)) return;
     localStorage.setItem(k, v); localStorage.setItem(ck, c);
   }, { k: SLOT0, v: C.serialize(adult.s), ck: CFGK, c: JSON.stringify({ policy: "skip", speed: 16, fs: 2 }) });
   const tab = async () => {
-    const p = await ctx.newPage(); await p.goto(URL); await p.waitForTimeout(300);
+    const p = await ctx.newPage(); await p.goto(web.url); await p.waitForTimeout(300);
     await p.locator('[data-a="load:0"]').click(); await p.waitForTimeout(200);
-    await p.locator('[data-a="pause"]').first().click().catch(() => {});
     return p;
   };
-  const A = await tab(), B = await tab();
+  // pause for sure: the button toggles, so press it until it offers "เล่นต่อ"
+  const hold = async (p) => {
+    for (let i = 0; i < 3 && (await p.locator('[data-a="pause"]').first().innerText()) !== "เล่นต่อ"; i++) {
+      await p.locator('[data-a="pause"]').first().click(); await p.waitForTimeout(100);
+    }
+  };
+  const A = await tab(); await hold(A);
+  const B = await tab(); await hold(B);
   const ageIn = () => B.evaluate((k) => localStorage.getItem(k), SLOT0).then((x) => C.deserialize(x)?.ageM);
   const start = await ageIn();
   await B.bringToFront(); await B.locator('[data-a="speed:16"]').click();
   for (let i = 0; i < 30 && (await ageIn()) < start + 24; i++) {
-    const c = B.locator('[data-a^="choose:"]').first();
+    const c = B.locator('[data-a^="choose:"]:not([disabled])').first();
     if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
     await B.waitForTimeout(200);
   }
-  await B.locator('[data-a="pause"]').first().click().catch(() => {});
+  await hold(B);
   await settings(B); await B.locator('#modal [data-a="save:0"]').click(); await B.waitForTimeout(150);
   const ahead = await ageIn();
-  const ageA = (await cardText(A)).match(/อายุ\s*(\d+)/)?.[1];
+  // tabs see each other's storage a moment later (as in a real browser): wait until A's page sees B's save
+  for (let i = 0; i < 20 && C.deserialize(await A.evaluate((k) => localStorage.getItem(k), SLOT0))?.ageM !== ahead; i++) {
+    await A.waitForTimeout(100);
+  }
+  const ageA = await A.evaluate(() => document.querySelector('[data-a="pause"]').textContent);
+  const seenA = () => A.evaluate((k) => localStorage.getItem(k), SLOT0).then((x) => C.deserialize(x)?.ageM);
+  const pre = await seenA();
   await A.bringToFront(); await settings(A); await A.locator('#modal [data-a="save:0"]').click(); await A.waitForTimeout(150);
+  const post = await seenA();
   const after = await ageIn(), said = await A.locator("#banner").innerText();
-  await ctx.close();
-  return [ahead > start && after === ahead && /อีกแท็บ/.test(said),
-    `an older tab cannot save over a newer life (slot ${start} → ${ahead} → ${after} months, A at ${ageA}; "${said}")`];
+  // the older tab plays on past the other one's age: its autosave must still not take the slot by itself
+  await A.keyboard.press("Escape"); await A.waitForTimeout(100);
+  await A.locator('[data-a="speed:16"]').click();
+  const yearsA = async () => +((await cardText(A)).match(/อายุ\s*(\d+)/)?.[1] ?? 0);
+  for (let i = 0; i < 80 && (await yearsA()) * 12 <= ahead + 12; i++) {
+    const c = A.locator('[data-a^="choose:"]:not([disabled])').first();
+    if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
+    await A.waitForTimeout(200);
+  }
+  const ageA2 = (await cardText(A)).match(/อายุ\s*(\d+)/)?.[1], later = await ageIn();
+  await ctx.close(); web.close();
+  return [ahead > start && after === ahead && /อีกแท็บ/.test(said) && later === ahead && +ageA2 * 12 > ahead,
+    `an older tab cannot save over a newer life (slot ${start} → ${ahead} → ${after} → ${later} months, A at `
+    + `${ageA} then ${ageA2}; "${said}"; A saw ${pre}→${post})`];
 };
 
 CASES["B-focus-return"] = async (b) => {

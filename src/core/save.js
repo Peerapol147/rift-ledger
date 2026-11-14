@@ -150,7 +150,8 @@ export function slots(store, n = 3) {
     save: (i, s) => {
       if (status(i) === "unsupported") return false;
       const prev = store.get(SLOT(i)), old = prev && deserialize(prev);
-      if (old && old.lifeId && old.lifeId === s.lifeId && old.ageM > s.ageM) return "newer";
+      // a finished life in the slot is never "further on": a new run of its seed may take the slot
+      if (old && !old.dead && old.lifeId && old.lifeId === s.lifeId && old.ageM > s.ageM) return "newer";
       if (old) store.set(BAK(i), prev);
       return store.set(SLOT(i), serialize(s)) !== false;
     },
