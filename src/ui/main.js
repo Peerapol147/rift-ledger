@@ -447,7 +447,7 @@ document.addEventListener("keydown", (e) => {
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);
     const pick = vis[+e.key - 1];
-    if (pick && !pick[1].locked) { C.choose(s, pick[0]); fx(); }
+    if (pick && !pick[1].locked) { const n0 = s.log.length; C.choose(s, pick[0]); showResult(n0); fx(); }
   } else return;
   saveCfg(); dirty = true;
 });

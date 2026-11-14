@@ -393,6 +393,14 @@ CASES["C-plan"] = async (b) => {
   return [!!plan && marked > 0, `an option that fits the main plan (${plan}) has the plan border (${marked})`];
 };
 
+CASES["C-key-result"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await page.keyboard.press("1"); await page.waitForTimeout(200);
+  const res = await page.locator("#event .result").count();
+  await ctx.close();
+  return [res > 0, `choosing with a number key shows what happened, as a click does (${res})`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);
