@@ -24,10 +24,10 @@ const slots = C.slots(store), book = C.collection(store);
 const loadCfg = () => { try { return cleanCfg(JSON.parse(store.get(CFG) ?? "{}")); } catch { return cleanCfg(null); } };
 const cfg0 = loadCfg();
 const ui = {
-  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, paused: false, tab: "log", onlyImp: false,
+  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, foldStart: cfg0.fold, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
-const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
+const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs, fold: ui.foldStart }));
 let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0, bannerUrgent = false;
 
 // ---- Start, load, death
