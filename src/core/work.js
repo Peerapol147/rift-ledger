@@ -90,6 +90,8 @@ resolvers.jobName = (id) => CAREERS[id]?.n ?? id;
 monthly.push((s) => {
   workMonth(s);
   if (s.job && s.mind < 20 && ch(stream(s, "work"), 0.03)) quitJob(s);
-  const free = !s.hunter || s.flags.stoppedHunting;
+  // anyone not living off gates gets the yearly offer, idle hunters too (a rank-F hunter who never hunts and never
+  // hears of a job sinks into debt for decades: owner's life "เอก")
+  const free = !s.hunter || s.flags.stoppedHunting || s.focus !== "hunt";
   if (!s.job && free && !s.flags.retired && ageY(s) >= 23 && s.ageM % 12 === 0) openJobChoice(s);
 });
