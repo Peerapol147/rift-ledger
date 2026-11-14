@@ -105,6 +105,14 @@ export function planWeight(s, ev) {
   return 1;
 }
 
+// Which plan a decision's option fits (choice card): the stat it tests, or a stat it raises, is one the plan grows.
+// "main" wins over "second"; a plan with no stats (rest, hunt) fits nothing.
+export function planFit(s, opt) {
+  const stats = new Set([opt.s, ...Object.keys(opt.y?.st ?? {})].filter(Boolean));
+  const fits = (id) => Object.keys(planOf(s, id)?.st ?? {}).some((k) => stats.has(k));
+  return fits(s.focus) ? "main" : fits(s.focus2) ? "second" : null;
+}
+
 // A random event, opened with the name of the plan that pulled it (shown in the log), if one did.
 export function openRandom(s, ev) {
   openEvent(s, ev);

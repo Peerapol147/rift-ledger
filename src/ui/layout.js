@@ -97,7 +97,8 @@ function eventCard(s, waitingAuto) {
     if (!v.visible) return "";
     n++;
     const lock = v.locked ? `<div class="lockrow">🔒 ${esc(v.lockText)} ${btn("pin:" + i, "📌 ปักเป้าหมาย", 'class="sm"')}</div>` : "";
-    return `<div><button class="opt ${v.locked ? "lock" : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
+    const fit = C.planFit(s, o); // the plan it fits: a solid border for the main plan, dashed for the second
+    return `<div><button class="opt ${v.locked ? "lock" : ""} ${fit ? "fit-" + fit : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
       <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}${chips(v.fx)}</span><span>${badge(v)}</span></button>${lock}</div>`;
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";

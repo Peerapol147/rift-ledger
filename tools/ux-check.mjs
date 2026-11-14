@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import * as C from "../src/core/index.js";
 import { ITEMS } from "../src/data/items.js";
+import { FOCUS } from "../src/data/stats.js";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const URL = pathToFileURL(process.cwd() + "/play.html").href;
@@ -377,6 +378,19 @@ CASES["C-fold-setting"] = async (b) => {
   await ctx.close();
   return [saved === true && dim === true, `the card's "start folded" box is saved (${saved}); speeds look dimmed while`
     + ` a decision waits (${dim})`];
+};
+
+CASES["C-plan"] = async (b) => {
+  // the infant's waiting decision, with a main plan that one of its options fits
+  const s = C.deserialize(C.serialize(infant));
+  const plan = Object.keys(FOCUS[C.stageOf(s)]).find((id) => {
+    s.focus = id; s.focus2 = null;
+    return s.ev.opts.some((o) => C.optionView(s, o).visible && C.planFit(s, o) === "main");
+  });
+  const { ctx, page } = await loaded(b, s);
+  const marked = await page.locator("#choice .opt.fit-main").count();
+  await ctx.close();
+  return [!!plan && marked > 0, `an option that fits the main plan (${plan}) has the plan border (${marked})`];
 };
 
 CASES["UX-02"] = async (b) => {
