@@ -66,12 +66,21 @@ function badge(v) {
 
 const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
 
-export function eventPanel(s, waitingAuto, result) {
+// The decision itself opens as a card over the stage (#choice); the side panel then only says one is waiting.
+export function choiceCard(s, waitingAuto) {
+  const k = C.eventKind(s);
+  return `<div class="card t-${k.tier}" role="dialog" aria-modal="true" aria-label="${esc(s.ev.tag ?? "เหตุการณ์")}">`
+    + `<div class="foldbar">${btn("fold", "พับไว้ดูก่อน ▾", 'class="sm"')}</div>${eventCard(s, waitingAuto)}</div>`;
+}
+
+export function eventPanel(s, waitingAuto, result, asking = false) {
   const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}</div>` : "";
   // phones show the character card below everything, so the essentials ride here (CSS shows it only there)
   const m = `<div class="mstat">อายุ <b>${C.ageY(s)}</b> สุขภาพ <b>${Math.round(s.hp)}</b> จิต <b>${Math.round(s.mind)}</b>`
     + ` เงิน <b>${money(s.gold)}</b></div>`;
-  return m + res + storyLine(s) + eventCard(s, waitingAuto);
+  const body = asking ? `<div class="evwait"><p>มีเรื่องรอคุณตัดสินใจ</p>${btn("unfold", "เปิดตัวเลือก")}</div>`
+    : eventCard(s, waitingAuto);
+  return m + res + storyLine(s) + body;
 }
 
 function eventCard(s, waitingAuto) {

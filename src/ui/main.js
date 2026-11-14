@@ -6,7 +6,7 @@ import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf, isNight } from "./art.js";
 import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
-import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { card, eventPanel, choiceCard, controls, tabsBar, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
 import { logTab } from "./tabs/log.js";
@@ -171,6 +171,18 @@ function put(sel, html) {
   if (key && document.activeElement === document.body) box.querySelector(key)?.focus({ preventScroll: true });
 }
 
+// The card never covers the controls bar (pause, speeds, settings): it takes the larger free part of the screen.
+function placeCard(ch) {
+  const r = $("#ctrl").getBoundingClientRect(), h = innerHeight, below = h - r.bottom, above = r.top;
+  const onScreen = r.bottom > 0 && r.top < h;
+  if (!onScreen) { ch.style.setProperty("--ctop", "12px"); ch.style.setProperty("--cmax", `${h - 24}px`); return; }
+  if (below >= above) {
+    ch.style.setProperty("--ctop", `${Math.round(r.bottom + 8)}px`); ch.style.setProperty("--cmax", `${Math.round(below - 20)}px`);
+  } else {
+    ch.style.setProperty("--ctop", "12px"); ch.style.setProperty("--cmax", `${Math.round(above - 20)}px`);
+  }
+}
+
 function render() {
   dirty = false;
   document.documentElement.style.setProperty("--fs", FONT[ui.fs]);
@@ -181,7 +193,15 @@ function render() {
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
   put("#card", card(s));
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
-  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
+  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result, waiting));
+  // the decision card: a new event opens folded or not by the setting; folded, the screen behind is usable
+  if (s.ev !== ui.foldEv) { ui.foldEv = s.ev; ui.folded = !!ui.foldStart; }
+  const ch = $("#choice");
+  ch.hidden = !waiting;
+  ch.classList.toggle("folded", waiting && ui.folded);
+  put("#choice", waiting ? choiceCard(s, ui.policy !== "stop")
+    + (ui.folded ? btn("unfold", `เปิดตัวเลือก · ${esc(s.ev.tag ?? "")}`, 'id="unfold" class="primary"') : "") : "");
+  if (waiting) placeCard(ch);
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
@@ -303,6 +323,8 @@ function act(a, el) {
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
+    fold: () => { ui.folded = true; },
+    unfold: () => { ui.folded = false; },
     settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
     close: () => {
       ui.settings = false;

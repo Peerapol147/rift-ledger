@@ -261,6 +261,57 @@ CASES["B-landscape"] = async (b) => {
   return [ok && side <= 0, `a phone held sideways: a choice can be reached ${ok}, sideways ${side}px`];
 };
 
+// ---- The choice card over the stage (docs/superpowers/specs/2026-11-14-choice-card-design.md)
+const cardOpen = (page) => page.evaluate(() => {
+  const c = document.querySelector("#choice"), k = c?.querySelector(".card");
+  return !!c && !c.hidden && !!k && getComputedStyle(k).display !== "none" && k.getClientRects().length > 0;
+});
+
+CASES["C-open"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  const open = await cardOpen(page);
+  const inCard = await page.locator('#choice [data-a^="choose:"]').count();
+  const inSide = await page.locator('#event [data-a^="choose:"]').count();
+  const note = await page.locator("#event").innerText();
+  await ctx.close();
+  return [open && inCard > 0 && inSide === 0 && /มีเรื่องรอคุณตัดสินใจ/.test(note),
+    `a waiting decision opens over the stage (card ${open}, ${inCard} choices in it, ${inSide} beside)`];
+};
+
+CASES["C-phone"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
+  const r = await page.evaluate(() => {
+    const k = document.querySelector("#choice .card"); if (!k) return null;
+    const box = k.getBoundingClientRect(), c = k.querySelector('[data-a^="choose:"]');
+    c?.scrollIntoView({ block: "nearest" }); const x = c?.getBoundingClientRect();
+    return { bottom: Math.round(box.bottom), w: Math.round(box.width), ok: !!x && x.top >= 0 && x.bottom <= innerHeight };
+  });
+  const side = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  await ctx.close();
+  return [!!r && r.bottom <= 845 && r.w >= 360 && r.ok && side <= 0,
+    `on a phone the card is a sheet at the bottom (${JSON.stringify(r)}, sideways ${side}px)`];
+};
+
+CASES["C-auto"] = async (b) => {
+  const { ctx, page } = await loaded(b, adult.s, { init: { [CFGK]: { policy: "skip", speed: 16, fs: 2 } } });
+  await page.locator('[data-a="speed:16"]').click();
+  let flashes = 0;
+  for (let i = 0; i < 15; i++) {
+    const waiting = await page.locator('#choice [data-a^="choose:"]').count();
+    if ((await cardOpen(page)) && !waiting) flashes++;
+    const c = page.locator('#choice [data-a^="choose:"]:not([disabled])').first();
+    if (await c.count()) await c.click({ timeout: 300 }).catch(() => {});
+    await page.waitForTimeout(200);
+  }
+  await ctx.close();
+  return [flashes === 0, `the autopilot's own choices never open an empty card (${flashes})`];
+};
+
+// a decision card covers the screen (as in the model game): fold it to use the screen behind
+const foldCard = async (page) => {
+  const f = page.locator('#choice [data-a="fold"]');
+  if (await f.count()) { await f.click(); await page.waitForTimeout(100); }
+};
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);
@@ -290,6 +341,7 @@ CASES["UX-03"] = async (b) => {
 
 CASES["UX-04"] = async (b) => {
   const { ctx, page } = await loaded(b, adult.s);
+  await foldCard(page);
   await page.locator('[data-a="tab:items"]').first().click(); await page.waitForTimeout(150);
   await page.locator(`[data-a="equip:${adult.uid}"]`).click(); await page.waitForTimeout(200);
   const still = await page.locator(`[data-a="equip:${adult.uid}"]`).count();
@@ -394,6 +446,7 @@ CASES["UX-10"] = async (b) => {
 
 CASES["R-scroll"] = async (b) => {
   const { ctx, page } = await loaded(b, adult.s, { w: 390, h: 844, mobile: true });
+  await foldCard(page);
   await page.locator('[data-a="pause"]').first().click(); // running again
   const btn = page.locator('#card [data-a^="focus:"]').last();
   await btn.scrollIntoViewIfNeeded(); await btn.tap(); await page.waitForTimeout(200);
@@ -442,6 +495,7 @@ CASES["UX-15"] = async (b) => {
 
 CASES["cast-world"] = async (b) => {
   const { ctx, page, errors } = await loaded(b, adult.s, { w: 390, h: 844, mobile: true });
+  await foldCard(page);
   await page.locator('[data-a="tab:world"]').first().click(); await page.waitForTimeout(200);
   const r = await page.evaluate(() => ({ text: document.querySelector("#view").innerText,
     over: document.documentElement.scrollWidth > innerWidth }));
