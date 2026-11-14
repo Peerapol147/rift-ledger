@@ -80,6 +80,7 @@ function hunterMonth(s) {
 // The routine monthly gate pick waits until no story, team or secret event wants the month.
 function huntMonth(s) {
   if (s.focus !== "hunt" || !canHunt(s)) return;
+  s.c.lastHuntM = s.ageM; // a month spent on gates (work.js: a hunter this busy is not offered office jobs)
   if (s.hp < 50) {
     if (!s.c.restNoted) log(s, "ร่างกาย", "ร่างกายยังไม่พร้อมลงเกต คุณพักฟื้นจนกว่าจะหายดี", "");
     s.c.restNoted = 1;

@@ -16,3 +16,10 @@ test("interest does not grow a debt past what anyone would lend", () => {
   C.advance(s);
   assert.ok(s.debt <= cap * 3, `debt grew from ${cap * 3} to ${s.debt}`);
 });
+
+test("no allowance for a hunter still hunting past 60", () => {
+  const s = C.newLife("old-hunter"); s.ageM = 65 * 12; s.job = null; s.ev = null; s.gold = 1000;
+  s.hunter = { rank: 3, lv: 20, xp: 0, skills: [], cls: "knight" };
+  C.advance(s);
+  assert.ok(!(s.ledger ?? []).some((l) => /เบี้ยผู้สูงอายุ/.test(l.label)));
+});

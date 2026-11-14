@@ -126,7 +126,7 @@ function familyGift(s) {
 
 // The state's old-age allowance: from 60, a life with no job gets half its city's living cost each month.
 function allowance(s) {
-  if (ageY(s) < 60 || s.job) return;
+  if (ageY(s) < 60 || s.job || (s.hunter && !s.flags.stoppedHunting)) return;
   addLedger(s, "เบี้ยผู้สูงอายุ", Math.round(cityOf(s.city).cost * 0.5));
 }
 
