@@ -5,7 +5,7 @@ export const SPEEDS = [1, 2, 4, 8, 16];
 export const STEP_S = { 1: 0.8, 2: 0.4, 4: 0.17, 8: 0.05, 16: 0.025 };
 export const POLICY_IDS = ["stop", "important", "skip"];
 // A first play leaves every choice to the player; the autopilot is theirs to turn on (UX-15, as in the model game).
-export const DEFAULT_CFG = { speed: 2, policy: "stop", fs: 2 };
+export const DEFAULT_CFG = { speed: 2, policy: "stop", fs: 2, fold: false };
 
 export function cleanCfg(raw) {
   const r = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
@@ -13,5 +13,6 @@ export function cleanCfg(raw) {
     speed: SPEEDS.includes(r.speed) ? r.speed : DEFAULT_CFG.speed,
     policy: POLICY_IDS.includes(r.policy) ? r.policy : DEFAULT_CFG.policy,
     fs: [1, 2, 3].includes(r.fs) ? r.fs : DEFAULT_CFG.fs,
+    fold: r.fold === true, // new decisions open folded (the model game's "start folded")
   };
 }

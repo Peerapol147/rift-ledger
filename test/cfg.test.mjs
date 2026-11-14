@@ -17,10 +17,16 @@ test("an unknown speed or policy falls back alone", () => {
   assert.deepEqual(cleanCfg({ speed: 16, policy: "nope", fs: 9 }), { ...DEFAULT_CFG, speed: 16 });
 });
 test("a good config is kept", () => {
-  assert.deepEqual(cleanCfg({ speed: 8, policy: "skip", fs: 1 }), { speed: 8, policy: "skip", fs: 1 });
+  assert.deepEqual(cleanCfg({ speed: 8, policy: "skip", fs: 1, fold: true }), { speed: 8, policy: "skip", fs: 1, fold: true });
 });
 test("every offered speed has a step time", () => {
   assert.deepEqual(SPEEDS, [1, 2, 4, 8, 16]);
   assert.ok(SPEEDS.every((n) => STEP_S[n] > 0));
   assert.ok(STEP_S[16] < STEP_S[8]);
+});
+
+test("cleanCfg keeps a boolean fold, anything else is false", () => {
+  assert.equal(cleanCfg({ fold: true }).fold, true);
+  assert.equal(cleanCfg({ fold: "yes" }).fold, false);
+  assert.equal(cleanCfg(null).fold, false);
 });

@@ -66,12 +66,23 @@ function badge(v) {
 
 const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
 
-export function eventPanel(s, waitingAuto, result) {
+// The decision itself opens as a card over the stage (#choice); the side panel then only says one is waiting.
+export function choiceCard(s, waitingAuto, foldStart = false) {
+  const k = C.eventKind(s);
+  return `<div class="card t-${k.tier}" role="dialog" aria-modal="true" aria-label="${esc(s.ev.tag ?? "เหตุการณ์")}">`
+    + `<div class="foldbar">${btn("fold", "พับไว้ดูก่อน ▾", 'class="sm"')}</div>${eventCard(s, waitingAuto)}`
+    + `<label class="foldstart dim"><input type="checkbox" data-c="foldStart" ${foldStart ? "checked" : ""}>`
+    + " เปิดเรื่องใหม่แบบพับไว้</label></div>";
+}
+
+export function eventPanel(s, waitingAuto, result, asking = false) {
   const res = result ? `<div class="result ${result.tone === "bad" ? "bad" : "good"}">${esc(result.text)}</div>` : "";
   // phones show the character card below everything, so the essentials ride here (CSS shows it only there)
   const m = `<div class="mstat">อายุ <b>${C.ageY(s)}</b> สุขภาพ <b>${Math.round(s.hp)}</b> จิต <b>${Math.round(s.mind)}</b>`
     + ` เงิน <b>${money(s.gold)}</b></div>`;
-  return m + res + storyLine(s) + eventCard(s, waitingAuto);
+  const body = asking ? `<div class="evwait"><p>มีเรื่องรอคุณตัดสินใจ</p>${btn("unfold", "เปิดตัวเลือก")}</div>`
+    : eventCard(s, waitingAuto);
+  return m + res + storyLine(s) + body;
 }
 
 function eventCard(s, waitingAuto) {
@@ -86,7 +97,8 @@ function eventCard(s, waitingAuto) {
     if (!v.visible) return "";
     n++;
     const lock = v.locked ? `<div class="lockrow">🔒 ${esc(v.lockText)} ${btn("pin:" + i, "📌 ปักเป้าหมาย", 'class="sm"')}</div>` : "";
-    return `<div><button class="opt ${v.locked ? "lock" : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
+    const fit = C.planFit(s, o); // the plan it fits: a solid border for the main plan, dashed for the second
+    return `<div><button class="opt ${v.locked ? "lock" : ""} ${fit ? "fit-" + fit : ""}" data-a="choose:${i}" ${v.locked ? "disabled" : ""}>
       <span><kbd>${n}</kbd>${esc(v.label)}${v.desc ? `<small>${esc(v.desc)}</small>` : ""}${chips(v.fx)}</span><span>${badge(v)}</span></button>${lock}</div>`;
   }).join("");
   const prep = ev.id === "gateChoice" ? prepPanel(s) : "";

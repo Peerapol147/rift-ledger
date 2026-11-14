@@ -6,7 +6,7 @@ import { weatherFor } from "../weather-art.js";
 import { $, esc, btn, store } from "./dom.js";
 import { classArt, careerArt, sceneOf, isNight } from "./art.js";
 import { SPEEDS, STEP_S, cleanCfg } from "./cfg.js";
-import { card, eventPanel, controls, tabsBar, TABS, POLICIES } from "./layout.js";
+import { card, eventPanel, choiceCard, controls, tabsBar, TABS, POLICIES } from "./layout.js";
 import { toggleSlot } from "./prep.js";
 import { settingsView, FONT } from "./settings.js";
 import { logTab } from "./tabs/log.js";
@@ -24,11 +24,11 @@ const slots = C.slots(store), book = C.collection(store);
 const loadCfg = () => { try { return cleanCfg(JSON.parse(store.get(CFG) ?? "{}")); } catch { return cleanCfg(null); } };
 const cfg0 = loadCfg();
 const ui = {
-  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, paused: false, tab: "log", onlyImp: false,
+  speed: cfg0.speed, policy: cfg0.policy, fs: cfg0.fs, foldStart: cfg0.fold, paused: false, tab: "log", onlyImp: false,
   slot: 0, settings: false, exportText: "", itemFilter: { kind: "", sort: "rarity", q: "" }, junk: 1, importText: "",
 };
-const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs }));
-let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0;
+const saveCfg = () => store.set(CFG, JSON.stringify({ speed: ui.speed, policy: ui.policy, fs: ui.fs, fold: ui.foldStart }));
+let s = null, acc = 0, last = 0, dirty = true, prev = null, bannerT = 0, bannerUrgent = false;
 
 // ---- Start, load, death
 // A new life takes the first empty slot, else the first finished one; -1 when every slot holds a life in progress.
@@ -137,19 +137,27 @@ function reveal() {
   for (const [k, n, ok] of TABS) {
     if (!ok(s) || s.flags["seenTab:" + k]) continue;
     s.flags["seenTab:" + k] = true;
-    if (s.ageM > 0 && k !== "log") banner(`เปิดแท็บใหม่: ${n}`);
+    if (s.ageM > 0 && k !== "log") banner(`เปิดแท็บใหม่: ${n}`, "news");
   }
 }
 
 // Every save the player did not ask for: says so once if it fails, instead of losing progress in silence.
 let saveFailing = false;
+const NEWER = "อีกแท็บเล่นชีวิตนี้ไปไกลกว่าแล้ว เซฟนี้ไม่ได้บันทึกทับ และจะไม่บันทึกอัตโนมัติจนกว่าจะเลือกช่องในตั้งค่า";
 function autosave() {
   if (!s || ui.slot < 0) return;
   const ok = slots.save(ui.slot, s);
-  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ");
+  // another tab is further on: stop writing to this slot at all, or this tab would take it once it passes that age
+  if (ok === "newer") { ui.slot = -1; banner(NEWER, "urgent"); return; }
+  if (!ok && !saveFailing) banner("บันทึกอัตโนมัติไม่สำเร็จ เปิดตั้งค่าเพื่อบันทึกลงช่องอื่นหรือส่งออกเซฟ", "urgent");
   saveFailing = !ok;
 }
-function banner(text) { const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; }
+// kind: "urgent" (a save that did not happen), "news" (birthdays, new tabs: the game talking on its own), or the
+// answer to something the player just did. News waits while an urgent banner has its time; a player's action never.
+function banner(text, kind = "act") {
+  if (bannerUrgent && bannerT > 0 && kind === "news") return;
+  const b = $("#banner"); b.textContent = text; b.hidden = false; bannerT = 3.5; bannerUrgent = kind === "urgent";
+}
 
 // Only touch the DOM when the markup changed, so buttons under the pointer stay put.
 const shown = {};
@@ -163,6 +171,18 @@ function put(sel, html) {
   if (key && document.activeElement === document.body) box.querySelector(key)?.focus({ preventScroll: true });
 }
 
+// The card never covers the controls bar (pause, speeds, settings): it takes the larger free part of the screen.
+function placeCard(ch) {
+  const r = $("#ctrl").getBoundingClientRect(), h = innerHeight, below = h - r.bottom, above = r.top;
+  const onScreen = r.bottom > 0 && r.top < h;
+  if (!onScreen) { ch.style.setProperty("--ctop", "12px"); ch.style.setProperty("--cmax", `${h - 24}px`); return; }
+  if (below >= above) {
+    ch.style.setProperty("--ctop", `${Math.round(r.bottom + 8)}px`); ch.style.setProperty("--cmax", `${Math.round(below - 20)}px`);
+  } else {
+    ch.style.setProperty("--ctop", "12px"); ch.style.setProperty("--cmax", `${Math.round(above - 20)}px`);
+  }
+}
+
 function render() {
   dirty = false;
   document.documentElement.style.setProperty("--fs", FONT[ui.fs]);
@@ -173,9 +193,30 @@ function render() {
   const waiting = !!s.ev && C.autoDecide(s, ui.policy) < 0;
   put("#card", card(s));
   if (ui.result && performance.now() > ui.result.until) ui.result = null;
-  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result));
+  put("#event", eventPanel(s, waiting && ui.policy !== "stop", ui.result, waiting));
+  // the decision card: a new event opens folded or not by the setting; folded, the screen behind is usable
+  if (s.ev !== ui.foldEv) { ui.foldEv = s.ev; ui.folded = !!ui.foldStart; }
+  const ch = $("#choice");
+  ch.hidden = !waiting;
+  ch.classList.toggle("folded", waiting && ui.folded);
+  $("#ctrl").classList.toggle("waiting", waiting);
+  put("#choice", waiting ? choiceCard(s, ui.policy !== "stop", ui.foldStart)
+    + (ui.folded ? btn("unfold", `เปิดตัวเลือก · ${esc(s.ev.tag ?? "")}`, 'id="unfold" class="primary"') : "") : "");
+  // focus: onto the first choice when a card opens (or unfolds), back to pause once a choice closes it
+  const open = waiting && !ui.folded;
+  if (open && ui.cardFocus !== s.ev && $("#modal").hidden) {
+    ui.cardFocus = s.ev; ui.cardAt = performance.now();
+    ch.querySelector('.card [data-a^="choose:"]:not([disabled])')?.focus({ preventScroll: true });
+  }
+  if (!open && ui.cardFocus && ch.contains(document.activeElement)) document.querySelector('[data-a="pause"]')?.focus();
+  if (!waiting && ui.cardFocus) { ui.cardFocus = null; if (document.activeElement === document.body) $('[data-a="pause"]')?.focus(); }
+  if (!open) ui.cardFocus = waiting ? null : ui.cardFocus;
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
+  // placed after #ctrl is drawn (its size is only known then); the page behind an open card does not scroll
+  if (waiting) placeCard($("#choice"));
+  document.documentElement.classList.toggle("cardopen", waiting && !ui.folded);
+  if (ui.focusUnfold) { ui.focusUnfold = false; $("#unfold")?.focus(); }
   const view = $("#view"), keep = view.scrollTop;
   const typing = view.contains(document.activeElement) && document.activeElement.matches("input,textarea,select");
   if (!typing) put("#view", TAB_VIEW[ui.tab]());
@@ -214,7 +255,7 @@ function step() {
     const y = C.ageY(s);
     C.advance(s);
     const n = !s.dead && C.ageY(s) > y ? C.yearSummary(s, y).lines.length : 0;
-    if (n) banner(`ครบ ${y + 1} ขวบ · ปีที่ผ่านมามี ${n} เรื่องสำคัญ`);
+    if (n) banner(`ครบ ${y + 1} ขวบ · ปีที่ผ่านมามี ${n} เรื่องสำคัญ`, "news");
   }
   return true;
 }
@@ -261,7 +302,9 @@ function act(a, el) {
       if (life.dead) showEnd(false); // a finished life: show its end, do not count it again
     },
     save: () => {
-      if (!slots.save(+v, s)) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน");
+      const r = slots.save(+v, s);
+      if (r === "newer") { if (ui.slot === +v) ui.slot = -1; return banner(NEWER, "urgent"); }
+      if (!r) return banner("บันทึกไม่สำเร็จ ลองช่องอื่น หรือส่งออกเซฟเก็บไว้ก่อน", "urgent");
       ui.slot = +v; banner("บันทึกแล้ว");
     },
     del: () => {
@@ -293,8 +336,15 @@ function act(a, el) {
     pause: () => { ui.paused = !ui.paused; },
     policy: () => { ui.policy = v; saveCfg(); },
     fs: () => { ui.fs = +v; saveCfg(); },
+    fold: () => { ui.folded = true; ui.focusUnfold = true; },
+    unfold: () => { ui.folded = false; },
     settings: () => { ui.opener = document.activeElement; ui.settings = true; ui.exportText = ""; ui.focusModal = true; },
-    close: () => { ui.settings = false; ui.opener?.focus?.(); ui.opener = null; },
+    close: () => {
+      ui.settings = false;
+      // the button that opened settings may have been drawn again meanwhile: go back to the one on screen now
+      const back = ui.opener?.isConnected ? ui.opener : document.querySelector('[data-a="settings"]');
+      back?.focus?.(); ui.opener = null;
+    },
     tab: () => { ui.tab = v; },
     onlyImp: () => { ui.onlyImp = !ui.onlyImp; },
     plan: () => { s.prefs.plan = v; },
@@ -345,6 +395,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("change", (e) => {
   const c = e.target.dataset?.c;
   if (c === "policy") { ui.policy = e.target.value; saveCfg(); }
+  if (c === "foldStart") { ui.foldStart = e.target.checked; saveCfg(); }
   if (c === "kind" || c === "sort") ui.itemFilter[c] = e.target.value;
   if (c === "junk") ui.junk = +e.target.value;
   dirty = true;
@@ -354,6 +405,9 @@ document.addEventListener("input", (e) => {
   if (c === "q") { ui.itemFilter.q = e.target.value; }
   if (c === "importText") ui.importText = e.target.value;
 });
+// the card's place depends on the screen: draw again when it turns or is resized
+addEventListener("resize", () => { dirty = true; });
+window.visualViewport?.addEventListener("resize", () => { dirty = true; });
 document.addEventListener("keydown", (e) => {
   const modal = $("#modal");
   if (!modal.hidden) {
@@ -367,7 +421,27 @@ document.addEventListener("keydown", (e) => {
     }
     return; // no game shortcuts while the dialog is open
   }
+  // the decision card is a dialog: Tab stays inside while it is open (also from its checkbox), F (and Esc while
+  // open) folds and unfolds it
+  const ch = $("#choice");
+  if (s && !s.dead && !ch.hidden) {
+    const typing = e.target.matches("input:not([type=checkbox]),textarea,select");
+    if (!typing && (e.key === "f" || e.key === "F" || (e.key === "Escape" && !ui.folded))) {
+      e.preventDefault(); act(ui.folded ? "unfold" : "fold"); return;
+    }
+    if (e.key === "Tab" && !ui.folded) {
+      const f = [...ch.querySelectorAll(".card button,.card input,.card select")].filter((x) => !x.disabled);
+      const i = f.indexOf(document.activeElement);
+      if (f.length && e.shiftKey && i <= 0) { e.preventDefault(); f.at(-1).focus(); }
+      else if (f.length && !e.shiftKey && (i < 0 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+      return;
+    }
+  }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  // a card that just opened took focus onto its first choice: a Space or Enter meant for something else (pausing as
+  // the event appeared) must not answer it
+  if ((e.key === " " || e.key === "Enter") && e.target.matches('#choice [data-a^="choose:"]')
+    && performance.now() - (ui.cardAt ?? 0) < 400) { e.preventDefault(); return; }
   // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
   if (e.key === " " && e.target.matches("button[data-a]")) {
     e.preventDefault();
@@ -384,7 +458,7 @@ document.addEventListener("keydown", (e) => {
   else if (/^[1-9]$/.test(e.key) && s.ev) {
     const vis = s.ev.opts.map((o, i) => [i, C.optionView(s, o)]).filter(([, v]) => v.visible);
     const pick = vis[+e.key - 1];
-    if (pick && !pick[1].locked) { C.choose(s, pick[0]); fx(); }
+    if (pick && !pick[1].locked) { const n0 = s.log.length; C.choose(s, pick[0]); showResult(n0); fx(); }
   } else return;
   saveCfg(); dirty = true;
 });
