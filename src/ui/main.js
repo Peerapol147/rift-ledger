@@ -199,9 +199,18 @@ function render() {
   const ch = $("#choice");
   ch.hidden = !waiting;
   ch.classList.toggle("folded", waiting && ui.folded);
-  put("#choice", waiting ? choiceCard(s, ui.policy !== "stop")
+  $("#ctrl").classList.toggle("waiting", waiting);
+  put("#choice", waiting ? choiceCard(s, ui.policy !== "stop", ui.foldStart)
     + (ui.folded ? btn("unfold", `เปิดตัวเลือก · ${esc(s.ev.tag ?? "")}`, 'id="unfold" class="primary"') : "") : "");
   if (waiting) placeCard(ch);
+  // focus: onto the first choice when a card opens (or unfolds), back to pause once a choice closes it
+  const open = waiting && !ui.folded;
+  if (open && ui.cardFocus !== s.ev && $("#modal").hidden) {
+    ui.cardFocus = s.ev; ch.querySelector('.card [data-a^="choose:"]:not([disabled])')?.focus({ preventScroll: true });
+  }
+  if (!open && ui.cardFocus && ch.contains(document.activeElement)) document.querySelector('[data-a="pause"]')?.focus();
+  if (!waiting && ui.cardFocus) { ui.cardFocus = null; if (document.activeElement === document.body) $('[data-a="pause"]')?.focus(); }
+  if (!open) ui.cardFocus = waiting ? null : ui.cardFocus;
   put("#ctrl", controls(ui));
   put("#tabs", tabsBar(s, ui.tab));
   const view = $("#view"), keep = view.scrollTop;
@@ -382,6 +391,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("change", (e) => {
   const c = e.target.dataset?.c;
   if (c === "policy") { ui.policy = e.target.value; saveCfg(); }
+  if (c === "foldStart") { ui.foldStart = e.target.checked; saveCfg(); }
   if (c === "kind" || c === "sort") ui.itemFilter[c] = e.target.value;
   if (c === "junk") ui.junk = +e.target.value;
   dirty = true;
@@ -405,6 +415,20 @@ document.addEventListener("keydown", (e) => {
     return; // no game shortcuts while the dialog is open
   }
   if (!s || s.dead || e.target.matches("input,textarea,select")) return;
+  // the decision card is a dialog: F (and Esc while open) folds and unfolds it; Tab stays inside while it is open
+  const ch = $("#choice");
+  if (!ch.hidden) {
+    if (e.key === "f" || e.key === "F" || (e.key === "Escape" && !ui.folded)) {
+      e.preventDefault(); act(ui.folded ? "unfold" : "fold"); return;
+    }
+    if (e.key === "Tab" && !ui.folded) {
+      const f = [...ch.querySelectorAll(".card button,.card input,.card select")].filter((x) => !x.disabled);
+      const i = f.indexOf(document.activeElement);
+      if (f.length && e.shiftKey && i <= 0) { e.preventDefault(); f.at(-1).focus(); }
+      else if (f.length && !e.shiftKey && (i < 0 || i === f.length - 1)) { e.preventDefault(); f[0].focus(); }
+      return;
+    }
+  }
   // Space presses the focused button now, so a redraw between key down and key up cannot swallow it
   if (e.key === " " && e.target.matches("button[data-a]")) {
     e.preventDefault();

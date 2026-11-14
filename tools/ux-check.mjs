@@ -312,6 +312,66 @@ const foldCard = async (page) => {
   const f = page.locator('#choice [data-a="fold"]');
   if (await f.count()) { await f.click(); await page.waitForTimeout(100); }
 };
+CASES["C-fold"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  const age0 = await cardText(page);
+  await page.locator('#choice [data-a="fold"]').click(); await page.waitForTimeout(1500);
+  const hidden = !(await cardOpen(page)), reopen = await page.locator('[data-a="unfold"]').first().isVisible();
+  const still = (await cardText(page)) === age0;
+  await page.locator('#unfold').click(); await page.waitForTimeout(150);
+  const back = await cardOpen(page);
+  await ctx.close();
+  return [hidden && reopen && still && back, `fold hides the card (${hidden}), a button reopens it (${reopen}, ${back}),`
+    + ` the life waits meanwhile (${still})`];
+};
+
+CASES["C-start-folded"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant, { init: { [CFGK]: { ...STOP, fold: true } } });
+  const open = await cardOpen(page), reopen = await page.locator("#unfold").isVisible().catch(() => false);
+  await ctx.close();
+  return [!open && reopen, `with "start folded" a decision opens folded (card ${open}, reopen button ${reopen})`];
+};
+
+CASES["C-keys"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  const inCard = () => page.evaluate(() => !!document.activeElement?.closest("#choice .card"));
+  // loaded() pressed pause, which took focus there: fold and reopen so the card opens again in front of the player
+  await page.locator('#choice [data-a="fold"]').click(); await page.locator("#unfold").click(); await page.waitForTimeout(100);
+  const first = await page.evaluate(() => document.activeElement?.dataset?.a ?? "");
+  let inside = true;
+  for (let i = 0; i < 10; i++) { await page.keyboard.press("Tab"); inside &&= await inCard(); }
+  await page.keyboard.press("f"); await page.waitForTimeout(100); const f1 = !(await cardOpen(page));
+  await page.keyboard.press("f"); await page.waitForTimeout(100); const f2 = await cardOpen(page);
+  await page.keyboard.press("Escape"); await page.waitForTimeout(100); const esc = !(await cardOpen(page));
+  await ctx.close();
+  return [/^choose:/.test(first) && inside && f1 && f2 && esc,
+    `focus starts on a choice (${first}), Tab stays in the card (${inside}), F folds/unfolds (${f1}/${f2}), Esc folds (${esc})`];
+};
+
+CASES["C-settings-over"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await settings(page);
+  let inModal = true;
+  for (let i = 0; i < 6; i++) {
+    await page.keyboard.press("Tab");
+    inModal &&= await page.evaluate(() => !!document.activeElement?.closest("#modal"));
+  }
+  await page.keyboard.press("Escape"); await page.waitForTimeout(150);
+  const open = await cardOpen(page);
+  await ctx.close();
+  return [inModal && open, `settings over a card keeps its own focus (${inModal}); closing it leaves the card open (${open})`];
+};
+
+CASES["C-fold-setting"] = async (b) => {
+  const { ctx, page } = await loaded(b, infant);
+  await page.locator('#choice [data-c="foldStart"]').check(); await page.waitForTimeout(100);
+  const saved = await page.evaluate((k) => JSON.parse(localStorage.getItem(k) || "{}").fold, CFGK);
+  const dim = await page.evaluate(() => document.querySelector("#ctrl")?.classList.contains("waiting"));
+  await ctx.close();
+  return [saved === true && dim === true, `the card's "start folded" box is saved (${saved}); speeds look dimmed while`
+    + ` a decision waits (${dim})`];
+};
+
 CASES["UX-02"] = async (b) => {
   const { ctx, page } = await loaded(b, infant, { w: 390, h: 844, mobile: true });
   const n0 = await choices(page);

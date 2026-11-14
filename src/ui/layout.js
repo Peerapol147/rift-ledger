@@ -67,10 +67,12 @@ function badge(v) {
 const TIER = { uncommon: "ไม่ธรรมดา", story: "เรื่องราว", rare: "หายาก", world: "เหตุการณ์โลก" };
 
 // The decision itself opens as a card over the stage (#choice); the side panel then only says one is waiting.
-export function choiceCard(s, waitingAuto) {
+export function choiceCard(s, waitingAuto, foldStart = false) {
   const k = C.eventKind(s);
   return `<div class="card t-${k.tier}" role="dialog" aria-modal="true" aria-label="${esc(s.ev.tag ?? "เหตุการณ์")}">`
-    + `<div class="foldbar">${btn("fold", "พับไว้ดูก่อน ▾", 'class="sm"')}</div>${eventCard(s, waitingAuto)}</div>`;
+    + `<div class="foldbar">${btn("fold", "พับไว้ดูก่อน ▾", 'class="sm"')}</div>${eventCard(s, waitingAuto)}`
+    + `<label class="foldstart dim"><input type="checkbox" data-c="foldStart" ${foldStart ? "checked" : ""}>`
+    + " เปิดเรื่องใหม่แบบพับไว้</label></div>";
 }
 
 export function eventPanel(s, waitingAuto, result, asking = false) {
